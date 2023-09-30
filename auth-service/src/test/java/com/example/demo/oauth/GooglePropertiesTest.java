@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-@DisplayName("Properties 파일이 잘 초기화되었는지 확인하는 테스트")
+@DisplayName("Google Properties 파일이 잘 초기화되었는지 확인하는 테스트")
 class GooglePropertiesTest {
     @Autowired
     GoogleProperties properties;

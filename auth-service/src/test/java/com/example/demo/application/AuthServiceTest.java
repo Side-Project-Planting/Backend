@@ -37,11 +37,6 @@ class AuthServiceTest {
             .containsKey("state");
     }
 
-    @Test
-    void test() {
-        authService.login("google", "4/0AfJohXmIwoDZvAIg77dbNVbAZKLtdPATD71Tllxs4DurKCZW9VQQHmIKDHq3emamKq77NA");
-    }
-
     private static Map<String, String> extractParams(String paramsStr) {
         Map<String, String> params = new HashMap<>();
         for (String each : paramsStr.split("&")) {
