@@ -2,6 +2,7 @@ package com.example.demo.application;
 
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
+import com.example.demo.factory.RandomStringFactory;
 import com.example.demo.oauth.OAuthProvider;
 import com.example.demo.presentation.dto.response.GetAuthorizedUrlResponse;
 import com.example.demo.presentation.dto.response.OAuthLoginResponse;
@@ -17,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
     private final List<OAuthProvider> oAuthProviders;
     private final AuthMemberRepository authMemberRepository;
-
+    private final RandomStringFactory randomStringFactory;
 
     /**
      * 입력받은 providerName을 사용해 해당되는 OAuthProvider를 찾는다.
@@ -25,7 +26,8 @@ public class AuthService {
      */
     public GetAuthorizedUrlResponse getAuthorizedUri(String providerName) {
         OAuthProvider oAuthProvider = findProvider(providerName);
-        return new GetAuthorizedUrlResponse(oAuthProvider.getAuthorizedUriWithParams("랜덤값"));
+        String state = randomStringFactory.create();
+        return new GetAuthorizedUrlResponse(oAuthProvider.getAuthorizedUriWithParams(state));
     }
 
     @Transactional
