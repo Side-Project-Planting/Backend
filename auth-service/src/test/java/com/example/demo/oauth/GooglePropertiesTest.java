@@ -2,6 +2,7 @@ package com.example.demo.oauth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.demo.oauth.google.GoogleProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

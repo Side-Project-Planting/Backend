@@ -2,9 +2,10 @@ package com.example.demo.oauth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.demo.oauth.google.GoogleOAuthProvider;
+import com.example.demo.oauth.google.GoogleProperties;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
