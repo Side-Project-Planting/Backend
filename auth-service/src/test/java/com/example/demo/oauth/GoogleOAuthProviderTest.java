@@ -4,15 +4,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@DisplayName("GoogleOAuthProvider 테스트")
+@ExtendWith(MockitoExtension.class)
+@DisplayName("GoogleOAuthProvider 단위테스트")
 class GoogleOAuthProviderTest {
-    GoogleProperties properties = new GoogleProperties();
-    GoogleOAuthProvider provider = new GoogleOAuthProvider(properties);
+    @Mock
+    GoogleProperties properties;
+
+    @InjectMocks
+    GoogleOAuthProvider provider;
 
     @Test
     @DisplayName("google이라는 값에 대해 match 메서드는 true를 반환한다")
@@ -47,6 +57,7 @@ class GoogleOAuthProviderTest {
     @DisplayName("만들어진 Authentication Url은 파라미터에 clientId, redirect_uri, scope, response_type, state를 포함한다")
     void makeAuthenticationUrl() {
         // given
+        setGoogleProperties();
         String state = "랜덤값";
 
         // when
@@ -67,12 +78,20 @@ class GoogleOAuthProviderTest {
             .containsEntry("state", state);
     }
 
-    private static Map<String, String> extractParams(String paramsStr) {
+    private Map<String, String> extractParams(String paramsStr) {
         Map<String, String> params = new HashMap<>();
         for (String each : paramsStr.split("&")) {
             String[] keyAndValue = each.split("=");
             params.put(keyAndValue[0], keyAndValue[1]);
         }
         return params;
+    }
+
+    private void setGoogleProperties() {
+        Mockito.when(properties.getAuthorizedUriEndpoint()).thenReturn("1");
+        Mockito.when(properties.getClientId()).thenReturn("1");
+        Mockito.when(properties.getRedirectUri()).thenReturn("1");
+        Mockito.when(properties.getScope()).thenReturn(new String[] {"1"});
+        Mockito.when(properties.getResponseType()).thenReturn("1");
     }
 }

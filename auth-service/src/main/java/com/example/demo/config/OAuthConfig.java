@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OAuthConfig {
     @Bean
-    public OAuthProvider googleOAuthProvider() {
-        return new GoogleOAuthProvider(new GoogleProperties());
+    public OAuthProvider googleOAuthProvider(GoogleProperties properties) {
+        return new GoogleOAuthProvider(properties);
     }
 }
