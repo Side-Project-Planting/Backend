@@ -18,6 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
 
+    // TODO 삭제해야 하는 로직입니다.
+    //  Auth Code를 확인하기 위해 임의로 설정한 URL입니다.
+    @GetMapping("/login/oauth2/code/google")
+    public String showAuthCode(String code) {
+        return code;
+    }
+
     @GetMapping("/oauth/{provider}/authorized-url")
     public ResponseEntity<Object> getAuthorizedUrl(@PathVariable String provider) {
         GetAuthorizedUrlResponse response = authService.getAuthorizedUri(provider);

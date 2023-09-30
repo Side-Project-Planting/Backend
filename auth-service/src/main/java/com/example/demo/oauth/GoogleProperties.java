@@ -15,4 +15,6 @@ public class GoogleProperties {
     private String redirectUri;
     private String[] scope;
     private String responseType;
+    private String tokenUri;
+    private String clientSecret;
 }

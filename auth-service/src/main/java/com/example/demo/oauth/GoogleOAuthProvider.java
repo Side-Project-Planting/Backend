@@ -39,4 +39,15 @@ public class GoogleOAuthProvider implements OAuthProvider {
         return googleProperties.getResponseType();
     }
 
+    @Override
+    public String getTokenUri() {
+        return googleProperties.getTokenUri();
+    }
+
+    @Override
+    public String getClientSecret() {
+        // TODO 추후 삭제하기
+        return googleProperties.getClientSecret();
+    }
+
 }

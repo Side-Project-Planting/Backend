@@ -40,4 +40,10 @@ class GooglePropertiesTest {
     void canReturnResponseType() {
         assertThat(properties.getResponseType()).isNotBlank();
     }
+
+    @Test
+    @DisplayName("구글 프로퍼티는 tokenUri 값을 반환할 수 있다")
+    void canReturnTokenUri() {
+        assertThat(properties.getTokenUri()).isNotBlank();
+    }
 }

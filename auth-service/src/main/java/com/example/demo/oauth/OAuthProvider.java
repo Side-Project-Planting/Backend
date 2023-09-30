@@ -13,6 +13,8 @@ public interface OAuthProvider {
 
     String getResponseType();
 
+    String getTokenUri();
+
     /**
      * 입력한 값들을 조합해 클라이언트에게 반환할 AuthorizedUri을 만든다.
      *
@@ -27,4 +29,7 @@ public interface OAuthProvider {
             "&response_type=" + getResponseType() +
             "&state=" + state;
     }
+
+    // TODO 추후 리팩토링하며 삭제하기
+    String getClientSecret();
 }
