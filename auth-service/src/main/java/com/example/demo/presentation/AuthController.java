@@ -20,7 +20,7 @@ public class AuthController {
 
     @GetMapping("/oauth/{provider}/authorized-url")
     public ResponseEntity<Object> getAuthorizedUrl(@PathVariable String provider) {
-        GetAuthorizedUrlResponse response = authService.getAuthorizedUrl(provider);
+        GetAuthorizedUrlResponse response = authService.getAuthorizedUri(provider);
         return ResponseEntity.ok(response);
     }
 

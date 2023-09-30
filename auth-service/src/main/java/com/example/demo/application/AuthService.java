@@ -18,7 +18,7 @@ public class AuthService {
      * 반환된 OAuthProvider은 Authorized URL을 만들어 반환한다.
      *
      */
-    public GetAuthorizedUrlResponse getAuthorizedUrl(String providerName) {
+    public GetAuthorizedUrlResponse getAuthorizedUri(String providerName) {
         OAuthProvider oAuthProvider = oAuthProviders.stream()
             .filter(provider -> provider.match(providerName))
             .findAny()

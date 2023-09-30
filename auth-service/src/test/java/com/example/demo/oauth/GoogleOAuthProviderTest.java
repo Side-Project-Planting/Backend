@@ -58,7 +58,6 @@ class GoogleOAuthProviderTest {
         Map<String, String> params = extractParams(url[1]);
 
         assertThat(endpoint).isNotBlank();
-
         assertThat(params)
             .hasSize(5)
             .containsKey("clientId")
