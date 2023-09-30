@@ -12,4 +12,6 @@ public interface OAuthProperties {
     String getResponseType();
 
     String getTokenUri();
+
+    String getUserInfoUri();
 }

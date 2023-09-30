@@ -18,4 +18,5 @@ public class GoogleProperties implements OAuthProperties {
     private String responseType;
     private String tokenUri;
     private String clientSecret;
+    private String userInfoUri;
 }

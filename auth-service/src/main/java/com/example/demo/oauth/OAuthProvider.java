@@ -1,7 +1,7 @@
 package com.example.demo.oauth;
 
-import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
+import com.example.demo.presentation.dto.response.AccessTokenResponse;
 import com.example.demo.presentation.dto.response.OAuthUserResponse;
 import java.util.Objects;
 
@@ -11,11 +11,7 @@ public interface OAuthProvider {
 
     OAuthProperties getOAuthProperties();
 
-
-    /**
-     * authCode를 사용해 Access Token을 받아온 뒤, Resource Server에서 여러 정보를 가져온다.
-     */
-    OAuthUserResponse getOAuthUserResponse(String authCode);
+    OAuthClient getOAuthClient();
 
     /**
      * 해당 Provider가 처리할 수 있는지 확인한다.
@@ -36,5 +32,14 @@ public interface OAuthProvider {
             "&scope=" + String.join(",", properties.getScope()) +
             "&response_type=" + properties.getResponseType() +
             "&state=" + state;
+    }
+
+    /**
+     * authCode를 사용해 Access Token을 받아온 뒤, Resource Server에서 여러 정보를 가져온다.
+     */
+    default OAuthUserResponse getOAuthUserResponse(String authCode) {
+        OAuthClient client = getOAuthClient();
+        AccessTokenResponse accessTokenResponse = client.getAccessToken(authCode);
+        return client.getOAuthUserResponse(accessTokenResponse.getAccessToken());
     }
 }
