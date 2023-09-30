@@ -50,7 +50,7 @@ class GoogleOAuthProviderTest {
         String state = "랜덤값";
 
         // when
-        String authorizedUrl = provider.getAuthorizedUrlWithParams(state);
+        String authorizedUrl = provider.getAuthorizedUriWithParams(state);
 
         // then
         String[] url = authorizedUrl.split("[?]");

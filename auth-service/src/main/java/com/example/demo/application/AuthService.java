@@ -24,6 +24,6 @@ public class AuthService {
             .findAny()
             .orElseThrow(() -> new IllegalArgumentException("매치되지 않는 타입입니다"));
 
-        return new GetAuthorizedUrlResponse(oAuthProvider.getAuthorizedUrlWithParams("랜덤값"));
+        return new GetAuthorizedUrlResponse(oAuthProvider.getAuthorizedUriWithParams("랜덤값"));
     }
 }

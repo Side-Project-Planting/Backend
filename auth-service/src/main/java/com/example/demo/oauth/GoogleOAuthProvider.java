@@ -15,17 +15,7 @@ public class GoogleOAuthProvider implements OAuthProvider {
     }
 
     @Override
-    public String getAuthorizedUrlWithParams(String state) {
-        return getAuthorizedUrl() + "?" +
-            "clientId=" + getClientId() +
-            "&redirect_uri=" + getRedirectUri() +
-            "&scope=" + String.join(",", getScope()) +
-            "&response_type=" + getResponseType() +
-            "&state=" + state;
-    }
-
-    @Override
-    public String getAuthorizedUrl() {
+    public String getAuthorizedUriEndpoint() {
         return googleProperties.getAuthorizedUriEndpoint();
     }
 
