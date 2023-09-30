@@ -71,7 +71,7 @@ class GoogleOAuthProviderTest {
         assertThat(endpoint).isNotBlank();
         assertThat(params)
             .hasSize(5)
-            .containsKey("clientId")
+            .containsKey("client_id")
             .containsKey("redirect_uri")
             .containsKey("scope")
             .containsKey("response_type")

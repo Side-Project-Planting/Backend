@@ -21,7 +21,7 @@ public interface OAuthProvider {
      */
     default String getAuthorizedUriWithParams(String state) {
         return getAuthorizedUriEndpoint() + "?" +
-            "clientId=" + getClientId() +
+            "client_id=" + getClientId() +
             "&redirect_uri=" + getRedirectUri() +
             "&scope=" + String.join(",", getScope()) +
             "&response_type=" + getResponseType() +
