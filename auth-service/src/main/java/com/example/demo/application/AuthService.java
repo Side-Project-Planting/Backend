@@ -1,5 +1,6 @@
 package com.example.demo.application;
 
+import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.oauth.OAuthProvider;
 import com.example.demo.presentation.dto.response.AccessTokenResponse;
 import com.example.demo.presentation.dto.response.GetAuthorizedUrlResponse;
@@ -25,6 +26,8 @@ import org.springframework.web.client.RestTemplate;
 @Transactional(readOnly = true)
 public class AuthService {
     private final List<OAuthProvider> oAuthProviders;
+    private final AuthMemberRepository authMemberRepository;
+
 
     /**
      * 입력받은 providerName을 사용해 해당되는 OAuthProvider를 찾는다.

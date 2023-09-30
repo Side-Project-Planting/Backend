@@ -13,4 +13,6 @@ public class OAuthUserInfo {
     @JsonProperty("email")
     private String email;
 
+    @JsonProperty("sub")
+    private String sub;
 }
