@@ -1,0 +1,3 @@
+rootProject.name = 'planting'
+include 'config-service', 'eureka-service', 'gateway-service'
+

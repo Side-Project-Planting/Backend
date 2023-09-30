@@ -1,0 +1,22 @@
+version: '3'
+services:
+  config-service:
+    build: ./config-service
+    ports:
+      - "8888:8888"
+
+  eureka-service:
+    build: ./eureka-service
+    ports:
+      - "8761:8761"
+
+  gateway-service:
+    build: ./gateway-service
+    ports:
+      - "8080:8080"
+
+  rabb:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
