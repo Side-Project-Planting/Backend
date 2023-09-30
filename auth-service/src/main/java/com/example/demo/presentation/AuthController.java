@@ -1,5 +1,7 @@
 package com.example.demo.presentation;
 
+import com.example.demo.application.AuthService;
+import com.example.demo.presentation.dto.response.GetAuthorizedUrlResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,15 +11,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// TODO 컨트롤러 계층에 대한 테스트는 Service가 만들어진 이후에 작성하기
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/")
 public class AuthController {
+    private final AuthService authService;
 
     @GetMapping("/oauth/{provider}/authorized-url")
     public ResponseEntity<Object> getAuthorizedUrl(@PathVariable String provider) {
-        // 링크를 만들어서 보내준다
-        return null;
+        GetAuthorizedUrlResponse response = authService.getAuthorizedUrl(provider);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/oauth/{provider}/login")
