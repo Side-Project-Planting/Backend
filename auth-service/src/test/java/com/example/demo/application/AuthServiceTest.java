@@ -39,7 +39,7 @@ class AuthServiceTest {
 
     @Test
     void test() {
-        authService.login("google", "4/0AfJohXnAkUAM-9vwtscDZc0QIT6N1TzYGkL4WTO_Sqk-51rm-Y4et7CzadiPBJUuqHnUKw`");
+        authService.login("google", "4/0AfJohXmIwoDZvAIg77dbNVbAZKLtdPATD71Tllxs4DurKCZW9VQQHmIKDHq3emamKq77NA");
     }
 
     private static Map<String, String> extractParams(String paramsStr) {

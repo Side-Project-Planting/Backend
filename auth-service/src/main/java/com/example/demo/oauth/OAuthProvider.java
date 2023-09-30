@@ -1,5 +1,7 @@
 package com.example.demo.oauth;
 
+import com.example.demo.domain.OAuthMember;
+
 public interface OAuthProvider {
     boolean match(String name);
 
@@ -30,6 +32,6 @@ public interface OAuthProvider {
             "&state=" + state;
     }
 
-    // TODO 추후 리팩토링하며 삭제하기
-    String getClientSecret();
+    OAuthMember createAuthMember(String authCode);
+
 }
