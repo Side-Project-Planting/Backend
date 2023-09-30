@@ -19,13 +19,13 @@ import org.springframework.web.client.RestTemplate;
 
 @RequiredArgsConstructor
 public class GoogleOAuthProvider implements OAuthProvider {
-    private static final String NAME = "google";
+    private static final OAuthType TYPE = OAuthType.GOOGLE;
 
     private final GoogleProperties googleProperties;
 
     @Override
-    public boolean match(String name) {
-        return Objects.equals(NAME, name);
+    public OAuthType getOAuthType() {
+        return TYPE;
     }
 
     @Override
@@ -75,6 +75,26 @@ public class GoogleOAuthProvider implements OAuthProvider {
 
             OAuthUserResponse info = result.getBody();
             return OAuthUserResponse.create(info, OAuthType.GOOGLE);
+        }
+        throw new IllegalArgumentException("요청에 실패했습니다");
+    }
+
+    @Override
+    public OAuthUserResponse getOAuthUserResponse(String authCode) {
+        ResponseEntity<AccessTokenResponse> responseWithAccessToken = getAccessToken(authCode);
+        if (responseWithAccessToken.getStatusCode().is2xxSuccessful()) {
+            String accessToken = responseWithAccessToken.getBody().getAccessToken();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + accessToken);
+
+            HttpEntity<Object> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<OAuthUserResponse> result =
+                new RestTemplate().exchange("https://www.googleapis.com/oauth2/v3/userinfo", HttpMethod.GET, entity,
+                    OAuthUserResponse.class);
+
+            return result.getBody();
         }
         throw new IllegalArgumentException("요청에 실패했습니다");
     }

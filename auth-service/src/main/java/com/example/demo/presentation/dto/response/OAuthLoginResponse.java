@@ -1,5 +1,7 @@
 package com.example.demo.presentation.dto.response;
 
+import com.example.demo.domain.OAuthMember;
+import com.example.demo.jwt.TokenInfo;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,5 +23,16 @@ public class OAuthLoginResponse {
         this.profileUrl = profileUrl;
         this.email = email;
         this.isNew = isNew;
+    }
+
+    public static OAuthLoginResponse create(OAuthMember oAuthMember, TokenInfo tokenInfo) {
+        return OAuthLoginResponse.builder()
+            .accessToken(tokenInfo.getAccessToken())
+            .refreshToken(tokenInfo.getRefreshToken())
+            .grantType(tokenInfo.getGrantType())
+            .profileUrl(oAuthMember.getProfileUrl())
+            .email(oAuthMember.getEmail())
+            .isNew(oAuthMember.isNew())
+            .build();
     }
 }

@@ -1,10 +1,11 @@
 package com.example.demo.oauth;
 
 import com.example.demo.domain.OAuthMember;
+import com.example.demo.domain.OAuthType;
+import com.example.demo.presentation.dto.response.OAuthUserResponse;
+import java.util.Objects;
 
 public interface OAuthProvider {
-    boolean match(String name);
-
     String getAuthorizedUriEndpoint();
 
     String getClientId();
@@ -16,6 +17,10 @@ public interface OAuthProvider {
     String getResponseType();
 
     String getTokenUri();
+
+    OAuthUserResponse getOAuthUserResponse(String authCode);
+
+    OAuthType getOAuthType();
 
 
     /**
@@ -39,5 +44,10 @@ public interface OAuthProvider {
             "&scope=" + String.join(",", getScope()) +
             "&response_type=" + getResponseType() +
             "&state=" + state;
+    }
+
+    default boolean match(String name) {
+        OAuthType type = getOAuthType();
+        return Objects.equals(type.getText(), name);
     }
 }

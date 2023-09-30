@@ -26,4 +26,13 @@ public class OAuthUserResponse {
             .profileUrl(response.getProfileUrl())
             .build();
     }
+
+    public OAuthMember toEntity(OAuthType oAuthType) {
+        return OAuthMember.builder()
+            .idUsingResourceServer(this.getIdUsingResourceServer())
+            .email(this.getEmail())
+            .profileUrl(this.getProfileUrl())
+            .oAuthType(oAuthType)
+            .build();
+    }
 }

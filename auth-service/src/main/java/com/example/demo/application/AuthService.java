@@ -2,12 +2,14 @@ package com.example.demo.application;
 
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
+import com.example.demo.domain.OAuthType;
 import com.example.demo.factory.RandomStringFactory;
 import com.example.demo.jwt.JwtTokenProvider;
 import com.example.demo.jwt.TokenInfo;
 import com.example.demo.oauth.OAuthProvider;
 import com.example.demo.presentation.dto.response.GetAuthorizedUrlResponse;
 import com.example.demo.presentation.dto.response.OAuthLoginResponse;
+import com.example.demo.presentation.dto.response.OAuthUserResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -37,27 +39,20 @@ public class AuthService {
     @Transactional
     public OAuthLoginResponse login(String providerName, String authCode) {
         OAuthProvider oAuthProvider = findProvider(providerName);
-        OAuthMember oAuthMember = retrieveOrCreateMemberUsingAuthCode(authCode, oAuthProvider);
+        OAuthUserResponse response = oAuthProvider.getOAuthUserResponse(authCode);
+        OAuthMember oAuthMember = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), response);
+
         TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(oAuthMember.getId(), LocalDateTime.now());
 
-        return OAuthLoginResponse.builder()
-            .accessToken(tokenInfo.getAccessToken())
-            .refreshToken(tokenInfo.getRefreshToken())
-            .grantType(tokenInfo.getGrantType())
-            .profileUrl(oAuthMember.getProfileUrl())
-            .email(oAuthMember.getEmail())
-            .isNew(oAuthMember.isNew())
-            .build();
+        return OAuthLoginResponse.create(oAuthMember, tokenInfo);
     }
 
-    private OAuthMember retrieveOrCreateMemberUsingAuthCode(String authCode, OAuthProvider oAuthProvider) {
-        OAuthMember oAuthMember = oAuthProvider.createAuthMember(authCode);
-
+    private OAuthMember retrieveOrCreateMemberUsingAuthCode(OAuthType type, OAuthUserResponse response) {
         Optional<OAuthMember> oAuthMemberOpt = authMemberRepository.findByIdUsingResourceServerAndType(
-            oAuthMember.getIdUsingResourceServer(),
-            oAuthMember.getType());
+            response.getIdUsingResourceServer(), type);
 
         if (oAuthMemberOpt.isEmpty()) {
+            OAuthMember oAuthMember = response.toEntity(type);
             return authMemberRepository.save(oAuthMember);
         }
         return oAuthMemberOpt.get();
