@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
+import com.example.demo.exception.ApiException;
+import com.example.demo.exception.ErrorCode;
 import com.example.demo.oauth.google.GoogleOAuthClient;
 import com.example.demo.presentation.dto.response.AccessTokenResponse;
 import com.example.demo.presentation.dto.response.GetAuthorizedUrlResponse;
@@ -64,8 +66,8 @@ class AuthServiceTest {
     @ValueSource(strings = {"naver", "kakao", "Google", " ", ""})
     void cantGetAuthorizedUrlAboutNotSupportedProviderName(String providerName) {
         assertThatThrownBy(() -> authService.getAuthorizedUri(providerName))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("매치되지 않는 타입입니다");
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.OAUTH_PROVIDER_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -138,8 +140,8 @@ class AuthServiceTest {
 
         // when & then
         assertThatThrownBy(() -> authService.login(providerName, authCode))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("매치되지 않는 타입입니다");
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.OAUTH_PROVIDER_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -151,12 +153,12 @@ class AuthServiceTest {
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
-            .thenThrow(new IllegalArgumentException("구글에서 응답을 제대로 받지 못했습니다"));
+            .thenThrow(new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL));
 
         //when & then
         assertThatThrownBy(() -> authService.login(providerName, authCode))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("구글에서 응답을 제대로 받지 못했습니다");
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.ACCESS_TOKEN_FETCH_FAIL.getMessage());
     }
 
     @Test
@@ -171,12 +173,12 @@ class AuthServiceTest {
         when(googleOAuthClient.getAccessToken(anyString()))
             .thenReturn(new AccessTokenResponse(accessToken));
         when(googleOAuthClient.getOAuthUserResponse(accessToken))
-            .thenThrow(new IllegalArgumentException("구글에서 응답을 제대로 받지 못했습니다"));
+            .thenThrow(new ApiException(ErrorCode.USER_INFO_FETCH_FAIL));
 
         //when & then
         assertThatThrownBy(() -> authService.login(providerName, authCode))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("구글에서 응답을 제대로 받지 못했습니다");
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.USER_INFO_FETCH_FAIL.getMessage());
     }
 
 

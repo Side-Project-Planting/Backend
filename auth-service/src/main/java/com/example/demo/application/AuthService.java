@@ -3,6 +3,8 @@ package com.example.demo.application;
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
+import com.example.demo.exception.ApiException;
+import com.example.demo.exception.ErrorCode;
 import com.example.demo.factory.RandomStringFactory;
 import com.example.demo.jwt.JwtTokenProvider;
 import com.example.demo.jwt.TokenInfo;
@@ -62,6 +64,6 @@ public class AuthService {
         return oAuthProviders.stream()
             .filter(provider -> provider.match(providerName))
             .findAny()
-            .orElseThrow(() -> new IllegalArgumentException("매치되지 않는 타입입니다"));
+            .orElseThrow(() -> new ApiException(ErrorCode.OAUTH_PROVIDER_NOT_FOUND));
     }
 }

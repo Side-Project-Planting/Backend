@@ -1,5 +1,7 @@
 package com.example.demo.oauth.google;
 
+import com.example.demo.exception.ApiException;
+import com.example.demo.exception.ErrorCode;
 import com.example.demo.oauth.OAuthClient;
 import com.example.demo.oauth.OAuthProperties;
 import com.example.demo.presentation.dto.response.AccessTokenResponse;
@@ -46,7 +48,7 @@ public class GoogleOAuthClient implements OAuthClient {
         if (response.getStatusCode().is2xxSuccessful()) {
             return response.getBody();
         }
-        throw new IllegalArgumentException("구글에서 응답을 제대로 받지 못했습니다");
+        throw new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL);
     }
 
     @Override
@@ -60,6 +62,6 @@ public class GoogleOAuthClient implements OAuthClient {
         if (response.getStatusCode().is2xxSuccessful()) {
             return response.getBody();
         }
-        throw new IllegalArgumentException("구글에서 응답을 제대로 받지 못했습니다");
+        throw new ApiException(ErrorCode.USER_INFO_FETCH_FAIL);
     }
 }
