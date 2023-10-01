@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class GetAuthorizedUrlResponse {
-    private String authorizedUrl;
+public class GetAuthorizedUriResponse {
+    private String authorizedUri;
 }

@@ -9,7 +9,7 @@ import com.example.demo.factory.RandomStringFactory;
 import com.example.demo.jwt.JwtTokenProvider;
 import com.example.demo.jwt.TokenInfo;
 import com.example.demo.oauth.OAuthProvider;
-import com.example.demo.presentation.dto.response.GetAuthorizedUrlResponse;
+import com.example.demo.presentation.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.presentation.dto.response.OAuthLoginResponse;
 import com.example.demo.presentation.dto.response.OAuthUserResponse;
 import java.time.LocalDateTime;
@@ -32,10 +32,10 @@ public class AuthService {
      * 입력받은 providerName을 사용해 해당되는 OAuthProvider를 찾는다.
      * 반환된 OAuthProvider은 Authorized URL을 만들어 반환한다.
      */
-    public GetAuthorizedUrlResponse getAuthorizedUri(String providerName) {
+    public GetAuthorizedUriResponse getAuthorizedUri(String providerName) {
         OAuthProvider oAuthProvider = findProvider(providerName);
         String state = randomStringFactory.create();
-        return new GetAuthorizedUrlResponse(oAuthProvider.getAuthorizedUriWithParams(state));
+        return new GetAuthorizedUriResponse(oAuthProvider.getAuthorizedUriWithParams(state));
     }
 
     @Transactional

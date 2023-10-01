@@ -12,7 +12,7 @@ import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.oauth.google.GoogleOAuthClient;
 import com.example.demo.presentation.dto.response.AccessTokenResponse;
-import com.example.demo.presentation.dto.response.GetAuthorizedUrlResponse;
+import com.example.demo.presentation.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.presentation.dto.response.OAuthLoginResponse;
 import com.example.demo.presentation.dto.response.OAuthUserResponse;
 import java.util.HashMap;
@@ -43,10 +43,10 @@ class AuthServiceTest {
     @DisplayName("google의 AuthorizedUrl을 가져온다")
     void getGoogleAuthorizedUrl() {
         //when
-        GetAuthorizedUrlResponse response = authService.getAuthorizedUri("google");
+        GetAuthorizedUriResponse response = authService.getAuthorizedUri("google");
 
         // then
-        String authorizedUrl = response.getAuthorizedUrl();
+        String authorizedUrl = response.getAuthorizedUri();
         String[] url = authorizedUrl.split("[?]");
         String endpoint = url[0];
         Map<String, String> params = extractParams(url[1]);
