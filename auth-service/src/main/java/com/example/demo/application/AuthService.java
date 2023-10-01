@@ -1,5 +1,6 @@
 package com.example.demo.application;
 
+import com.example.demo.application.dto.response.RegisterResponse;
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
@@ -12,6 +13,7 @@ import com.example.demo.oauth.OAuthProvider;
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.OAuthUserResponse;
+import com.example.demo.presentation.dto.request.RegisterRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -65,5 +67,9 @@ public class AuthService {
             .filter(provider -> provider.match(providerName))
             .findAny()
             .orElseThrow(() -> new ApiException(ErrorCode.OAUTH_PROVIDER_NOT_FOUND));
+    }
+
+    public RegisterResponse register(RegisterRequest request, Long userId) {
+        return null;
     }
 }

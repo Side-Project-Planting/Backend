@@ -1,5 +1,7 @@
 package com.example.demo.presentation;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -7,10 +9,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.demo.application.AuthService;
+import com.example.demo.application.dto.response.RegisterResponse;
 import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
+import com.example.demo.presentation.dto.request.RegisterRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +33,9 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Test
     @DisplayName("입력받은 Provider를 지원한다면 200번 상태와 해당 Provider의 authorized uri를 반환한다")
@@ -127,5 +136,74 @@ class AuthControllerTest {
                 .content(authCode)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("회원을 등록한다")
+    void register() throws Exception {
+        // given
+        Long userId = 1L;
+        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
+        RegisterResponse registerResponse = new RegisterResponse();
+
+        // stub
+        when(authService.register(request, userId))
+            .thenReturn(registerResponse);
+
+        // when & then
+        mockMvc.perform(post("/auth/register")
+                .content(objectMapper.writeValueAsString(request))
+                .header("X-UserId", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("회원가입 시 profile uri 양식이 잘못되면 예외를 반환한다")
+    void registerFailAboutInvalidProfileUri() throws Exception {
+        // given
+        Long userId = 1L;
+        RegisterRequest request = new RegisterRequest("invalid", "김태태");
+
+        // when & then
+        mockMvc.perform(post("/auth/register")
+                .content(objectMapper.writeValueAsString(request))
+                .header("X-UserId", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("회원가입 시 이름이 공백이면 예외를 반환한다")
+    void registerFailAboutEmptyName() throws Exception {
+        // given
+        Long userId = 1L;
+        RegisterRequest request = new RegisterRequest("https://profileUrl", "");
+
+        // when & then
+        mockMvc.perform(post("/auth/register")
+                .content(objectMapper.writeValueAsString(request))
+                .header("X-UserId", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("회원가입 시 존재하지 않는 userId가 입력되면 예외를 반환한다")
+    void registerFailAboutNotExistUser() throws Exception {
+        // given
+        Long userId = 1L;
+        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
+
+        // stub
+        when(authService.register(any(RegisterRequest.class), anyLong()))
+            .thenThrow(new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(post("/auth/register")
+                .content(objectMapper.writeValueAsString(request))
+                .header("X-UserId", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());
     }
 }
