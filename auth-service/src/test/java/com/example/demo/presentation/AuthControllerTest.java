@@ -45,4 +45,19 @@ class AuthControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.authorizedUri").value("https://answer-uri"));
     }
+
+    @Test
+    @DisplayName("입력받은 Provider를 지원하지 않는다면 404번 예외를 반환한다")
+    void cantGetAuthorizedUriAboutNotSupportedProvider() throws Exception {
+        // given
+        String providerName = "google";
+
+        // stub
+        when(authService.getAuthorizedUri("google"))
+            .thenThrow(new ApiException(ErrorCode.OAUTH_PROVIDER_NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(get(String.format("/oauth/%s/authorized-uri", providerName)))
+            .andExpect(status().isNotFound());
+    }
 }
