@@ -14,6 +14,7 @@ import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
 import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
+import com.example.demo.presentation.dto.request.OAuthLoginRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -74,7 +75,7 @@ class AuthControllerTest {
     void login() throws Exception {
         // given
         String providerName = "google";
-        String authCode = "authcode";
+        OAuthLoginRequest request = new OAuthLoginRequest("authcode");
         OAuthLoginResponse response = OAuthLoginResponse.builder()
             .accessToken("access")
             .refreshToken("refresh")
@@ -85,12 +86,12 @@ class AuthControllerTest {
             .build();
 
         // stub
-        when(authService.login(providerName, authCode))
+        when(authService.login(providerName, request.getAuthCode()))
             .thenReturn(response);
 
         // when & then
         mockMvc.perform(post(String.format("/oauth/%s/login", providerName))
-                .content(authCode)
+                .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.accessToken").exists())

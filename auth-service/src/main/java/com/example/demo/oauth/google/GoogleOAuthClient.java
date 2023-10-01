@@ -6,8 +6,6 @@ import com.example.demo.oauth.OAuthClient;
 import com.example.demo.oauth.OAuthProperties;
 import com.example.demo.application.dto.response.AccessTokenResponse;
 import com.example.demo.application.dto.response.OAuthUserResponse;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -35,16 +33,17 @@ public class GoogleOAuthClient implements OAuthClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.add("client_id", properties.getClientId());
-        map.add("client_secret", properties.getClientSecret());
-        map.add("code", URLDecoder.decode(authCode, StandardCharsets.UTF_8));
-        map.add("grant_type", "authorization_code");
-        map.add("redirect_uri", properties.getRedirectUri());
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client_id", properties.getClientId());
+        params.add("client_secret", properties.getClientSecret());
+        params.add("code", authCode);
+        params.add("redirect_uri", properties.getRedirectUri());
+        params.add("grant_type", "authorization_code");
 
-        HttpEntity<?> entity = new HttpEntity<>(map, headers);
+
+        HttpEntity<?> request = new HttpEntity<>(params, headers);
         ResponseEntity<AccessTokenResponse> response =
-            new RestTemplate().postForEntity(properties.getTokenUri(), entity, AccessTokenResponse.class);
+            new RestTemplate().postForEntity(properties.getTokenUri(), request, AccessTokenResponse.class);
         if (response.getStatusCode().is2xxSuccessful()) {
             return response.getBody();
         }

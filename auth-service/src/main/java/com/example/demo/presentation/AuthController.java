@@ -2,6 +2,8 @@ package com.example.demo.presentation;
 
 import com.example.demo.application.AuthService;
 import com.example.demo.application.dto.response.RegisterResponse;
+import com.example.demo.jwt.TokenInfoResponse;
+import com.example.demo.presentation.dto.request.OAuthLoginRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
 import com.example.demo.presentation.dto.response.ApiResponse;
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -37,8 +40,9 @@ public class AuthController {
     }
 
     @PostMapping("/oauth/{provider}/login")
-    public ApiResponse<OAuthLoginResponse> oauthLogin(@PathVariable String provider, @RequestBody String authCode) {
-        return ApiResponse.ok(authService.login(provider, authCode));
+    public ApiResponse<OAuthLoginResponse> oauthLogin(@PathVariable String provider, @RequestBody
+    OAuthLoginRequest request) {
+        return ApiResponse.ok(authService.login(provider, request.getAuthCode()));
     }
 
     @PostMapping("/auth/register")
