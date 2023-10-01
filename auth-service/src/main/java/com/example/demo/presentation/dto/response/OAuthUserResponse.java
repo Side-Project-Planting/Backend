@@ -3,6 +3,7 @@ package com.example.demo.presentation.dto.response;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +18,13 @@ public class OAuthUserResponse {
 
     @JsonProperty("sub")
     private String idUsingResourceServer;
+
+    @Builder
+    private OAuthUserResponse(String profileUrl, String email, String idUsingResourceServer) {
+        this.profileUrl = profileUrl;
+        this.email = email;
+        this.idUsingResourceServer = idUsingResourceServer;
+    }
 
     public static OAuthMember create(OAuthUserResponse response, OAuthType oAuthType) {
         return OAuthMember.builder()

@@ -1,36 +1,44 @@
 package com.example.demo.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import com.example.demo.domain.AuthMemberRepository;
+import com.example.demo.domain.OAuthMember;
+import com.example.demo.domain.OAuthType;
 import com.example.demo.oauth.google.GoogleOAuthClient;
 import com.example.demo.presentation.dto.response.AccessTokenResponse;
 import com.example.demo.presentation.dto.response.GetAuthorizedUrlResponse;
+import com.example.demo.presentation.dto.response.OAuthLoginResponse;
+import com.example.demo.presentation.dto.response.OAuthUserResponse;
 import java.util.HashMap;
 import java.util.Map;
-import org.assertj.core.api.Assertions;
-import org.hibernate.annotations.Parameter;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
+@Transactional
+@DisplayName("AuthService 통합테스트")
 class AuthServiceTest {
     @Autowired
     AuthService authService;
+
+    @Autowired
+    AuthMemberRepository authMemberRepository;
 
     @MockBean
     GoogleOAuthClient googleOAuthClient;
 
     @Test
-    @DisplayName("google의 Authorized URL을 가져온다")
+    @DisplayName("google의 AuthorizedUrl을 가져온다")
     void getGoogleAuthorizedUrl() {
         //when
         GetAuthorizedUrlResponse response = authService.getAuthorizedUri("google");
@@ -52,20 +60,149 @@ class AuthServiceTest {
     }
 
     @ParameterizedTest
-    @DisplayName("google 이외의 providerName은 지원하지 않는다")
+    @DisplayName("처리할 수 없는 ProviderName으로는 AuthorizedUrl을 가져올 수 없다")
     @ValueSource(strings = {"naver", "kakao", "Google", " ", ""})
-    void notSupportProviderWithoutGoogle(String providerName) {
-        Assertions.assertThatThrownBy(() -> authService.getAuthorizedUri(providerName))
+    void cantGetAuthorizedUrlAboutNotSupportedProviderName(String providerName) {
+        assertThatThrownBy(() -> authService.getAuthorizedUri(providerName))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("매치되지 않는 타입입니다");
     }
 
-    private static Map<String, String> extractParams(String paramsStr) {
+    @Test
+    @DisplayName("기존에 로그인한 적 있는 사용자가 동일한 계정으로 로그인을 할 수 있다")
+    void loginSuccessIfAlreadySaved() {
+        // given
+        String providerName = "google";
+        String authCode = "authcode";
+        String accessToken = "accessToken";
+
+        String email = "hello@naver.com";
+        String profileUrl = "https://imageurl";
+        String idUsingResourceServer = "1";
+
+        OAuthUserResponse oAuthUserResponse = createOAuthUserResponse(email, profileUrl, idUsingResourceServer);
+        OAuthMember member = createOAuthMember(email, profileUrl, idUsingResourceServer);
+        authMemberRepository.save(member);
+
+        // stub
+        when(googleOAuthClient.getAccessToken(anyString()))
+            .thenReturn(new AccessTokenResponse(accessToken));
+        when(googleOAuthClient.getOAuthUserResponse(accessToken))
+            .thenReturn(oAuthUserResponse);
+
+        //when
+        OAuthLoginResponse response = authService.login(providerName, authCode);
+
+        // then
+        assertThat(response.getAccessToken()).isNotBlank();
+        assertThat(response.getRefreshToken()).isNotBlank();
+        assertThat(response.getEmail()).isEqualTo(oAuthUserResponse.getEmail());
+        assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
+        assertThat(response.getGrantType()).isEqualTo("Bearer");
+    }
+
+    @Test
+    @DisplayName("기존에 로그인한 적 없는 사용자는 로그인이 가능하다")
+    void loginSuccessIfFirstVisit() {
+        // given
+        String providerName = "google";
+        String authCode = "authcode";
+        String accessToken = "accessToken";
+        OAuthUserResponse oAuthUserResponse =
+            createOAuthUserResponse("hello@naver.com", "https://imageurl", "1");
+
+        // stub
+        when(googleOAuthClient.getAccessToken(anyString()))
+            .thenReturn(new AccessTokenResponse(accessToken));
+        when(googleOAuthClient.getOAuthUserResponse(accessToken))
+            .thenReturn(oAuthUserResponse);
+
+        //when
+        OAuthLoginResponse response = authService.login(providerName, authCode);
+
+        // then
+        assertThat(response.getAccessToken()).isNotBlank();
+        assertThat(response.getRefreshToken()).isNotBlank();
+        assertThat(response.getEmail()).isEqualTo(oAuthUserResponse.getEmail());
+        assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
+        assertThat(response.getGrantType()).isEqualTo("Bearer");
+    }
+
+
+    @ParameterizedTest
+    @DisplayName("로그인할 때 지원하지 않는 ProviderName에 대해 예외를 반환한다")
+    @ValueSource(strings = {"naver", "kakao", "Google", " ", ""})
+    void returnExceptionAboutNotSupportedProviderName(String providerName) {
+        // given
+        String authCode = "authcode";
+
+        // when & then
+        assertThatThrownBy(() -> authService.login(providerName, authCode))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("매치되지 않는 타입입니다");
+    }
+
+    @Test
+    @DisplayName("auth code를 통해 권한을 받아올 수 없으면 예외를 반환한다")
+    void returnExceptionAboutInvalidAuthCode() {
+        // given
+        String providerName = "google";
+        String authCode = "authcode";
+
+        // stub
+        when(googleOAuthClient.getAccessToken(anyString()))
+            .thenThrow(new IllegalArgumentException("구글에서 응답을 제대로 받지 못했습니다"));
+
+        //when & then
+        assertThatThrownBy(() -> authService.login(providerName, authCode))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("구글에서 응답을 제대로 받지 못했습니다");
+    }
+
+    @Test
+    @DisplayName("access token을 사용해 UserResponse를 받아오지 못하면 예외를 반환한다")
+    void returnExceptionAboutInvalidAccessToken() {
+        // given
+        String providerName = "google";
+        String authCode = "authcode";
+        String accessToken = "accessToken";
+
+        // stub
+        when(googleOAuthClient.getAccessToken(anyString()))
+            .thenReturn(new AccessTokenResponse(accessToken));
+        when(googleOAuthClient.getOAuthUserResponse(accessToken))
+            .thenThrow(new IllegalArgumentException("구글에서 응답을 제대로 받지 못했습니다"));
+
+        //when & then
+        assertThatThrownBy(() -> authService.login(providerName, authCode))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("구글에서 응답을 제대로 받지 못했습니다");
+    }
+
+
+    private Map<String, String> extractParams(String paramsStr) {
         Map<String, String> params = new HashMap<>();
         for (String each : paramsStr.split("&")) {
             String[] keyAndValue = each.split("=");
             params.put(keyAndValue[0], keyAndValue[1]);
         }
         return params;
+    }
+
+    private OAuthMember createOAuthMember(String email, String profileUrl, String idUsingResourceServer) {
+        return OAuthMember.builder()
+            .oAuthType(OAuthType.GOOGLE)
+            .email(email)
+            .profileUrl(profileUrl)
+            .idUsingResourceServer(idUsingResourceServer)
+            .build();
+    }
+
+    private OAuthUserResponse createOAuthUserResponse(String email, String profileUrl, String idUsingResourceServer) {
+        return OAuthUserResponse.builder()
+            .email(email)
+            .profileUrl(profileUrl)
+            .idUsingResourceServer(idUsingResourceServer)
+            .build();
     }
 }
