@@ -1,19 +1,33 @@
 package com.example.demo.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
+import com.example.demo.oauth.google.GoogleOAuthClient;
+import com.example.demo.presentation.dto.response.AccessTokenResponse;
 import com.example.demo.presentation.dto.response.GetAuthorizedUrlResponse;
 import java.util.HashMap;
 import java.util.Map;
+import org.assertj.core.api.Assertions;
+import org.hibernate.annotations.Parameter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 @SpringBootTest
 class AuthServiceTest {
     @Autowired
     AuthService authService;
+
+    @MockBean
+    GoogleOAuthClient googleOAuthClient;
 
     @Test
     @DisplayName("google의 Authorized URL을 가져온다")
@@ -35,6 +49,15 @@ class AuthServiceTest {
             .containsKey("scope")
             .containsKey("response_type")
             .containsKey("state");
+    }
+
+    @ParameterizedTest
+    @DisplayName("google 이외의 providerName은 지원하지 않는다")
+    @ValueSource(strings = {"naver", "kakao", "Google", " ", ""})
+    void notSupportProviderWithoutGoogle(String providerName) {
+        Assertions.assertThatThrownBy(() -> authService.getAuthorizedUri(providerName))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("매치되지 않는 타입입니다");
     }
 
     private static Map<String, String> extractParams(String paramsStr) {
