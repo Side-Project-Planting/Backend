@@ -2,6 +2,7 @@ package com.example.demo.presentation;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -9,12 +10,14 @@ import com.example.demo.application.AuthService;
 import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.presentation.dto.response.GetAuthorizedUriResponse;
+import com.example.demo.presentation.dto.response.OAuthLoginResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest
@@ -22,9 +25,6 @@ import org.springframework.test.web.servlet.MockMvc;
 class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @MockBean
     private AuthService authService;
@@ -60,5 +60,73 @@ class AuthControllerTest {
         mockMvc.perform(get(String.format("/oauth/%s/authorized-uri", providerName)))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.message").value(ErrorCode.OAUTH_PROVIDER_NOT_FOUND.getMessage()));
+    }
+
+    @Test
+    @DisplayName("로그인에 성공하면 200번 상태와 OAuthLoginResponse를 반환한다")
+    void login() throws Exception {
+        // given
+        String providerName = "google";
+        String authCode = "authcode";
+        OAuthLoginResponse response = OAuthLoginResponse.builder()
+            .accessToken("access")
+            .refreshToken("refresh")
+            .grantType("Bearer")
+            .profileUrl("https://이미지")
+            .email("email@google.com")
+            .old(true)
+            .build();
+
+        // stub
+        when(authService.login(providerName, authCode))
+            .thenReturn(response);
+
+        // when & then
+        mockMvc.perform(post(String.format("/oauth/%s/login", providerName))
+                .content(authCode)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.accessToken").exists())
+            .andExpect(jsonPath("$.data.refreshToken").exists())
+            .andExpect(jsonPath("$.data.grantType").exists())
+            .andExpect(jsonPath("$.data.profileUrl").exists())
+            .andExpect(jsonPath("$.data.email").exists())
+            .andExpect(jsonPath("$.data.old").exists());
+    }
+
+    @Test
+    @DisplayName("액세스 토큰을 받아오는 데 실패하면 로그인이 불가능하다")
+    void loginFailAboutAccessTokenFetchFail() throws Exception {
+        // given
+        String providerName = "google";
+        String authCode = "authcode";
+
+        // stub
+        when(authService.login(providerName, authCode))
+            .thenThrow(new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL));
+
+        // when & then
+        mockMvc.perform(post(String.format("/oauth/%s/login", providerName))
+                .content(authCode)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("유저 정보를 받아오는 데 실패하면 로그인이 불가능하다")
+    void loginFailAboutUserInfoFetchFail() throws Exception {
+        // given
+        String providerName = "google";
+        String authCode = "authcode";
+
+        // stub
+        when(authService.login(providerName, authCode))
+            .thenThrow(new ApiException(ErrorCode.USER_INFO_FETCH_FAIL));
+
+        // when & then
+        mockMvc.perform(post(String.format("/oauth/%s/login", providerName))
+                .content(authCode)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
     }
 }
