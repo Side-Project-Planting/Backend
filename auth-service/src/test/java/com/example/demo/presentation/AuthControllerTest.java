@@ -37,13 +37,13 @@ class AuthControllerTest {
         GetAuthorizedUriResponse response = new GetAuthorizedUriResponse("https://answer-uri");
 
         // stub
-        when(authService.getAuthorizedUri("google"))
+        when(authService.getAuthorizedUri(providerName))
             .thenReturn(response);
 
         // when & then
         mockMvc.perform(get(String.format("/oauth/%s/authorized-uri", providerName)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.authorizedUri").value("https://answer-uri"));
+            .andExpect(jsonPath("$.data.authorizedUri").value("https://answer-uri"));
     }
 
     @Test
@@ -53,11 +53,12 @@ class AuthControllerTest {
         String providerName = "google";
 
         // stub
-        when(authService.getAuthorizedUri("google"))
+        when(authService.getAuthorizedUri(providerName))
             .thenThrow(new ApiException(ErrorCode.OAUTH_PROVIDER_NOT_FOUND));
 
         // when & then
         mockMvc.perform(get(String.format("/oauth/%s/authorized-uri", providerName)))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.message").value(ErrorCode.OAUTH_PROVIDER_NOT_FOUND.getMessage()));
     }
 }

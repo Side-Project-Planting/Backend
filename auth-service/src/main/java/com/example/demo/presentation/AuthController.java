@@ -1,6 +1,7 @@
 package com.example.demo.presentation;
 
 import com.example.demo.application.AuthService;
+import com.example.demo.presentation.dto.response.ApiResponse;
 import com.example.demo.presentation.dto.response.GetAuthorizedUriResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +26,8 @@ public class AuthController {
     }
 
     @GetMapping("/oauth/{provider}/authorized-uri")
-    public ResponseEntity<Object> getAuthorizedUri(@PathVariable String provider) {
-        GetAuthorizedUriResponse response = authService.getAuthorizedUri(provider);
-        return ResponseEntity.ok(response);
+    public ApiResponse<GetAuthorizedUriResponse> getAuthorizedUri(@PathVariable String provider) {
+        return ApiResponse.ok(authService.getAuthorizedUri(provider));
     }
 
     @PostMapping("/oauth/{provider}/login")
