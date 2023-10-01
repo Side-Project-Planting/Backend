@@ -1,7 +1,7 @@
 package com.example.demo.oauth;
 
-import com.example.demo.presentation.dto.response.AccessTokenResponse;
-import com.example.demo.presentation.dto.response.OAuthUserResponse;
+import com.example.demo.application.dto.response.AccessTokenResponse;
+import com.example.demo.application.dto.response.OAuthUserResponse;
 
 public interface OAuthClient {
     OAuthProperties getOAuthProperties();

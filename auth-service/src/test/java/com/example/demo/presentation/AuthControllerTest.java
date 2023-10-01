@@ -9,9 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.demo.application.AuthService;
 import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
-import com.example.demo.presentation.dto.response.GetAuthorizedUriResponse;
-import com.example.demo.presentation.dto.response.OAuthLoginResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
+import com.example.demo.application.dto.response.OAuthLoginResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

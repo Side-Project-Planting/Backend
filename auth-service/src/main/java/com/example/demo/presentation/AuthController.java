@@ -2,8 +2,8 @@ package com.example.demo.presentation;
 
 import com.example.demo.application.AuthService;
 import com.example.demo.presentation.dto.response.ApiResponse;
-import com.example.demo.presentation.dto.response.GetAuthorizedUriResponse;
-import com.example.demo.presentation.dto.response.OAuthLoginResponse;
+import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
+import com.example.demo.application.dto.response.OAuthLoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

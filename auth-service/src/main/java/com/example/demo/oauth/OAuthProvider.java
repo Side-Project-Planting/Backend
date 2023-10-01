@@ -1,8 +1,8 @@
 package com.example.demo.oauth;
 
 import com.example.demo.domain.OAuthType;
-import com.example.demo.presentation.dto.response.AccessTokenResponse;
-import com.example.demo.presentation.dto.response.OAuthUserResponse;
+import com.example.demo.application.dto.response.AccessTokenResponse;
+import com.example.demo.application.dto.response.OAuthUserResponse;
 import java.util.Objects;
 
 public interface OAuthProvider {

@@ -1,4 +1,4 @@
-package com.example.demo.presentation.dto.response;
+package com.example.demo.application.dto.response;
 
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
