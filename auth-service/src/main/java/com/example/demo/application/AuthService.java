@@ -69,7 +69,18 @@ public class AuthService {
             .orElseThrow(() -> new ApiException(ErrorCode.OAUTH_PROVIDER_NOT_FOUND));
     }
 
+    @Transactional
     public RegisterResponse register(RegisterRequest request, Long userId) {
-        return null;
+        // 입력한 값을 DB에 저장하고, Member Service에 요청을 보낸다
+        Optional<OAuthMember> memberOpt = authMemberRepository.findById(userId);
+        if (memberOpt.isEmpty()) {
+            throw new ApiException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        OAuthMember member = memberOpt.get();
+        member.init(request.getProfileUrl());
+
+        // TODO 외부 서버인 Member Service를 호출해서 Member를 생성하는 기능이 추가되어야 합니다
+        return new RegisterResponse(member.getId());
     }
 }

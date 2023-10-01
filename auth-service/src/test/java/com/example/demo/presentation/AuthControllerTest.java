@@ -9,13 +9,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.demo.application.AuthService;
+import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
+import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
 import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
-import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
-import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.presentation.dto.request.RegisterRequest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -144,7 +143,7 @@ class AuthControllerTest {
         // given
         Long userId = 1L;
         RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
-        RegisterResponse registerResponse = new RegisterResponse();
+        RegisterResponse registerResponse = new RegisterResponse(userId);
 
         // stub
         when(authService.register(request, userId))

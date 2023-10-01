@@ -2,9 +2,11 @@ package com.example.demo.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import com.example.demo.application.dto.response.RegisterResponse;
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
@@ -15,8 +17,10 @@ import com.example.demo.application.dto.response.AccessTokenResponse;
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.OAuthUserResponse;
+import com.example.demo.presentation.dto.request.RegisterRequest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -181,6 +185,36 @@ class AuthServiceTest {
             .hasMessageContaining(ErrorCode.USER_INFO_FETCH_FAIL.getMessage());
     }
 
+    @Test
+    @DisplayName("OAuthMember를 등록한다")
+    void registerOAuthMember() {
+        // given
+        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
+        OAuthMember member = OAuthMember.builder()
+            .profileUrl("https://oldUrl")
+            .build();
+        authMemberRepository.save(member);
+
+        // when
+        RegisterResponse response = authService.register(request, member.getId());
+
+        //when & then
+        assertThat(response.getId()).isNotNull();
+        assertThat(member.isOld()).isTrue();
+        assertThat(member.getProfileUrl()).isEqualTo("https://profileUrl");
+    }
+
+    @Test
+    @DisplayName("회원가입 시 userId를 사용해 OAuthMember를 조회할 수 없으면 예외를 반환한다")
+    void registerFailNotFoundUser() {
+        // given
+        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
+
+        // when & then
+        assertThatThrownBy(() -> authService.register(request, 1L))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+    }
 
     private Map<String, String> extractParams(String paramsStr) {
         Map<String, String> params = new HashMap<>();
