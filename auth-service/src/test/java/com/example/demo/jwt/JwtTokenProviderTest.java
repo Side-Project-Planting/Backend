@@ -1,7 +1,10 @@
 package com.example.demo.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.example.demo.exception.ApiException;
+import com.example.demo.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -105,6 +108,21 @@ class JwtTokenProviderTest {
 
         assertThat(accessTokenClaims.getSubject()).isEqualTo(String.valueOf(id));
         assertThat(accessTokenClaims.getExpiration()).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("Token을 파싱한다")
+    void parseToken() {
+        // given
+        LocalDateTime currentTime = LocalDateTime.now();
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(1L, currentTime);
+        String accessToken = tokenInfo.getAccessToken();
+
+        // when
+        TokenInfoResponse response = jwtTokenProvider.parse(accessToken);
+
+        // then
+        assertThat(response.getId()).isEqualTo(1L);
     }
 
     private Date makeExpiresDate(LocalDateTime now, long properties) {

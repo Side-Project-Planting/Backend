@@ -2,6 +2,7 @@ package com.example.demo.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -14,6 +15,7 @@ import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
 import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
+import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.presentation.dto.request.OAuthLoginRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -205,5 +207,55 @@ class AuthControllerTest {
                 .header("X-UserId", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("토큰을 파싱한다")
+    void parseToken() throws Exception {
+        // given
+        Long userId = 1L;
+        String token = "token";
+
+        // stub
+        when(authService.parse(token))
+            .thenReturn(new TokenInfoResponse(userId));
+
+        // when & then
+        mockMvc.perform(get("/auth/parse")
+                .queryParam("token", token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(userId));
+    }
+
+    @Test
+    @DisplayName("Token ID가 유효하지 않으면 토큰 파싱에 실패한다")
+    void parseTokenBecauseOfInvalidTokenId() throws Exception {
+        // given
+        String token = "token";
+
+        // stub
+        when(authService.parse(token))
+            .thenThrow(new ApiException(ErrorCode.TOKEN_ID_INVALID));
+
+        // when & then
+        mockMvc.perform(get("/auth/parse")
+                .queryParam("token", token))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Token의 기간이 만료되었으면 토큰 파싱에 실패한다")
+    void parseTokenBecauseOfDurationOver() throws Exception {
+        // given
+        String token = "token";
+
+        // stub
+        when(authService.parse(token))
+            .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
+
+        // when & then
+        mockMvc.perform(get("/auth/parse")
+                .queryParam("token", token))
+            .andExpect(status().isBadRequest());
     }
 }

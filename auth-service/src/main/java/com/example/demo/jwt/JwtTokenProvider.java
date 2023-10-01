@@ -1,5 +1,11 @@
 package com.example.demo.jwt;
 
+import com.example.demo.exception.ApiException;
+import com.example.demo.exception.ErrorCode;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -17,12 +23,16 @@ public class JwtTokenProvider {
 
     private JwtProperties properties;
     private final Key key;
+    private final JwtParser parser;
 
     @Autowired
     public JwtTokenProvider(JwtProperties properties) {
         this.properties = properties;
         byte[] keyBytes = Decoders.BASE64.decode(properties.getSecret());
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.parser = Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build();
     }
 
     public TokenInfo generateTokenInfo(Long id, LocalDateTime currentDateTime) {
@@ -46,4 +56,16 @@ public class JwtTokenProvider {
             .compact();
     }
 
+    public TokenInfoResponse parse(String token) {
+        try {
+            Jws<Claims> jws = parser.parseClaimsJws(token);
+            Claims body = jws.getBody();
+            long sub = Long.parseLong(body.get("sub", String.class));
+            return new TokenInfoResponse(sub);
+        } catch (NumberFormatException e) {
+            throw new ApiException(ErrorCode.TOKEN_ID_INVALID);
+        } catch (ExpiredJwtException e) {
+            throw new ApiException(ErrorCode.TOKEN_TIMEOVER);
+        }
+    }
 }

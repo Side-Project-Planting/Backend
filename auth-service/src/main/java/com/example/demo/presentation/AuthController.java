@@ -52,4 +52,8 @@ public class AuthController {
             .body(authService.register(request, userId));
     }
 
+    @GetMapping("/auth/parse")
+    public ResponseEntity<TokenInfoResponse> parseToken(@RequestParam String token) {
+        return ResponseEntity.ok().body(authService.parse(token));
+    }
 }

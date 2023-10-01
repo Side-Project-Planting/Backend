@@ -1,5 +1,8 @@
 package com.example.demo.application;
 
+import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
+import com.example.demo.application.dto.response.OAuthLoginResponse;
+import com.example.demo.application.dto.response.OAuthUserResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
@@ -9,10 +12,8 @@ import com.example.demo.exception.ErrorCode;
 import com.example.demo.factory.RandomStringFactory;
 import com.example.demo.jwt.JwtTokenProvider;
 import com.example.demo.jwt.TokenInfo;
+import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.oauth.OAuthProvider;
-import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
-import com.example.demo.application.dto.response.OAuthLoginResponse;
-import com.example.demo.application.dto.response.OAuthUserResponse;
 import com.example.demo.presentation.dto.request.RegisterRequest;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -82,5 +83,9 @@ public class AuthService {
 
         // TODO 외부 서버인 Member Service를 호출해서 Member를 생성하는 기능이 추가되어야 합니다
         return new RegisterResponse(member.getId());
+    }
+
+    public TokenInfoResponse parse(String token) {
+        return jwtTokenProvider.parse(token);
     }
 }

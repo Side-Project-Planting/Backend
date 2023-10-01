@@ -42,7 +42,7 @@ public class OAuthMember {
         this.profileUrl = profileUrl;
         this.isOld = false;
     }
-    
+
     public void init(String profileUrl) {
         this.profileUrl = profileUrl;
         this.isOld = true;
