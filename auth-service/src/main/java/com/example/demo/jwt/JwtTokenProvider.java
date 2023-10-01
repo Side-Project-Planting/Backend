@@ -38,7 +38,7 @@ public class JwtTokenProvider {
             .build();
     }
 
-    private String makeToken(String subject, Long expires, long now) {
+    private String makeToken(String subject, long expires, long now) {
         return Jwts.builder()
             .setSubject(subject)
             .setExpiration(new Date(now + expires * 1000L))

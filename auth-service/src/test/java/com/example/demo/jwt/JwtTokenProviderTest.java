@@ -24,8 +24,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class JwtTokenProviderTest {
     private static final String TEMP_SECRET = "5plDwnuqJyjDbaTJai5nS9tLCA7QwYwnCn2MhW6K8e/ohLrV7QVzR9IUKyrIk" +
         "0f35GOOwIT4dQqfGKzLtV3NzV7qlr+7V6M6u5A4iJTh+YxTrLrQ8WgCmH8W7gKfCnS+R";
-    private static final long ACCESS_TOKEN_EXPIRES = 213111;
-    private static final long REFRESH_TOKEN_EXPIRES = 123123123;
+    private static final long ACCESS_TOKEN_EXPIRES = 1234;
+    private static final long REFRESH_TOKEN_EXPIRES = 123456;
 
     @Mock
     JwtProperties properties;
@@ -59,11 +59,8 @@ class JwtTokenProviderTest {
         TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(id, now);
 
         // then
-        String accessToken = tokenInfo.getAccessToken();
-        String refreshToken = tokenInfo.getRefreshToken();
-
-        assertThat(accessToken).isNotBlank();
-        assertThat(refreshToken).isNotBlank();
+        assertThat(tokenInfo.getAccessToken()).isNotBlank();
+        assertThat(tokenInfo.getRefreshToken()).isNotBlank();
     }
 
     @Test
