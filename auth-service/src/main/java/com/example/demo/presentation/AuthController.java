@@ -5,7 +5,6 @@ import com.example.demo.application.dto.response.RegisterResponse;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.presentation.dto.request.OAuthLoginRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
-import com.example.demo.presentation.dto.response.ApiResponse;
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import jakarta.validation.Valid;
@@ -35,14 +34,14 @@ public class AuthController {
     }
 
     @GetMapping("/oauth/{provider}/authorized-uri")
-    public ApiResponse<GetAuthorizedUriResponse> getAuthorizedUri(@PathVariable String provider) {
-        return ApiResponse.ok(authService.getAuthorizedUri(provider));
+    public ResponseEntity<GetAuthorizedUriResponse> getAuthorizedUri(@PathVariable String provider) {
+        return ResponseEntity.ok(authService.getAuthorizedUri(provider));
     }
 
     @PostMapping("/oauth/{provider}/login")
-    public ApiResponse<OAuthLoginResponse> oauthLogin(@PathVariable String provider, @RequestBody
+    public ResponseEntity<OAuthLoginResponse> oauthLogin(@PathVariable String provider, @RequestBody
     OAuthLoginRequest request) {
-        return ApiResponse.ok(authService.login(provider, request.getAuthCode()));
+        return ResponseEntity.ok(authService.login(provider, request.getAuthCode()));
     }
 
     @PostMapping("/auth/register")

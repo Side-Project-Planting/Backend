@@ -2,7 +2,6 @@ package com.example.demo.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -53,7 +52,7 @@ class AuthControllerTest {
         // when & then
         mockMvc.perform(get(String.format("/oauth/%s/authorized-uri", providerName)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.authorizedUri").value("https://answer-uri"));
+            .andExpect(jsonPath("$.authorizedUri").value("https://answer-uri"));
     }
 
     @Test
@@ -96,12 +95,12 @@ class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.accessToken").exists())
-            .andExpect(jsonPath("$.data.refreshToken").exists())
-            .andExpect(jsonPath("$.data.grantType").exists())
-            .andExpect(jsonPath("$.data.profileUrl").exists())
-            .andExpect(jsonPath("$.data.email").exists())
-            .andExpect(jsonPath("$.data.old").exists());
+            .andExpect(jsonPath("$.accessToken").exists())
+            .andExpect(jsonPath("$.refreshToken").exists())
+            .andExpect(jsonPath("$.grantType").exists())
+            .andExpect(jsonPath("$.profileUrl").exists())
+            .andExpect(jsonPath("$.email").exists())
+            .andExpect(jsonPath("$.old").exists());
     }
 
     @Test
