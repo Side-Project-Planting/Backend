@@ -1,9 +1,10 @@
 package com.example.demo.oauth;
 
-import com.example.demo.domain.OAuthType;
+import java.util.Objects;
+
 import com.example.demo.application.dto.response.AccessTokenResponse;
 import com.example.demo.application.dto.response.OAuthUserResponse;
-import java.util.Objects;
+import com.example.demo.domain.OAuthType;
 
 public interface OAuthProvider {
 
@@ -26,12 +27,12 @@ public interface OAuthProvider {
      */
     default String getAuthorizedUriWithParams(String state) {
         OAuthProperties properties = getOAuthProperties();
-        return properties.getAuthorizedUriEndpoint() + "?" +
-            "client_id=" + properties.getClientId() +
-            "&redirect_uri=" + properties.getRedirectUri() +
-            "&scope=" + String.join(",", properties.getScope()) +
-            "&response_type=" + properties.getResponseType() +
-            "&state=" + state;
+        return properties.getAuthorizedUriEndpoint() + "?"
+            + "client_id=" + properties.getClientId()
+            + "&redirect_uri=" + properties.getRedirectUri()
+            + "&scope=" + String.join(",", properties.getScope())
+            + "&response_type=" + properties.getResponseType()
+            + "&state=" + state;
     }
 
     /**

@@ -1,10 +1,12 @@
 package com.example.demo.oauth.google;
 
-import com.example.demo.oauth.OAuthProperties;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+
+import com.example.demo.oauth.OAuthProperties;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Component
 @ConfigurationProperties(prefix = "oauth.google")

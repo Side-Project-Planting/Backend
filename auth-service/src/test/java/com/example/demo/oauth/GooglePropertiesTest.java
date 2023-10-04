@@ -2,11 +2,12 @@ package com.example.demo.oauth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.demo.oauth.google.GoogleProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import com.example.demo.oauth.google.GoogleProperties;
 
 @SpringBootTest
 @DisplayName("Google Properties 파일이 잘 초기화되었는지 확인하는 테스트")

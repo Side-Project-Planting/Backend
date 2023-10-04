@@ -2,25 +2,12 @@ package com.example.demo.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.example.demo.application.dto.response.RegisterResponse;
-import com.example.demo.domain.AuthMemberRepository;
-import com.example.demo.domain.OAuthMember;
-import com.example.demo.domain.OAuthType;
-import com.example.demo.exception.ApiException;
-import com.example.demo.exception.ErrorCode;
-import com.example.demo.oauth.google.GoogleOAuthClient;
-import com.example.demo.application.dto.response.AccessTokenResponse;
-import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
-import com.example.demo.application.dto.response.OAuthLoginResponse;
-import com.example.demo.application.dto.response.OAuthUserResponse;
-import com.example.demo.presentation.dto.request.RegisterRequest;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,6 +16,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.demo.application.dto.response.AccessTokenResponse;
+import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
+import com.example.demo.application.dto.response.OAuthLoginResponse;
+import com.example.demo.application.dto.response.OAuthUserResponse;
+import com.example.demo.application.dto.response.RegisterResponse;
+import com.example.demo.domain.AuthMemberRepository;
+import com.example.demo.domain.OAuthMember;
+import com.example.demo.domain.OAuthType;
+import com.example.demo.exception.ApiException;
+import com.example.demo.exception.ErrorCode;
+import com.example.demo.oauth.google.GoogleOAuthClient;
+import com.example.demo.presentation.dto.request.RegisterRequest;
+
 
 @SpringBootTest
 @Transactional

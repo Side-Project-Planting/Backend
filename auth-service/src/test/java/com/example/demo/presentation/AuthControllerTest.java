@@ -8,6 +8,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
 import com.example.demo.application.AuthService;
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
@@ -17,14 +25,8 @@ import com.example.demo.exception.ErrorCode;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.presentation.dto.request.OAuthLoginRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest
 @DisplayName("AuthController 슬라이싱 테스트")

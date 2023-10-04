@@ -1,15 +1,7 @@
 package com.example.demo.presentation;
 
-import com.example.demo.application.AuthService;
-import com.example.demo.application.dto.response.RegisterResponse;
-import com.example.demo.jwt.TokenInfoResponse;
-import com.example.demo.presentation.dto.request.OAuthLoginRequest;
-import com.example.demo.presentation.dto.request.RegisterRequest;
-import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
-import com.example.demo.application.dto.response.OAuthLoginResponse;
-import jakarta.validation.Valid;
 import java.net.URI;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +11,17 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.application.AuthService;
+import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
+import com.example.demo.application.dto.response.OAuthLoginResponse;
+import com.example.demo.application.dto.response.RegisterResponse;
+import com.example.demo.jwt.TokenInfoResponse;
+import com.example.demo.presentation.dto.request.OAuthLoginRequest;
+import com.example.demo.presentation.dto.request.RegisterRequest;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,8 +42,8 @@ public class AuthController {
     }
 
     @PostMapping("/oauth/{provider}/login")
-    public ResponseEntity<OAuthLoginResponse> oauthLogin(@PathVariable String provider, @RequestBody
-    OAuthLoginRequest request) {
+    public ResponseEntity<OAuthLoginResponse> oauthLogin(@PathVariable String provider,
+                                                         @RequestBody OAuthLoginRequest request) {
         return ResponseEntity.ok(authService.login(provider, request.getAuthCode()));
     }
 

@@ -1,12 +1,5 @@
 package com.example.demo.oauth.google;
 
-import com.example.demo.exception.ApiException;
-import com.example.demo.exception.ErrorCode;
-import com.example.demo.oauth.OAuthClient;
-import com.example.demo.oauth.OAuthProperties;
-import com.example.demo.application.dto.response.AccessTokenResponse;
-import com.example.demo.application.dto.response.OAuthUserResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -16,6 +9,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
+import com.example.demo.application.dto.response.AccessTokenResponse;
+import com.example.demo.application.dto.response.OAuthUserResponse;
+import com.example.demo.exception.ApiException;
+import com.example.demo.exception.ErrorCode;
+import com.example.demo.oauth.OAuthClient;
+import com.example.demo.oauth.OAuthProperties;
+
+import lombok.RequiredArgsConstructor;
 
 // TODO WebClient로 변경하기
 @Component

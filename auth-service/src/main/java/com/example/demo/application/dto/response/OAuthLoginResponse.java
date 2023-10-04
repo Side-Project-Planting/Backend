@@ -2,6 +2,7 @@ package com.example.demo.application.dto.response;
 
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.jwt.TokenInfo;
+
 import lombok.Builder;
 import lombok.Getter;
 

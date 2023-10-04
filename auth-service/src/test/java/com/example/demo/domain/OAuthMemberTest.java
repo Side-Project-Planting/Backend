@@ -31,6 +31,5 @@ class OAuthMemberTest {
         // then
         assertThat(member.getProfileUrl()).isEqualTo("https://new");
         assertThat(member.isOld()).isTrue();
-
     }
 }

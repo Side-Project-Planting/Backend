@@ -3,6 +3,7 @@ package com.example.demo.factory;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Base64;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -19,5 +20,4 @@ class Random32BitStringStringFactoryTest {
         byte[] decoded = Base64.getUrlDecoder().decode(randomStr);
         assertThat(decoded).hasSize(32);
     }
-
 }

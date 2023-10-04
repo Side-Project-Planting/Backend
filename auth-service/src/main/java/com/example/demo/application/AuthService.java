@@ -1,5 +1,12 @@
 package com.example.demo.application;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.OAuthUserResponse;
@@ -15,12 +22,8 @@ import com.example.demo.jwt.TokenInfo;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.oauth.OAuthProvider;
 import com.example.demo.presentation.dto.request.RegisterRequest;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor

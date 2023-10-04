@@ -3,6 +3,7 @@ package com.example.demo.application.dto.response;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

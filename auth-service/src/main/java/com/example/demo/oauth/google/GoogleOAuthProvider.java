@@ -4,6 +4,7 @@ import com.example.demo.domain.OAuthType;
 import com.example.demo.oauth.OAuthClient;
 import com.example.demo.oauth.OAuthProperties;
 import com.example.demo.oauth.OAuthProvider;
+
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

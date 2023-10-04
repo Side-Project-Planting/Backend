@@ -1,19 +1,13 @@
 package com.example.demo.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.example.demo.exception.ApiException;
-import com.example.demo.exception.ErrorCode;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtParser;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+
 import javax.crypto.SecretKey;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,11 +16,17 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JwtTokenProvider 단위테스트")
 class JwtTokenProviderTest {
-    private static final String TEMP_SECRET = "5plDwnuqJyjDbaTJai5nS9tLCA7QwYwnCn2MhW6K8e/ohLrV7QVzR9IUKyrIk" +
-        "0f35GOOwIT4dQqfGKzLtV3NzV7qlr+7V6M6u5A4iJTh+YxTrLrQ8WgCmH8W7gKfCnS+R";
+    private static final String TEMP_SECRET = "5plDwnuqJyjDbaTJai5nS9tLCA7QwYwnCn2MhW6K8e/ohLrV7QVzR9IUKyrIk"
+        + "0f35GOOwIT4dQqfGKzLtV3NzV7qlr+7V6M6u5A4iJTh+YxTrLrQ8WgCmH8W7gKfCnS+R";
     private static final long ACCESS_TOKEN_EXPIRES = 1234;
     private static final long REFRESH_TOKEN_EXPIRES = 123456;
 
@@ -131,5 +131,4 @@ class JwtTokenProviderTest {
             .toInstant()
             .toEpochMilli() / 1000) * 1000);
     }
-
 }
