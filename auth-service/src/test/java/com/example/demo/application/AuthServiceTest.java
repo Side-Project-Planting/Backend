@@ -6,8 +6,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,7 +29,13 @@ import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
 import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
+import com.example.demo.factory.RandomStringFactory;
+import com.example.demo.jwt.JwtTokenProvider;
+import com.example.demo.oauth.OAuthProperties;
+import com.example.demo.oauth.OAuthProvider;
+import com.example.demo.oauth.OAuthProviderResolver;
 import com.example.demo.oauth.google.GoogleOAuthClient;
+import com.example.demo.oauth.google.GoogleOAuthProvider;
 import com.example.demo.presentation.dto.request.RegisterRequest;
 
 
@@ -35,14 +43,34 @@ import com.example.demo.presentation.dto.request.RegisterRequest;
 @Transactional
 @DisplayName("AuthService 통합테스트")
 class AuthServiceTest {
-    @Autowired
     AuthService authService;
 
     @Autowired
     AuthMemberRepository authMemberRepository;
 
+    @Autowired
+    RandomStringFactory factory;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    OAuthProviderResolver resolver;
+
+    OAuthProvider provider;
+
+    @Autowired
+    OAuthProperties oAuthProperties;
+
     @MockBean
     GoogleOAuthClient googleOAuthClient;
+
+
+    @BeforeEach
+    void setUp() {
+        provider = new GoogleOAuthProvider(oAuthProperties, googleOAuthClient);
+        resolver = new OAuthProviderResolver(List.of(provider));
+        authService = new AuthService(resolver, authMemberRepository, factory, jwtTokenProvider);
+    }
 
     @Test
     @DisplayName("google의 AuthorizedUrl을 가져온다")

@@ -11,9 +11,9 @@ import lombok.RequiredArgsConstructor;
 public class GoogleOAuthProvider implements OAuthProvider {
     private static final OAuthType TYPE = OAuthType.GOOGLE;
 
-    private final GoogleProperties googleProperties;
+    private final OAuthProperties googleProperties;
 
-    private final GoogleOAuthClient client;
+    private final OAuthClient client;
 
     @Override
     public OAuthType getOAuthType() {

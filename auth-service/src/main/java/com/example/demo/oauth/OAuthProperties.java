@@ -5,6 +5,8 @@ public interface OAuthProperties {
 
     String getClientId();
 
+    String getClientSecret();
+
     String getRedirectUri();
 
     String[] getScope();

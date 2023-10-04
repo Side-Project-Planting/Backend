@@ -5,7 +5,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -20,10 +19,9 @@ import com.example.demo.oauth.OAuthProperties;
 import lombok.RequiredArgsConstructor;
 
 // TODO WebClient로 변경하기
-@Component
 @RequiredArgsConstructor
 public class GoogleOAuthClient implements OAuthClient {
-    private final GoogleProperties properties;
+    private final OAuthProperties properties;
 
     @Override
     public OAuthProperties getOAuthProperties() {
