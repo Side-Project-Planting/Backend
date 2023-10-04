@@ -1,7 +1,6 @@
 package com.example.demo.application;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -21,6 +20,7 @@ import com.example.demo.jwt.JwtTokenProvider;
 import com.example.demo.jwt.TokenInfo;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.oauth.OAuthProvider;
+import com.example.demo.oauth.OAuthProviderResolver;
 import com.example.demo.presentation.dto.request.RegisterRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
-    private final List<OAuthProvider> oAuthProviders;
+    private final OAuthProviderResolver oAuthProviderResolver;
     private final AuthMemberRepository authMemberRepository;
     private final RandomStringFactory randomStringFactory;
     private final JwtTokenProvider jwtTokenProvider;
@@ -39,14 +39,14 @@ public class AuthService {
      * 반환된 OAuthProvider은 Authorized URL을 만들어 반환한다.
      */
     public GetAuthorizedUriResponse getAuthorizedUri(String providerName) {
-        OAuthProvider oAuthProvider = findProvider(providerName);
+        OAuthProvider oAuthProvider = oAuthProviderResolver.find(providerName);
         String state = randomStringFactory.create();
         return new GetAuthorizedUriResponse(oAuthProvider.getAuthorizedUriWithParams(state));
     }
 
     @Transactional
     public OAuthLoginResponse login(String providerName, String authCode) {
-        OAuthProvider oAuthProvider = findProvider(providerName);
+        OAuthProvider oAuthProvider = oAuthProviderResolver.find(providerName);
         OAuthUserResponse response = oAuthProvider.getOAuthUserResponse(authCode);
         OAuthMember oAuthMember = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), response);
 
@@ -64,13 +64,6 @@ public class AuthService {
             return authMemberRepository.save(oAuthMember);
         }
         return oAuthMemberOpt.get();
-    }
-
-    private OAuthProvider findProvider(String providerName) {
-        return oAuthProviders.stream()
-            .filter(provider -> provider.match(providerName))
-            .findAny()
-            .orElseThrow(() -> new ApiException(ErrorCode.OAUTH_PROVIDER_NOT_FOUND));
     }
 
     @Transactional
