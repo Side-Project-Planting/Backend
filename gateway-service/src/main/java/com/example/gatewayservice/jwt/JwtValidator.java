@@ -29,6 +29,10 @@ public class JwtValidator {
         return !isTokenExpired(token);
     }
 
+    public String getSubject(String token) {
+        Claims claims = getAllClaimsFromToken(token);
+        return claims.getSubject();
+    }
 
     private boolean isTokenExpired(String token) {
         try {
@@ -39,11 +43,12 @@ public class JwtValidator {
         }
     }
 
+    private Date getExpirationDateFromToken(String token) {
+        return getAllClaimsFromToken(token).getExpiration();
+    }
+
     private Claims getAllClaimsFromToken(String token) {
         return parser.parseClaimsJws(token).getBody();
     }
 
-    private Date getExpirationDateFromToken(String token) {
-        return getAllClaimsFromToken(token).getExpiration();
-    }
 }
