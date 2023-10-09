@@ -10,6 +10,7 @@ import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.OAuthUserResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
+import com.example.demo.application.dto.response.TokenRefreshResponse;
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
@@ -21,6 +22,7 @@ import com.example.demo.jwt.TokenInfo;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.oauth.OAuthProvider;
 import com.example.demo.oauth.OAuthProviderResolver;
+import com.example.demo.presentation.dto.request.TokenRefreshRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -83,5 +85,9 @@ public class AuthService {
 
     public TokenInfoResponse parse(String token) {
         return jwtTokenProvider.parse(token);
+    }
+
+    public TokenRefreshResponse refreshToken(TokenRefreshRequest request) {
+        return null;
     }
 }

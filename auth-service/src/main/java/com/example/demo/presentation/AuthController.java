@@ -16,8 +16,10 @@ import com.example.demo.application.AuthService;
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
+import com.example.demo.application.dto.response.TokenRefreshResponse;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.presentation.dto.request.OAuthLoginRequest;
+import com.example.demo.presentation.dto.request.TokenRefreshRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
 
 import jakarta.validation.Valid;
@@ -57,5 +59,11 @@ public class AuthController {
     @GetMapping("/auth/parse")
     public ResponseEntity<TokenInfoResponse> parseToken(@RequestParam String token) {
         return ResponseEntity.ok().body(authService.parse(token));
+    }
+
+    // TODO 테스트 작성하기
+    @PostMapping("/auth/refresh-token")
+    public ResponseEntity<TokenRefreshResponse> refreshToken(@RequestBody TokenRefreshRequest request) {
+        return ResponseEntity.ok().body(authService.refreshToken(request));
     }
 }

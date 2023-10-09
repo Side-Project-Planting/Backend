@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +22,13 @@ import com.example.demo.application.AuthService;
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
+import com.example.demo.application.dto.response.TokenRefreshResponse;
 import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.presentation.dto.request.OAuthLoginRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
-
+import com.example.demo.presentation.dto.request.TokenRefreshRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest
@@ -258,5 +261,65 @@ class AuthControllerTest {
         mockMvc.perform(get("/auth/parse")
                 .queryParam("token", token))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("유효한 Refresh Token을 사용해 Access Token을 재발급받는다")
+    void refreshToken() throws Exception {
+        // given
+        String token = makeToken();
+        TokenRefreshRequest request = new TokenRefreshRequest(token);
+        String createdToken = makeToken();
+
+        // stub
+        when(authService.refreshToken(any(TokenRefreshRequest.class)))
+            .thenReturn(new TokenRefreshResponse(createdToken));
+
+        // when & then
+        mockMvc.perform(post("/auth/refresh-token")
+                .content(objectMapper.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").value(createdToken));
+    }
+
+    @Test
+    @DisplayName("만료된 Refresh Token으로는 Access Token을 재발급받을 수 없다")
+    void cantRefreshTokenBecauseOfExpired() throws Exception {
+        // given
+        String token = makeToken();
+        TokenRefreshRequest request = new TokenRefreshRequest(token);
+
+        // stub
+        when(authService.refreshToken(any(TokenRefreshRequest.class)))
+            .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
+
+        // when & then
+        mockMvc.perform(post("/auth/refresh-token")
+                .content(objectMapper.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("잘못된 Refresh Token으로 Access Token을 재발급받을 수 없다")
+    void cantRefreshTokenBecauseOfInvalid() throws Exception {
+        // given
+        String token = makeToken();
+        TokenRefreshRequest request = new TokenRefreshRequest(token);
+
+        // stub
+        when(authService.refreshToken(any(TokenRefreshRequest.class)))
+            .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
+
+        // when & then
+        mockMvc.perform(post("/auth/refresh-token")
+                .content(objectMapper.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    private String makeToken() {
+        return UUID.randomUUID().toString();
     }
 }
