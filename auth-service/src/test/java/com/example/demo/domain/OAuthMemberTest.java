@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("OAuthMember 테스트")
 class OAuthMemberTest {
@@ -43,5 +45,42 @@ class OAuthMemberTest {
         member.changeRefreshToken("리프레쉬토큰");
 
         assertThat(member.getRefreshToken()).isEqualTo("리프레쉬토큰");
+    }
+
+    @Test
+    @DisplayName("입력받은 Refresh Token이 Member의 Refresh Token과 일치한다")
+    void sameRefreshToken() {
+        // given
+        OAuthMember member = OAuthMember.builder()
+            .refreshToken("초기값")
+            .build();
+
+        // when & then
+        assertThat(member.isRefreshTokenMatching("초기값")).isTrue();
+    }
+
+    @ParameterizedTest
+    @DisplayName("입력받은 Refresh Token이 Member의 Refresh Token과 일치하지 않는다")
+    @ValueSource(strings = {"다른값", ""})
+    void notSameRefreshToken(String token) {
+        // given
+        OAuthMember member = OAuthMember.builder()
+            .refreshToken("초기값")
+            .build();
+
+        // when & then
+        assertThat(member.isRefreshTokenMatching(token)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Member의 Refresh Token를 비교할 때 null이 입력되면 false를 반환한다")
+    void notSameRefreshTokenIfInputIsNull() {
+        // given
+        OAuthMember member = OAuthMember.builder()
+            .refreshToken("초기값")
+            .build();
+
+        // when & then
+        assertThat(member.isRefreshTokenMatching(null)).isFalse();
     }
 }
