@@ -105,7 +105,7 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.grantType").exists())
             .andExpect(jsonPath("$.profileUrl").exists())
             .andExpect(jsonPath("$.email").exists())
-            .andExpect(jsonPath("$.old").exists());
+            .andExpect(jsonPath("$.registered").exists());
     }
 
     @Test

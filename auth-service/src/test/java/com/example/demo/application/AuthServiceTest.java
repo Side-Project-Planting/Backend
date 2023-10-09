@@ -134,6 +134,8 @@ class AuthServiceTest {
         assertThat(response.getEmail()).isEqualTo(oAuthUserResponse.getEmail());
         assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
         assertThat(response.getGrantType()).isEqualTo("Bearer");
+
+        assertThat(member.getRefreshToken()).isNotBlank();
     }
 
     @Test

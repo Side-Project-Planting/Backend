@@ -22,9 +22,8 @@ import com.example.demo.jwt.TokenInfo;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.oauth.OAuthProvider;
 import com.example.demo.oauth.OAuthProviderResolver;
-import com.example.demo.presentation.dto.request.TokenRefreshRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
-
+import com.example.demo.presentation.dto.request.TokenRefreshRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -53,7 +52,7 @@ public class AuthService {
         OAuthMember oAuthMember = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), response);
 
         TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(oAuthMember.getId(), LocalDateTime.now());
-
+        oAuthMember.changeRefreshToken(tokenInfo.getRefreshToken());
         return OAuthLoginResponse.create(oAuthMember, tokenInfo);
     }
 

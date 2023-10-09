@@ -32,19 +32,27 @@ public class OAuthMember {
 
     private String profileUrl;
 
+    private String refreshToken;
+
     private boolean registered;
 
     @Builder
-    private OAuthMember(String idUsingResourceServer, OAuthType oAuthType, String email, String profileUrl) {
+    private OAuthMember(String idUsingResourceServer, OAuthType oAuthType, String email, String profileUrl,
+                        String refreshToken) {
         this.idUsingResourceServer = idUsingResourceServer;
         this.type = oAuthType;
         this.email = email;
         this.profileUrl = profileUrl;
+        this.refreshToken = refreshToken;
         this.registered = false;
     }
 
     public void init(String profileUrl) {
         this.profileUrl = profileUrl;
         this.registered = true;
+    }
+
+    public void changeRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 }

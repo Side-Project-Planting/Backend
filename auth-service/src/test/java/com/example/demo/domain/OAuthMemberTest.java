@@ -32,4 +32,16 @@ class OAuthMemberTest {
         assertThat(member.getProfileUrl()).isEqualTo("https://new");
         assertThat(member.isRegistered()).isTrue();
     }
+
+    @Test
+    @DisplayName("Refresh Token을 갱신한다")
+    void changeRefreshToken() {
+        OAuthMember member = OAuthMember.builder()
+            .refreshToken("초기값")
+            .build();
+
+        member.changeRefreshToken("리프레쉬토큰");
+
+        assertThat(member.getRefreshToken()).isEqualTo("리프레쉬토큰");
+    }
 }

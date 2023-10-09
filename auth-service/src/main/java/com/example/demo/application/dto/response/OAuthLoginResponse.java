@@ -2,7 +2,6 @@ package com.example.demo.application.dto.response;
 
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.jwt.TokenInfo;
-
 import lombok.Builder;
 import lombok.Getter;
 
@@ -29,7 +28,7 @@ public class OAuthLoginResponse {
     public static OAuthLoginResponse create(OAuthMember oAuthMember, TokenInfo tokenInfo) {
         return OAuthLoginResponse.builder()
             .accessToken(tokenInfo.getAccessToken())
-            .refreshToken(tokenInfo.getRefreshToken())
+            .refreshToken(oAuthMember.getRefreshToken())
             .grantType(tokenInfo.getGrantType())
             .profileUrl(oAuthMember.getProfileUrl())
             .email(oAuthMember.getEmail())
