@@ -86,7 +86,25 @@ public class AuthService {
         return jwtTokenProvider.parse(token);
     }
 
+    @Transactional
     public TokenRefreshResponse refreshToken(TokenRefreshRequest request, Long userId) {
-        return null;
+        Optional<OAuthMember> memberOpt = authMemberRepository.findById(userId);
+        if (memberOpt.isEmpty()) {
+            throw new ApiException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        OAuthMember member = memberOpt.get();
+        if (!member.isRefreshTokenMatching(request.getRefreshToken())) {
+            throw new ApiException(ErrorCode.REFRESH_TOKEN_INVALID);
+        }
+
+        if (jwtTokenProvider.isTokenExpired(member.getRefreshToken())) {
+            throw new ApiException(ErrorCode.TOKEN_TIMEOVER);
+        }
+
+        TokenInfo generatedTokenInfo = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now());
+
+        member.changeRefreshToken(generatedTokenInfo.getRefreshToken());
+        return new TokenRefreshResponse(generatedTokenInfo.getAccessToken());
     }
 }

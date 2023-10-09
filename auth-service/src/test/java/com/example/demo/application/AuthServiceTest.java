@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.OAuthUserResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
+import com.example.demo.application.dto.response.TokenRefreshResponse;
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
@@ -31,12 +33,14 @@ import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.factory.RandomStringFactory;
 import com.example.demo.jwt.JwtTokenProvider;
+import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.oauth.OAuthProperties;
 import com.example.demo.oauth.OAuthProvider;
 import com.example.demo.oauth.OAuthProviderResolver;
 import com.example.demo.oauth.google.GoogleOAuthClient;
 import com.example.demo.oauth.google.GoogleOAuthProvider;
 import com.example.demo.presentation.dto.request.RegisterRequest;
+import com.example.demo.presentation.dto.request.TokenRefreshRequest;
 
 
 @SpringBootTest
@@ -245,6 +249,83 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.register(request, 1L))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("refresh token으로 access token을 재발급한다")
+    void refreshToken() {
+        // given
+        OAuthMember member = OAuthMember.builder()
+            .build();
+        authMemberRepository.save(member);
+
+        String refreshToken = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now()).getRefreshToken();
+        member.changeRefreshToken(refreshToken);
+        TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
+        Long memberId = member.getId();
+
+        // when
+        TokenRefreshResponse response = authService.refreshToken(request, memberId);
+
+        // then
+        assertThat(response.getAccessToken()).isNotBlank();
+
+        TokenInfoResponse parsedToken = jwtTokenProvider.parse(response.getAccessToken());
+        assertThat(parsedToken.getId()).isEqualTo(memberId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 사용자가 refresh token 발급 요청을 하면 예외를 반환한다")
+    void requestRefreshTokenIfNotExistsUser() {
+        // given
+        Long memberId = 1L;
+        String refreshToken = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now()).getRefreshToken();
+        TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
+
+        // when & then
+        assertThatThrownBy(() -> authService.refreshToken(request, memberId))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("입력받은 RefreshToken이 기존에 발급한 Refresh Token과 일치하지 않으면 예외를 반환한다")
+    void refreshTokenNotEqualPrevValue() {
+        // given
+        OAuthMember member = OAuthMember.builder()
+            .refreshToken("기존 RefreshToken")
+            .build();
+        authMemberRepository.save(member);
+
+        Long memberId = member.getId();
+        String refreshToken = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now()).getRefreshToken();
+        TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
+
+
+        // when & then
+        assertThatThrownBy(() -> authService.refreshToken(request, memberId))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.REFRESH_TOKEN_INVALID.getMessage());
+    }
+
+    @Test
+    @DisplayName("Refresh Token의 기한이 지났으면 예외를 반환한다")
+    void refreshTokenExpired() {
+        // given
+        OAuthMember member = OAuthMember.builder()
+            .build();
+        authMemberRepository.save(member);
+        Long memberId = member.getId();
+        String refreshToken = jwtTokenProvider.generateTokenInfo(memberId,
+            LocalDateTime.of(1900,1,1,1,1))
+            .getRefreshToken();
+        member.changeRefreshToken(refreshToken);
+        TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
+
+        // when & then
+        assertThatThrownBy(() -> authService.refreshToken(request, memberId))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TOKEN_TIMEOVER.getMessage());
     }
 
     private Map<String, String> extractParams(String paramsStr) {
