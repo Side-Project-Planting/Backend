@@ -25,7 +25,6 @@ import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.OAuthUserResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
-import com.example.demo.application.dto.response.TokenRefreshResponse;
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
@@ -33,6 +32,7 @@ import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.factory.RandomStringFactory;
 import com.example.demo.jwt.JwtTokenProvider;
+import com.example.demo.jwt.TokenInfo;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.oauth.OAuthProperties;
 import com.example.demo.oauth.OAuthProvider;
@@ -265,10 +265,11 @@ class AuthServiceTest {
         Long memberId = member.getId();
 
         // when
-        TokenRefreshResponse response = authService.refreshToken(request, memberId);
+        TokenInfo response = authService.refreshToken(request, memberId);
 
         // then
         assertThat(response.getAccessToken()).isNotBlank();
+        assertThat(response.getRefreshToken()).isNotBlank();
 
         TokenInfoResponse parsedToken = jwtTokenProvider.parse(response.getAccessToken());
         assertThat(parsedToken.getId()).isEqualTo(memberId);

@@ -22,9 +22,9 @@ import com.example.demo.application.AuthService;
 import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
-import com.example.demo.application.dto.response.TokenRefreshResponse;
 import com.example.demo.exception.ApiException;
 import com.example.demo.exception.ErrorCode;
+import com.example.demo.jwt.TokenInfo;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.presentation.dto.request.OAuthLoginRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
@@ -269,11 +269,16 @@ class AuthControllerTest {
         // given
         String token = makeToken();
         TokenRefreshRequest request = new TokenRefreshRequest(token);
-        String createdToken = makeToken();
+        String createdAccessToken = makeToken();
+        String createdRefreshToken = makeToken();
 
         // stub
         when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
-            .thenReturn(new TokenRefreshResponse(createdToken));
+            .thenReturn(TokenInfo.builder()
+                .accessToken(createdAccessToken)
+                .refreshToken(createdRefreshToken)
+                .grantType("Bearer")
+                    .build());
 
         // when & then
         mockMvc.perform(post("/auth/refresh-token")
@@ -281,7 +286,11 @@ class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.accessToken").value(createdToken));
+            .andExpect(jsonPath("$.accessToken").value(createdAccessToken))
+            .andExpect(jsonPath("$.refreshToken").value(createdRefreshToken))
+            .andExpect(jsonPath("$.grantType").value("Bearer"));
+
+
     }
 
     @Test

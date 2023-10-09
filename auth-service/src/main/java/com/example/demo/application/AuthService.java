@@ -10,7 +10,6 @@ import com.example.demo.application.dto.response.GetAuthorizedUriResponse;
 import com.example.demo.application.dto.response.OAuthLoginResponse;
 import com.example.demo.application.dto.response.OAuthUserResponse;
 import com.example.demo.application.dto.response.RegisterResponse;
-import com.example.demo.application.dto.response.TokenRefreshResponse;
 import com.example.demo.domain.AuthMemberRepository;
 import com.example.demo.domain.OAuthMember;
 import com.example.demo.domain.OAuthType;
@@ -87,7 +86,7 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenRefreshResponse refreshToken(TokenRefreshRequest request, Long userId) {
+    public TokenInfo refreshToken(TokenRefreshRequest request, Long userId) {
         Optional<OAuthMember> memberOpt = authMemberRepository.findById(userId);
         if (memberOpt.isEmpty()) {
             throw new ApiException(ErrorCode.USER_NOT_FOUND);
@@ -105,6 +104,6 @@ public class AuthService {
         TokenInfo generatedTokenInfo = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now());
 
         member.changeRefreshToken(generatedTokenInfo.getRefreshToken());
-        return new TokenRefreshResponse(generatedTokenInfo.getAccessToken());
+        return generatedTokenInfo;
     }
 }
