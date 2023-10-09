@@ -14,7 +14,7 @@ class OAuthMemberTest {
         OAuthMember member = OAuthMember.builder().build();
 
         // when & then
-        assertThat(member.isOld()).isFalse();
+        assertThat(member.isRegistered()).isFalse();
     }
 
     @Test
@@ -30,6 +30,6 @@ class OAuthMemberTest {
 
         // then
         assertThat(member.getProfileUrl()).isEqualTo("https://new");
-        assertThat(member.isOld()).isTrue();
+        assertThat(member.isRegistered()).isTrue();
     }
 }

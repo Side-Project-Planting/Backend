@@ -13,17 +13,17 @@ public class OAuthLoginResponse {
     private String grantType;
     private String profileUrl;
     private String email;
-    private boolean old;
+    private boolean registered;
 
     @Builder
     private OAuthLoginResponse(String accessToken, String refreshToken, String grantType,
-                               String profileUrl, String email, boolean old) {
+                               String profileUrl, String email, boolean registered) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.grantType = grantType;
         this.profileUrl = profileUrl;
         this.email = email;
-        this.old = old;
+        this.registered = registered;
     }
 
     public static OAuthLoginResponse create(OAuthMember oAuthMember, TokenInfo tokenInfo) {
@@ -33,7 +33,7 @@ public class OAuthLoginResponse {
             .grantType(tokenInfo.getGrantType())
             .profileUrl(oAuthMember.getProfileUrl())
             .email(oAuthMember.getEmail())
-            .old(oAuthMember.isOld())
+            .registered(oAuthMember.isRegistered())
             .build();
     }
 }

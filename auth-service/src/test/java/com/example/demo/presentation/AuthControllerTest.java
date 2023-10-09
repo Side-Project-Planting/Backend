@@ -88,7 +88,7 @@ class AuthControllerTest {
             .grantType("Bearer")
             .profileUrl("https://이미지")
             .email("email@google.com")
-            .old(true)
+            .registered(true)
             .build();
 
         // stub

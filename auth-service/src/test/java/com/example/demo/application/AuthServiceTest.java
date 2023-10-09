@@ -229,7 +229,7 @@ class AuthServiceTest {
 
         //when & then
         assertThat(response.getId()).isNotNull();
-        assertThat(member.isOld()).isTrue();
+        assertThat(member.isRegistered()).isTrue();
         assertThat(member.getProfileUrl()).isEqualTo("https://profileUrl");
     }
 

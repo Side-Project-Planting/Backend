@@ -32,7 +32,7 @@ public class OAuthMember {
 
     private String profileUrl;
 
-    private boolean isOld;
+    private boolean registered;
 
     @Builder
     private OAuthMember(String idUsingResourceServer, OAuthType oAuthType, String email, String profileUrl) {
@@ -40,11 +40,11 @@ public class OAuthMember {
         this.type = oAuthType;
         this.email = email;
         this.profileUrl = profileUrl;
-        this.isOld = false;
+        this.registered = false;
     }
 
     public void init(String profileUrl) {
         this.profileUrl = profileUrl;
-        this.isOld = true;
+        this.registered = true;
     }
 }
