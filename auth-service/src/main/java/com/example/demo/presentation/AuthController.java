@@ -19,9 +19,8 @@ import com.example.demo.application.dto.response.RegisterResponse;
 import com.example.demo.application.dto.response.TokenRefreshResponse;
 import com.example.demo.jwt.TokenInfoResponse;
 import com.example.demo.presentation.dto.request.OAuthLoginRequest;
-import com.example.demo.presentation.dto.request.TokenRefreshRequest;
 import com.example.demo.presentation.dto.request.RegisterRequest;
-
+import com.example.demo.presentation.dto.request.TokenRefreshRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -51,7 +50,7 @@ public class AuthController {
 
     @PostMapping("/auth/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request,
-                                                     @RequestHeader("X-UserId") Long userId) {
+                                                     @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.created(URI.create("/members/" + userId))
             .body(authService.register(request, userId));
     }
@@ -63,7 +62,8 @@ public class AuthController {
 
     // TODO 테스트 작성하기
     @PostMapping("/auth/refresh-token")
-    public ResponseEntity<TokenRefreshResponse> refreshToken(@RequestBody TokenRefreshRequest request) {
-        return ResponseEntity.ok().body(authService.refreshToken(request));
+    public ResponseEntity<TokenRefreshResponse> refreshToken(@RequestBody TokenRefreshRequest request,
+                                                             @RequestHeader("X-User-Id") Long userId) {
+        return ResponseEntity.ok().body(authService.refreshToken(request, userId));
     }
 }

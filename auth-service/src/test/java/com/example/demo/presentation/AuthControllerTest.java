@@ -159,7 +159,7 @@ class AuthControllerTest {
         // when & then
         mockMvc.perform(post("/auth/register")
                 .content(objectMapper.writeValueAsString(request))
-                .header("X-UserId", userId)
+                .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isCreated());
     }
@@ -208,7 +208,7 @@ class AuthControllerTest {
         // when & then
         mockMvc.perform(post("/auth/register")
                 .content(objectMapper.writeValueAsString(request))
-                .header("X-UserId", userId)
+                .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
     }
@@ -272,11 +272,12 @@ class AuthControllerTest {
         String createdToken = makeToken();
 
         // stub
-        when(authService.refreshToken(any(TokenRefreshRequest.class)))
+        when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
             .thenReturn(new TokenRefreshResponse(createdToken));
 
         // when & then
         mockMvc.perform(post("/auth/refresh-token")
+                .header("X-User-Id", 1L)
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -291,7 +292,7 @@ class AuthControllerTest {
         TokenRefreshRequest request = new TokenRefreshRequest(token);
 
         // stub
-        when(authService.refreshToken(any(TokenRefreshRequest.class)))
+        when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
             .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
 
         // when & then
@@ -309,7 +310,7 @@ class AuthControllerTest {
         TokenRefreshRequest request = new TokenRefreshRequest(token);
 
         // stub
-        when(authService.refreshToken(any(TokenRefreshRequest.class)))
+        when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
             .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
 
         // when & then

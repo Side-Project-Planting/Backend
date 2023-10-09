@@ -86,7 +86,7 @@ public class AuthService {
         return jwtTokenProvider.parse(token);
     }
 
-    public TokenRefreshResponse refreshToken(TokenRefreshRequest request) {
+    public TokenRefreshResponse refreshToken(TokenRefreshRequest request, Long userId) {
         return null;
     }
 }
