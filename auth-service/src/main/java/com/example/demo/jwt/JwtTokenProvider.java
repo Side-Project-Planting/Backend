@@ -71,4 +71,21 @@ public class JwtTokenProvider {
             throw new ApiException(ErrorCode.TOKEN_TIMEOVER);
         }
     }
+
+    public boolean isTokenExpired(String token) {
+        try {
+            getExpirationDateFromToken(token);
+            return false;
+        } catch (ExpiredJwtException e) {
+            return true;
+        }
+    }
+
+    private Date getExpirationDateFromToken(String token) {
+        return getAllClaimsFromToken(token).getExpiration();
+    }
+
+    private Claims getAllClaimsFromToken(String token) {
+        return parser.parseClaimsJws(token).getBody();
+    }
 }

@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
@@ -124,6 +125,34 @@ class JwtTokenProviderTest {
         // then
         assertThat(response.getId()).isEqualTo(1L);
     }
+
+    @Test
+    @DisplayName("토큰이 기한이 만료되지 않으면 true를 반환한다")
+    void validateToken() {
+        // given
+        LocalDateTime expired = LocalDateTime.of(3099, 1, 1, 0, 0);
+        String token = makeToken(1L, expired);
+
+        // when & then
+        assertThat(jwtTokenProvider.isTokenExpired(token)).isFalse();
+    }
+
+    @Test
+    @DisplayName("토큰이 기한이 만료되었으면 false를 반환한다")
+    void validateExpiredToken() {
+        // given
+        LocalDateTime expired = LocalDateTime.of(1999, 1, 1, 0, 0);
+        String token = makeToken(1L, expired);
+
+        // when & then
+        assertThat(jwtTokenProvider.isTokenExpired(token)).isTrue();
+    }
+
+    private String makeToken(Long id, LocalDateTime expiredDateTime) {
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(id, expiredDateTime);
+        return tokenInfo.getAccessToken();
+    }
+
 
     private Date makeExpiresDate(LocalDateTime now, long properties) {
         return new Date((now.plusSeconds(properties)
