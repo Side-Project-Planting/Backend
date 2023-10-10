@@ -1,5 +1,5 @@
 ### Custom ###
-/**/application-local.yml
+application-local.yml
 
 .gradle
 gradle
