@@ -1,4 +1,4 @@
-package com.example.planservice.domain.memberofteam;
+package com.example.planservice.domain.memberofplan;
 
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.member.Member;
@@ -13,10 +13,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity
-public class MemberOfTeam extends BaseEntity {
+public class MemberOfPlan extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "member_of_team_id")
+    @Column(name = "member_of_plan_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
