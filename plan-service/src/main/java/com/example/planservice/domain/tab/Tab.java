@@ -26,5 +26,5 @@ public class Tab extends BaseEntity {
 
     private String name;
 
-    private int order;
+    private int sequence;
 }
