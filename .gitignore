@@ -2,7 +2,6 @@
 application-local.yml
 
 .gradle
-gradle
 !gradle/wrapper/gradle-wrapper.jar
 !**/**/build/
 
