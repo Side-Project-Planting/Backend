@@ -1,11 +1,14 @@
 package com.example.planservice.presentation;
 
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -13,7 +16,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.TabService;
+import com.example.planservice.exception.ApiException;
+import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest
@@ -45,4 +51,27 @@ class TabControllerTest {
             .andExpect(header().exists("Location"))
             .andExpect(redirectedUrlPattern("/tabs/*"));
     }
+
+    // TODO 해당 테스트가 필요할까요? TAB_SIZE_LIMIT Api Exception이 터지면 400번 응답이 나오는지 테스트하는 로직인데
+    //  ErrorCode와 관련해서 테스트가 들어가는게 맞다는 생각이 듭니다.
+    @Test
+    @DisplayName("하나의 프로젝트에 Tab은 최대 5개까지만 생성이 가능하다")
+    void createTabFailSizeOver() throws Exception {
+        // given
+        Long userId = 1L;
+        TabCreateRequest request = TabCreateRequest.builder()
+            .name("탭이름")
+            .build();
+
+        Mockito.when(tabService.create(anyLong(), any(TabCreateRequest.class)))
+            .thenThrow(new ApiException(ErrorCode.TAB_SIZE_LIMIT));
+
+        // when & then
+        mockMvc.perform(post("/tabs")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
 }
