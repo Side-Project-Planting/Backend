@@ -36,7 +36,11 @@ public class TabController {
 
     @GetMapping("/{id}")
     public ResponseEntity<TabRetrieveResponse> retrieve(@PathVariable(name = "id") Long tabId,
-                                                        @RequestHeader("X-User-Id") Long userId) {
+                                                        @RequestHeader(
+                                                            value = "X-User-Id", required = false) Long userId) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok().body(tabService.retrieve(tabId, userId));
     }
 }
