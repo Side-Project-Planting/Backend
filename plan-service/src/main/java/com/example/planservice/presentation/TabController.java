@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.planservice.application.TabService;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -20,7 +21,7 @@ public class TabController {
     private final TabService tabService;
 
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody TabCreateRequest request,
+    public ResponseEntity<Void> create(@Valid @RequestBody TabCreateRequest request,
                                        @RequestHeader("X-User-Id") Long userId) {
         Long createdId = tabService.create(userId, request);
         return ResponseEntity.created(URI.create("/tabs/" + createdId)).build();

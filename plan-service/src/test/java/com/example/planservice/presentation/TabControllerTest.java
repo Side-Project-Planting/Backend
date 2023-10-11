@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -19,7 +21,6 @@ import com.example.planservice.application.TabService;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest
@@ -65,6 +66,40 @@ class TabControllerTest {
 
         Mockito.when(tabService.create(anyLong(), any(TabCreateRequest.class)))
             .thenThrow(new ApiException(ErrorCode.TAB_SIZE_LIMIT));
+
+        // when & then
+        mockMvc.perform(post("/tabs")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @ParameterizedTest
+    @DisplayName("탭의 이름은 공백이 될 수 없다")
+    @ValueSource(strings = {"", " ", "  "})
+    void createTabFailTabNameBlank(String name) throws Exception {
+        // given
+        Long userId = 1L;
+        TabCreateRequest request = TabCreateRequest.builder()
+            .name(name)
+            .build();
+
+        // when & then
+        mockMvc.perform(post("/tabs")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("탭의 이름은 null이 될 수 없다")
+    void createTabFailTabNameNull() throws Exception {
+        // given
+        Long userId = 1L;
+        TabCreateRequest request = TabCreateRequest.builder()
+            .build();
 
         // when & then
         mockMvc.perform(post("/tabs")
