@@ -41,8 +41,10 @@ class TabControllerTest {
     void createTab() throws Exception {
         // given
         Long userId = 1L;
+        Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
             .name("탭이름")
+            .planId(planId)
             .build();
 
         // when & then
@@ -59,8 +61,10 @@ class TabControllerTest {
     @DisplayName("로그인하지 않은 사용자는 Tab을 생성할 수 없다")
     void createtabFailNotLogin() throws Exception {
         // given
+        Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
             .name("탭이름")
+            .planId(planId)
             .build();
 
         // when & then
@@ -77,8 +81,10 @@ class TabControllerTest {
     void createTabFailSizeOver() throws Exception {
         // given
         Long userId = 1L;
+        Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
             .name("탭이름")
+            .planId(planId)
             .build();
 
         when(tabService.create(anyLong(), any(TabCreateRequest.class)))
@@ -98,8 +104,10 @@ class TabControllerTest {
     void createTabFailTabNameBlank(String name) throws Exception {
         // given
         Long userId = 1L;
+        Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
             .name(name)
+            .planId(planId)
             .build();
 
         // when & then
@@ -115,7 +123,26 @@ class TabControllerTest {
     void createTabFailTabNameNull() throws Exception {
         // given
         Long userId = 1L;
+        Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
+            .planId(planId)
+            .build();
+
+        // when & then
+        mockMvc.perform(post("/tabs")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("탭을 등록할 때 Project Id는 필수다")
+    void createTabFailEmptyProjectId() throws Exception {
+        // given
+        Long userId = 1L;
+        TabCreateRequest request = TabCreateRequest.builder()
+            .name("탭이름")
             .build();
 
         // when & then
