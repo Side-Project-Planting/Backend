@@ -2,6 +2,7 @@ package com.example.planservice.presentation;
 
 import java.net.URI;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,7 +26,10 @@ public class TabController {
 
     @PostMapping
     public ResponseEntity<Void> create(@Valid @RequestBody TabCreateRequest request,
-                                       @RequestHeader("X-User-Id") Long userId) {
+                                       @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Long createdId = tabService.create(userId, request);
         return ResponseEntity.created(URI.create("/tabs/" + createdId)).build();
     }
