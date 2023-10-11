@@ -11,7 +11,7 @@ public class TabService {
         return null;
     }
 
-    public TabRetrieveResponse retrieve(Long id) {
+    public TabRetrieveResponse retrieve(Long id, Long userId) {
         return null;
     }
 }

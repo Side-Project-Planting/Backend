@@ -3,6 +3,8 @@ package com.example.planservice.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -10,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,6 +22,7 @@ import com.example.planservice.application.TabService;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
+import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest
@@ -64,7 +66,7 @@ class TabControllerTest {
             .name("탭이름")
             .build();
 
-        Mockito.when(tabService.create(anyLong(), any(TabCreateRequest.class)))
+        when(tabService.create(anyLong(), any(TabCreateRequest.class)))
             .thenThrow(new ApiException(ErrorCode.TAB_SIZE_LIMIT));
 
         // when & then
@@ -109,4 +111,23 @@ class TabControllerTest {
             .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @DisplayName("탭을 조회한다")
+    void retrieveTab() throws Exception {
+        // given
+        Long userId = 1L;
+        Long tabId = 10L;
+        TabRetrieveResponse response = TabRetrieveResponse.builder()
+            .tabId(tabId)
+            .build();
+
+        when(tabService.retrieve(tabId, userId))
+            .thenReturn(response);
+
+        mockMvc.perform(get("/tabs/" + tabId)
+                .header("X-User-Id", userId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.tabId").value(tabId));
+    }
+    
 }
