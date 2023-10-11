@@ -18,6 +18,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.auth.application.dto.response.AccessTokenResponse;
@@ -44,6 +45,7 @@ import com.example.auth.presentation.dto.request.TokenRefreshRequest;
 
 
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 @DisplayName("AuthService 통합테스트")
 class AuthServiceTest {

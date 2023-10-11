@@ -1,0 +1,31 @@
+server:
+  port: 8443
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;
+    username: sa
+    password:
+
+
+oauth:
+  google:
+    client-id: temp
+    client-secret: temp
+    authorized-uri-endpoint: https://accounts.google.com/o/oauth2/auth
+    redirect-uri: http://temp
+    scope:
+      - email
+    response-type: code
+    token-uri: https://www.googleapis.com/oauth2/v4/token
+    user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+
+jwt:
+  secret: temporarySecrettemporarySecrettemporarySecrettemporarySecrettemporarySecrettemporarySecrettemporarySecrettemporarySecret
+  access-token-expires: 1800
+  refresh-token-expires: 1209600
