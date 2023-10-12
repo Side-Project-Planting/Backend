@@ -153,7 +153,7 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        createTab(plan, tabName, 0);
+        createTab(plan, tabName, null);
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), tabName);
 
@@ -171,8 +171,8 @@ class TabServiceTest {
         Member member = createMember();
         createMemberOfPlan(plan, member);
 
-        Tab tab1 = createTab(plan, "이전탭1", 1);
-        Tab tab2 = createTab(plan, "이전탭2", 2);
+        Tab tab2 = createTab(plan, "이전탭2", null);
+        Tab tab1 = createTab(plan, "이전탭1", tab2);
         tabRepository.saveAll(List.of(tab1, tab2));
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), "탭이름");
@@ -184,15 +184,15 @@ class TabServiceTest {
         assertThat(savedId).isNotNull();
 
         Tab savedTab = tabRepository.findById(savedId).get();
-        assertThat(savedTab.getSequence()).isGreaterThan(tab1.getSequence());
-        assertThat(savedTab.getSequence()).isGreaterThan(tab2.getSequence());
+        assertThat(tab2.getNext()).isEqualTo(savedTab);
+        assertThat(savedTab.getNext()).isNull();
     }
 
-    private Tab createTab(Plan plan, String name, Integer sequence) {
+    private Tab createTab(Plan plan, String name, Tab next) {
         Tab tab = Tab.builder()
             .plan(plan)
-            .sequence(sequence)
             .name(name)
+            .next(next)
             .build();
         tabRepository.save(tab);
         return tab;

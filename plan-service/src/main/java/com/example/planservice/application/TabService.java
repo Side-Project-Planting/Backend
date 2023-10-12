@@ -49,20 +49,21 @@ public class TabService {
             throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
         }
 
-        Optional<Integer> maxSequenceOpt = tabsOfPlan.stream()
-            .map(Tab::getSequence)
-            .max(Integer::compareTo);
-
-        int maxSequence = 0;
-        if (maxSequenceOpt.isPresent()) {
-            maxSequence = maxSequenceOpt.get();
-        }
-
         Tab tab = Tab.builder()
             .name(request.getName())
             .plan(plan)
-            .sequence(maxSequence + 1)
             .build();
+
+        // tabsOfPlan에서 가장 오른쪽에 있는 애를 찾는다
+        Optional<Tab> lastOpt = tabsOfPlan.stream()
+            .filter(each -> each.getNext() == null)
+            .findAny();
+
+        if (lastOpt.isPresent()) {
+            Tab last = lastOpt.get();
+            last.connect(tab);
+        }
+
         Tab savedTab = tabRepository.save(tab);
         return savedTab.getId();
     }
