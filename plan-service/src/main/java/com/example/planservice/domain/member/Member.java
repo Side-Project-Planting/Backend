@@ -11,9 +11,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "members")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 @Where(clause = "is_deleted = false")
 public class Member extends BaseEntity {
     @Id
@@ -34,4 +40,14 @@ public class Member extends BaseEntity {
 
     private boolean isDeleted;
 
+    @Builder
+    private Member(String profileImgUri, String name, String email, boolean receiveEmails, Role role,
+                   boolean isDeleted) {
+        this.profileImgUri = profileImgUri;
+        this.name = name;
+        this.email = email;
+        this.receiveEmails = receiveEmails;
+        this.role = role;
+        this.isDeleted = isDeleted;
+    }
 }
