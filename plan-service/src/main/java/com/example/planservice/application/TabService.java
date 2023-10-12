@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,11 +55,7 @@ public class TabService {
             .plan(plan)
             .build();
 
-        // tabsOfPlan에서 가장 오른쪽에 있는 애를 찾는다
-        Optional<Tab> lastOpt = tabsOfPlan.stream()
-            .filter(each -> each.getNext() == null)
-            .findAny();
-
+        Optional<Tab> lastOpt = findLastTab(tabsOfPlan);
         if (lastOpt.isPresent()) {
             Tab last = lastOpt.get();
             last.connect(tab);
@@ -66,6 +63,20 @@ public class TabService {
 
         Tab savedTab = tabRepository.save(tab);
         return savedTab.getId();
+    }
+
+    @NotNull
+    private Optional<Tab> findLastTab(List<Tab> tabsOfPlan) {
+        List<Tab> tabs = tabsOfPlan.stream()
+            .filter(each -> each.getNext() == null)
+            .toList();
+        if (tabs.size() > 1) {
+            throw new ApiException(ErrorCode.SERVER_ERROR);
+        }
+        if (tabs.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(tabs.get(0));
     }
 
     public TabRetrieveResponse retrieve(Long id, Long userId) {

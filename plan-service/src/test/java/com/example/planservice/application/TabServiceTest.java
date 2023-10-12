@@ -124,11 +124,11 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
+        Tab tab4 = createTab(plan, "탭4", null);
+        Tab tab3 = createTab(plan, "탭3", tab4);
+        Tab tab2 = createTab(plan, "탭2", tab3);
+        Tab tab1 = createTab(plan, "탭1", tab2);
 
-        Tab tab1 = Tab.builder().plan(plan).build();
-        Tab tab2 = Tab.builder().plan(plan).build();
-        Tab tab3 = Tab.builder().plan(plan).build();
-        Tab tab4 = Tab.builder().plan(plan).build();
         tabRepository.saveAll(List.of(tab1, tab2, tab3, tab4));
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), "이름");
@@ -186,6 +186,27 @@ class TabServiceTest {
         Tab savedTab = tabRepository.findById(savedId).get();
         assertThat(tab2.getNext()).isEqualTo(savedTab);
         assertThat(savedTab.getNext()).isNull();
+    }
+
+    @Test
+    @DisplayName("플랜에 소속된 탭 중 last가 null인 탭은 한개 이상 존재할 수 없다")
+    @SuppressWarnings("squid:S5778")
+    void createFailLastTabOver1() {
+        // given
+        Plan plan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+        Tab tab2 = createTab(plan, "탭2", null);
+        Tab tab1 = createTab(plan, "탭1", null);
+
+        tabRepository.saveAll(List.of(tab1, tab2));
+
+        TabCreateRequest request = createTabCreateRequest(plan.getId(), "이름");
+
+        // when & then
+        assertThatThrownBy(() -> tabService.create(member.getId(), request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.SERVER_ERROR.getMessage());
     }
 
     private Tab createTab(Plan plan, String name, Tab next) {
