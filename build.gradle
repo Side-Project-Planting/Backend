@@ -19,13 +19,14 @@ checkstyle {
     toolVersion = "10.9"
     configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 }
+bootJar.enabled = false
 
 subprojects {
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
 
-    group = 'com.example'
+    group = 'com.planting'
     version = '0.0.1-SNAPSHOT'
     java {
         sourceCompatibility = '17'
@@ -45,15 +46,6 @@ subprojects {
         mavenCentral()
     }
 
-    // 관리하는 모듈의 공통 dependencies
-    dependencies {
-        implementation 'org.springframework.cloud:spring-cloud-starter-config'
-        implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
-        implementation 'org.springframework.boot:spring-boot-starter-actuator'
-        implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp'
-        testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    }
-
     dependencyManagement {
         imports {
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
@@ -63,7 +55,47 @@ subprojects {
     tasks.named('test') {
         useJUnitPlatform()
     }
+}
 
+
+['gateway-service', 'auth-service', 'eureka-service', 'plan-service'].each {
+    project(it) {
+        dependencies {
+            implementation 'org.springframework.cloud:spring-cloud-starter-config'
+        }
+
+        sourceSets {
+            main {
+                resources {
+                    srcDirs += rootProject.file('resources')
+                }
+            }
+        }
+
+        processResources {
+            filesMatching("**/application.yml") {
+                expand(project: project.name)
+            }
+        }
+    }
+}
+
+['gateway-service', 'auth-service', 'config-service', 'eureka-service', 'plan-service'].each {
+    project(it) {
+        dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter-actuator'
+            implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp'
+            testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        }
+    }
+}
+
+['gateway-service', 'auth-service', 'plan-service'].each {
+    project(it) {
+        dependencies {
+            implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+        }
+    }
 }
 
 bootJar {
