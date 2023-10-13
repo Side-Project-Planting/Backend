@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,38 +32,42 @@ public class TabService {
 
     @Transactional
     public Long create(Long userId, TabCreateRequest request) {
-        Plan plan = planRepository.findById(request.getPlanId())
-            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        try {
+            Plan plan = planRepository.findById(request.getPlanId())
+                .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
 
-        boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), userId);
-        if (!existsInPlan) {
-            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
+            boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), userId);
+            if (!existsInPlan) {
+                throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
+            }
+
+            List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
+            if (tabsOfPlan.size() >= TAB_MAX_SIZE) {
+                throw new ApiException(ErrorCode.TAB_SIZE_LIMIT);
+            }
+
+            boolean isDuplicatedName = tabsOfPlan.stream()
+                .anyMatch(tab -> Objects.equals(tab.getName(), request.getName()));
+            if (isDuplicatedName) {
+                throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
+            }
+
+            Tab tab = Tab.builder()
+                .name(request.getName())
+                .plan(plan)
+                .build();
+
+            Optional<Tab> lastOpt = findLastTab(tabsOfPlan);
+            if (lastOpt.isPresent()) {
+                Tab last = lastOpt.get();
+                last.connect(tab);
+            }
+
+            Tab savedTab = tabRepository.save(tab);
+            return savedTab.getId();
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new ApiException(ErrorCode.REQUEST_CONFLICT);
         }
-
-        List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
-        if (tabsOfPlan.size() >= TAB_MAX_SIZE) {
-            throw new ApiException(ErrorCode.TAB_SIZE_LIMIT);
-        }
-
-        boolean isDuplicatedName = tabsOfPlan.stream()
-            .anyMatch(tab -> Objects.equals(tab.getName(), request.getName()));
-        if (isDuplicatedName) {
-            throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
-        }
-
-        Tab tab = Tab.builder()
-            .name(request.getName())
-            .plan(plan)
-            .build();
-
-        Optional<Tab> lastOpt = findLastTab(tabsOfPlan);
-        if (lastOpt.isPresent()) {
-            Tab last = lastOpt.get();
-            last.connect(tab);
-        }
-
-        Tab savedTab = tabRepository.save(tab);
-        return savedTab.getId();
     }
 
     @NotNull
