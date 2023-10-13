@@ -1,22 +1,64 @@
 version: '3'
+
 services:
   config-service:
     build: ./config-service
     ports:
-      - "8888:8888"
+      - ${CONFIG_SERVICE_PORT}:${CONFIG_SERVICE_PORT}
+    depends_on:
+      - rabbit-mq
+    restart: always
 
   eureka-service:
     build: ./eureka-service
     ports:
-      - "8761:8761"
+      - ${EUREKA_SERVICE_PORT}:${EUREKA_SERVICE_PORT}
+    depends_on:
+      - rabbit-mq
+      - config-service
+    restart: always
 
   gateway-service:
     build: ./gateway-service
     ports:
-      - "8080:8080"
+      - ${GATEWAY_SERVICE_PORT}:${GATEWAY_SERVICE_PORT}
+    depends_on:
+      - rabbit-mq
+      - config-service
+    restart: always
 
-  rabb:
+  auth-service:
+    build: ./auth-service
+    ports:
+      - ${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}
+    depends_on:
+      - mysql
+      - rabbit-mq
+      - config-service
+    restart: always
+
+  plan-service:
+    build: ./plan-service
+    ports:
+      - ${PLAN_SERVICE_PORT}:${PLAN_SERVICE_PORT}
+    depends_on:
+      - mysql
+      - rabbit-mq
+      - config-service
+    restart: always
+
+  rabbit-mq:
     image: rabbitmq:3-management
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - ${RABBITMQ_PORT}:${RABBITMQ_PORT}
+      - ${RABBITMQ_SUB_PORT}:${RABBITMQ_SUB_PORT}
+
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - ${MYSQL_PORT}:${MYSQL_PORT}
