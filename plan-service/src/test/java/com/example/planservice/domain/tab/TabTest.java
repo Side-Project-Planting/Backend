@@ -36,5 +36,4 @@ class TabTest {
 
         assertThat(oldTab.getNext()).isEqualTo(newTab);
     }
-
 }

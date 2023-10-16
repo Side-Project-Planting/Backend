@@ -38,20 +38,24 @@ public class Tab extends BaseEntity {
     @JoinColumn(name = "next_id")
     private Tab next;
 
+    private boolean first;
+
     @Version
     private int version;
 
     @Builder
-    private Tab(Plan plan, String name, Tab next) {
+    private Tab(Plan plan, String name, Tab next, boolean first) {
         this.plan = plan;
         this.name = name;
         this.next = next;
+        this.first = first;
     }
 
     public static Tab create(Plan plan, String name) {
         return Tab.builder()
             .plan(plan)
             .name(name)
+            .first(true)
             .build();
     }
 
@@ -60,5 +64,11 @@ public class Tab extends BaseEntity {
      */
     public void connect(Tab next) {
         this.next = next;
+    }
+
+    // TODO Plan이 하나 생성되면 무조건 투두 탭과 Done 탭을 가져야 함
+    //  사실상 투두 탭 때문에 존재하는 속성인데, 투두탭에 관련한 생성자를 만드는 게 더 바람직할듯
+    public void makeNotFirst() {
+        this.first = false;
     }
 }

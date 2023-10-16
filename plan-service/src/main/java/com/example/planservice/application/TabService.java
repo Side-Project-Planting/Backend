@@ -1,6 +1,9 @@
 package com.example.planservice.application;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -16,6 +19,7 @@ import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
+import com.example.planservice.presentation.dto.request.TabChangeRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +63,7 @@ public class TabService {
 
             Optional<Tab> lastOpt = findLastTab(tabsOfPlan);
             if (lastOpt.isPresent()) {
+                tab.makeNotFirst();
                 Tab last = lastOpt.get();
                 last.connect(tab);
             }
@@ -68,6 +73,54 @@ public class TabService {
         } catch (ObjectOptimisticLockingFailureException e) {
             throw new ApiException(ErrorCode.REQUEST_CONFLICT);
         }
+    }
+
+    @Transactional
+    public List<Long> changeOrder(Long memberId, TabChangeRequest request) {
+        Plan plan = planRepository.findById(request.getPlanId())
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+
+        boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), memberId);
+        if (!existsInPlan) {
+            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
+        }
+
+        List<Tab> tabs = tabRepository.findAllByPlanId(request.getPlanId());
+        Map<Long, Tab> hash = new HashMap<>();
+        for (Tab tab : tabs) {
+            hash.put(tab.getId(), tab);
+        }
+        Tab target = getTab(request.getTargetId(), hash);
+        Tab newPrev = getTab(request.getNewPrevId(), hash);
+        Tab oldPrev = tabs.stream()
+            .filter(tab -> Objects.equals(tab.getNext(), target))
+            .findAny()
+            .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
+        Tab todoTab = tabs.stream()
+            .filter(Tab::isFirst)
+            .findAny()
+            .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
+
+        target.connect(newPrev.getNext());
+        newPrev.connect(target);
+        oldPrev.connect(null);
+
+        List<Long> result = new ArrayList<>();
+        Tab temp = todoTab;
+        while (temp != null) {
+            result.add(temp.getId());
+            temp = temp.getNext();
+        }
+        return result;
+    }
+
+    @NotNull
+    private Tab getTab(Long id, Map<Long, Tab> hash) {
+        Tab target = hash.get(id);
+        if (target == null) {
+            throw new ApiException(ErrorCode.TAB_NOT_FOUND);
+        }
+        return target;
     }
 
     @NotNull
@@ -87,4 +140,6 @@ public class TabService {
     public TabRetrieveResponse retrieve(Long id, Long userId) {
         return null;
     }
+
+
 }
