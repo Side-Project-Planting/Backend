@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.example.planservice.application.TabService;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
+import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -182,5 +183,21 @@ class TabControllerTest {
         mockMvc.perform(get("/tabs/" + tabId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Tab의 순서를 변경한다")
+    void changeTabOrder() throws Exception {
+        // given
+        Long userId = 1L;
+        Long planId = 10L;
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder().build();
+
+        // when & then
+        mockMvc.perform(post("/tabs/change-order")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk());
     }
 }

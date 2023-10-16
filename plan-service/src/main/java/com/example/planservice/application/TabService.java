@@ -19,7 +19,7 @@ import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
-import com.example.planservice.presentation.dto.request.TabChangeRequest;
+import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +76,7 @@ public class TabService {
     }
 
     @Transactional
-    public List<Long> changeOrder(Long memberId, TabChangeRequest request) {
+    public List<Long> changeOrder(Long memberId, TabChangeOrderRequest request) {
         Plan plan = planRepository.findById(request.getPlanId())
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
 

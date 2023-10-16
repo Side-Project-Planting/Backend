@@ -22,7 +22,7 @@ import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
-import com.example.planservice.presentation.dto.request.TabChangeRequest;
+import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 
 @SpringBootTest
@@ -244,7 +244,7 @@ class TabServiceTest {
         Long targetId = tab3.getId();
         Long newPrevId = tab1.getId();
 
-        TabChangeRequest request = TabChangeRequest.builder()
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder()
             .planId(plan.getId())
             .targetId(targetId)
             .newPrevId(newPrevId)
@@ -266,7 +266,7 @@ class TabServiceTest {
     void changeTabOrderFailNotExistPlan() {
         // given
         Long memberId = 1L;
-        TabChangeRequest request = TabChangeRequest.builder()
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder()
             .planId(2L)
             .targetId(3L)
             .newPrevId(4L)
@@ -291,7 +291,7 @@ class TabServiceTest {
 
         Member otherMember = createMember();
 
-        TabChangeRequest request = TabChangeRequest.builder()
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder()
             .planId(plan.getId())
             .targetId(3L)
             .newPrevId(4L)
@@ -318,7 +318,7 @@ class TabServiceTest {
         Member member = createMember();
         createMemberOfPlan(otherPlan, member);
 
-        TabChangeRequest request = TabChangeRequest.builder()
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder()
             .planId(otherPlan.getId())
             .targetId(3L)
             .newPrevId(4L)

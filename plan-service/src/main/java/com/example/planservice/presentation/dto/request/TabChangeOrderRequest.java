@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 @NoArgsConstructor
 @Getter
-public class TabChangeRequest {
+public class TabChangeOrderRequest {
     @NotNull
     Long planId;
 
@@ -19,7 +19,7 @@ public class TabChangeRequest {
     Long newPrevId;
 
     @Builder
-    private TabChangeRequest(@NotNull Long planId, @NotNull Long targetId, @NotNull Long newPrevId) {
+    private TabChangeOrderRequest(@NotNull Long planId, @NotNull Long targetId, @NotNull Long newPrevId) {
         this.planId = planId;
         this.targetId = targetId;
         this.newPrevId = newPrevId;
