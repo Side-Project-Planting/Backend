@@ -1,9 +1,8 @@
 package com.example.planservice.application;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import static com.example.planservice.domain.tab.Tab.TAB_MAX_SIZE;
+
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -16,6 +15,7 @@ import com.example.planservice.domain.memberofplan.repository.MemberOfPlanReposi
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
+import com.example.planservice.domain.tab.TabGroup;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TabService {
-    private static final int TAB_MAX_SIZE = 5;
 
     private final PlanRepository planRepository;
     private final MemberOfPlanRepository memberOfPlanRepository;
@@ -47,7 +46,7 @@ public class TabService {
 
             List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
             if (tabsOfPlan.size() >= TAB_MAX_SIZE) {
-                throw new ApiException(ErrorCode.TAB_SIZE_LIMIT);
+                throw new ApiException(ErrorCode.TAB_SIZE_INVALID);
             }
 
             boolean isDuplicatedName = tabsOfPlan.stream()
@@ -85,42 +84,9 @@ public class TabService {
             throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
         }
 
-        List<Tab> tabs = tabRepository.findAllByPlanId(request.getPlanId());
-        Map<Long, Tab> hash = new HashMap<>();
-        for (Tab tab : tabs) {
-            hash.put(tab.getId(), tab);
-        }
-        Tab target = getTab(request.getTargetId(), hash);
-        Tab newPrev = getTab(request.getNewPrevId(), hash);
-        Tab oldPrev = tabs.stream()
-            .filter(tab -> Objects.equals(tab.getNext(), target))
-            .findAny()
-            .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
-        Tab todoTab = tabs.stream()
-            .filter(Tab::isFirst)
-            .findAny()
-            .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
-
-        target.connect(newPrev.getNext());
-        newPrev.connect(target);
-        oldPrev.connect(null);
-
-        List<Long> result = new ArrayList<>();
-        Tab temp = todoTab;
-        while (temp != null) {
-            result.add(temp.getId());
-            temp = temp.getNext();
-        }
-        return result;
-    }
-
-    @NotNull
-    private Tab getTab(Long id, Map<Long, Tab> hash) {
-        Tab target = hash.get(id);
-        if (target == null) {
-            throw new ApiException(ErrorCode.TAB_NOT_FOUND);
-        }
-        return target;
+        TabGroup tabGroup = new TabGroup(plan, tabRepository.findAllByPlanId(request.getPlanId()));
+        List<Tab> result = tabGroup.changeOrder(request.getTargetId(), request.getNewPrevId());
+        return result.stream().map(Tab::getId).toList();
     }
 
     @NotNull

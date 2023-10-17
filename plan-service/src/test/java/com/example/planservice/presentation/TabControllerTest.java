@@ -89,7 +89,7 @@ class TabControllerTest {
             .build();
 
         when(tabService.create(anyLong(), any(TabCreateRequest.class)))
-            .thenThrow(new ApiException(ErrorCode.TAB_SIZE_LIMIT));
+            .thenThrow(new ApiException(ErrorCode.TAB_SIZE_INVALID));
 
         // when & then
         mockMvc.perform(post("/tabs")

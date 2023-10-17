@@ -135,7 +135,7 @@ class TabServiceTest {
         // when & then
         assertThatThrownBy(() -> tabService.create(member.getId(), request))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.TAB_SIZE_LIMIT.getMessage());
+            .hasMessageContaining(ErrorCode.TAB_SIZE_INVALID.getMessage());
     }
 
     @Test
@@ -304,7 +304,7 @@ class TabServiceTest {
     }
 
     @Test
-    @DisplayName("탭 위치 변경 시 플랜을 기준으로 탭을 찾을 수 없으면 예외를 반환한다")
+    @DisplayName("탭과 플랜이 매핑되지 않으면 예외를 반환한다")
     @SuppressWarnings("squid:S5778")
     void changeTabOrderFailInvalidPlan() {
         // given
@@ -317,17 +317,18 @@ class TabServiceTest {
         Plan otherPlan = createPlan();
         Member member = createMember();
         createMemberOfPlan(otherPlan, member);
+        createTab(otherPlan, "탭1", null);
 
         TabChangeOrderRequest request = TabChangeOrderRequest.builder()
             .planId(otherPlan.getId())
-            .targetId(3L)
-            .newPrevId(4L)
+            .targetId(tab1.getId())
+            .newPrevId(tab3.getId())
             .build();
 
         // when & then
         assertThatThrownBy(() -> tabService.changeOrder(member.getId(), request))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.TAB_NOT_FOUND.getMessage());
+            .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
     }
 
 
