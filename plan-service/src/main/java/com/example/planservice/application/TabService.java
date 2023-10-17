@@ -55,14 +55,10 @@ public class TabService {
                 throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
             }
 
-            Tab tab = Tab.builder()
-                .name(request.getName())
-                .plan(plan)
-                .build();
+            Tab tab = Tab.create(plan, request.getName());
 
             Optional<Tab> lastOpt = findLastTab(tabsOfPlan);
             if (lastOpt.isPresent()) {
-                tab.makeNotFirst();
                 Tab last = lastOpt.get();
                 last.connect(tab);
             }

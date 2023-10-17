@@ -57,6 +57,14 @@ public class Tab extends BaseEntity {
         return Tab.builder()
             .plan(plan)
             .name(name)
+            .first(false)
+            .build();
+    }
+
+    public static Tab createTodoTab(Plan plan) {
+        return Tab.builder()
+            .plan(plan)
+            .name("TODO")
             .first(true)
             .build();
     }
@@ -68,8 +76,6 @@ public class Tab extends BaseEntity {
         this.next = next;
     }
 
-    // TODO Plan이 하나 생성되면 무조건 투두 탭과 Done 탭을 가져야 함
-    //  사실상 투두 탭 때문에 존재하는 속성인데, 투두탭에 관련한 생성자를 만드는 게 더 바람직할듯
     public void makeNotFirst() {
         this.first = false;
     }

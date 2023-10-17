@@ -71,7 +71,7 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab oldTab = createTab(plan, "과거탭", null);
+        Tab oldTab = createTab(plan, "과거탭", null, true);
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), "새로운탭");
 
@@ -145,10 +145,10 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab tab4 = createTab(plan, "탭4", null);
-        Tab tab3 = createTab(plan, "탭3", tab4);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab4 = createTab(plan, "탭4", null, false);
+        Tab tab3 = createTab(plan, "탭3", tab4, false);
+        Tab tab2 = createTab(plan, "탭2", tab3, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
 
         tabRepository.saveAll(List.of(tab1, tab2, tab3, tab4));
 
@@ -174,7 +174,7 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        createTab(plan, tabName, null);
+        createTab(plan, tabName, null,  true);
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), tabName);
 
@@ -192,8 +192,8 @@ class TabServiceTest {
         Member member = createMember();
         createMemberOfPlan(plan, member);
 
-        Tab tab2 = createTab(plan, "이전탭2", null);
-        Tab tab1 = createTab(plan, "이전탭1", tab2);
+        Tab tab2 = createTab(plan, "이전탭2", null, false);
+        Tab tab1 = createTab(plan, "이전탭1", tab2, true);
         tabRepository.saveAll(List.of(tab1, tab2));
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), "탭이름");
@@ -217,8 +217,8 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab tab2 = createTab(plan, "탭2", null);
-        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", null, false);
+        Tab tab1 = createTab(plan, "탭1", null, true);
 
         tabRepository.saveAll(List.of(tab1, tab2));
 
@@ -237,9 +237,9 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab tab3 = createTab(plan, "탭3", null);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab3 = createTab(plan, "탭3", null, false);
+        Tab tab2 = createTab(plan, "탭2", tab3, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
 
         Long targetId = tab3.getId();
         Long newPrevId = tab1.getId();
@@ -285,9 +285,9 @@ class TabServiceTest {
         // given
         Plan plan = createPlan();
 
-        Tab tab3 = createTab(plan, "탭3", null);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab3 = createTab(plan, "탭3", null, false);
+        Tab tab2 = createTab(plan, "탭2", tab3, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
 
         Member otherMember = createMember();
 
@@ -310,14 +310,14 @@ class TabServiceTest {
         // given
         Plan plan = createPlan();
 
-        Tab tab3 = createTab(plan, "탭3", null);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab3 = createTab(plan, "탭3", null, false);
+        Tab tab2 = createTab(plan, "탭2", tab3, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
 
         Plan otherPlan = createPlan();
         Member member = createMember();
         createMemberOfPlan(otherPlan, member);
-        createTab(otherPlan, "탭1", null);
+        createTab(otherPlan, "탭1", null, true);
 
         TabChangeOrderRequest request = TabChangeOrderRequest.builder()
             .planId(otherPlan.getId())
@@ -332,19 +332,17 @@ class TabServiceTest {
     }
 
 
-    private Tab createTab(Plan plan, String name, Tab next) {
+    private Tab createTab(Plan plan, String name, Tab next, boolean isFirst) {
         Tab tab = Tab.builder()
             .plan(plan)
             .name(name)
             .next(next)
-            .first(true)
+            .first(isFirst)
             .build();
         tabRepository.save(tab);
-        if (next != null) {
-            next.makeNotFirst();
-        }
         return tab;
     }
+
 
     @NotNull
     private MemberOfPlan createMemberOfPlan(Plan plan, Member member) {
