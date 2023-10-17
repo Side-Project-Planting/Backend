@@ -44,7 +44,6 @@ public class TabGroup {
         }
     }
 
-
     public List<Tab> changeOrder(long targetId, long newPrevId) {
         if (targetId == newPrevId) {
             throw new RuntimeException("옮기려는 대상의 ID와 옮길 위치 이전에 위치한 탭의 ID는 동일할 수 없습니다");
@@ -55,11 +54,11 @@ public class TabGroup {
         }
 
         Tab newPrev = findById(newPrevId);
-        Tab oldPrev = findPrevById(target);
+        Tab oldPrev = findPrev(target);
 
+        oldPrev.connect(target.getNext());
         target.connect(newPrev.getNext());
         newPrev.connect(target);
-        oldPrev.connect(null);
 
         List<Tab> result = new ArrayList<>();
         Tab temp = first;
@@ -77,7 +76,7 @@ public class TabGroup {
         return hash.get(id);
     }
 
-    private Tab findPrevById(@NotNull Tab target) {
+    private Tab findPrev(@NotNull Tab target) {
         return hash.values().stream()
             .filter(tab -> Objects.equals(tab.getNext(), target))
             .findAny()

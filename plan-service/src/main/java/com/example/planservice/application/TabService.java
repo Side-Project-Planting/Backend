@@ -80,7 +80,8 @@ public class TabService {
             throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
         }
 
-        TabGroup tabGroup = new TabGroup(plan, tabRepository.findAllByPlanId(request.getPlanId()));
+        List<Tab> tabs = tabRepository.findAllByPlanId(request.getPlanId());
+        TabGroup tabGroup = new TabGroup(plan, tabs);
         List<Tab> result = tabGroup.changeOrder(request.getTargetId(), request.getNewPrevId());
         return result.stream().map(Tab::getId).toList();
     }
