@@ -49,6 +49,11 @@ class TabControllerTest {
             .name("탭이름")
             .planId(planId)
             .build();
+        Long createdTabId = 2L;
+
+        // stub
+        when(tabService.create(anyLong(), any(TabCreateRequest.class)))
+            .thenReturn(createdTabId);
 
         // when & then
         mockMvc.perform(post("/tabs")
@@ -56,7 +61,7 @@ class TabControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(header().exists("Location"))
+            .andExpect(header().string("Location", "/tabs/" + createdTabId))
             .andExpect(redirectedUrlPattern("/tabs/*"));
     }
 
