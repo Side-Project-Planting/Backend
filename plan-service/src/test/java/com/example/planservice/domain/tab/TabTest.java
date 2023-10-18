@@ -53,4 +53,18 @@ class TabTest {
 
         assertThat(oldTab.getNext()).isEqualTo(newTab);
     }
+
+    @Test
+    @DisplayName("이름을 변경한다")
+    void changeName() {
+        // given
+        Plan plan = Plan.builder().build();
+        Tab tab = Tab.create(plan, "탭이름");
+
+        // when
+        tab.changeName("이름변경");
+
+        // then
+        assertThat(tab.getName()).isEqualTo("이름변경");
+    }
 }

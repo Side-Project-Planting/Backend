@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -189,7 +190,31 @@ class TabGroupTest {
 
         // when & then
         assertThatThrownBy(() -> tabGroup.findById(otherTab.getId()))
-            .isInstanceOf(ApiException.class);
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+    @Test
+    @DisplayName("이름으로 탭을 찾는다")
+    void findByName() {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan, "탭", null);
+        TabGroup tabGroup = new TabGroup(plan, List.of(tab));
+
+        assertThat(tabGroup.findByName(tab.getName())).isEqualTo(Optional.of(tab));
+    }
+
+    @Test
+    @DisplayName("찾으려는 탭이 없으면 Optional.empty()를 반환한다")
+    void findByNameFailNotFound() {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan, "탭", null);
+        TabGroup tabGroup = new TabGroup(plan, List.of(tab));
+
+        // when & then
+        assertThat(tabGroup.findByName("다른탭")).isEmpty();
     }
 
     @NotNull

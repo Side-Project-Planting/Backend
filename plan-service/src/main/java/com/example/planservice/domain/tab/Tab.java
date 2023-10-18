@@ -1,5 +1,7 @@
 package com.example.planservice.domain.tab;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.plan.Plan;
 import jakarta.persistence.Column;
@@ -77,5 +79,10 @@ public class Tab extends BaseEntity {
 
     public void makeNotFirst() {
         this.first = false;
+    }
+
+    public void changeName(@NotNull String name) {
+        // TODO Tab 이름에 대한 제약조건 이야기해보기
+        this.name = name;
     }
 }
