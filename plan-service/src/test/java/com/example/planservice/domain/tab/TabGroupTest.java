@@ -146,11 +146,12 @@ class TabGroupTest {
 
         // when
         assertThatThrownBy(() -> tabGroup.changeOrder(tab1.getId(), tab2.getId()))
-            .isInstanceOf(RuntimeException.class);
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_ORDER_FIXED.getMessage());
     }
 
     @Test
-    @DisplayName("타겟 탭과 옮기려는 위치 이전에 위치하는 탭은 동일할 수 없습니다")
+    @DisplayName("타겟 탭과 옮기려는 위치 이전에 위치하는 탭은 동일할 수 없다")
     void changeOrderFailCantSameTargetAndNewPrev() {
         // given
         Plan plan = createPlan();
@@ -161,7 +162,8 @@ class TabGroupTest {
 
         // when & then
         assertThatThrownBy(() -> tabGroup.changeOrder(tab2.getId(), tab2.getId()))
-            .isInstanceOf(RuntimeException.class);
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TARGET_TAB_SAME_AS_NEW_PREV.getMessage());
     }
 
     @Test
