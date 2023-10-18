@@ -10,9 +10,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "tabs")
 public class Tab extends BaseEntity {
     @Id
@@ -26,5 +34,31 @@ public class Tab extends BaseEntity {
 
     private String name;
 
-    private int order;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "next_id")
+    private Tab next;
+
+    @Version
+    private int version;
+
+    @Builder
+    private Tab(Plan plan, String name, Tab next) {
+        this.plan = plan;
+        this.name = name;
+        this.next = next;
+    }
+
+    public static Tab create(Plan plan, String name) {
+        return Tab.builder()
+            .plan(plan)
+            .name(name)
+            .build();
+    }
+
+    /**
+     * 오른쪽 방향으로 Tab을 연결한다
+     */
+    public void connect(Tab next) {
+        this.next = next;
+    }
 }
