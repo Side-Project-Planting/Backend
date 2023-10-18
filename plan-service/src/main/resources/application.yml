@@ -3,3 +3,5 @@ spring:
     name: ${project}
   profiles:
     active: ${profileLevel}
+  mail:
+    host: smtp.gmail.com
