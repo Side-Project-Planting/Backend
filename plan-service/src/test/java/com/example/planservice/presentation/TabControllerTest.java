@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -190,14 +192,37 @@ class TabControllerTest {
     void changeTabOrder() throws Exception {
         // given
         Long userId = 1L;
-        Long planId = 10L;
         TabChangeOrderRequest request = TabChangeOrderRequest.builder().build();
+
+        // stub
+        when(tabService.changeOrder(anyLong(), any(TabChangeOrderRequest.class)))
+            .thenReturn(List.of(2L, 1L));
 
         // when & then
         mockMvc.perform(post("/tabs/change-order")
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.sortedTabs").isArray())
+            .andExpect(jsonPath("$.sortedTabs[0]").value(2L))
+            .andExpect(jsonPath("$.sortedTabs[1]").value(1L));
+    }
+
+    @Test
+    @DisplayName("인증되지 않은 사용자는 Tab의 순서를 변경할 수 없다")
+    void changeTabOrderFailNotAuthorized() throws Exception {
+        // given
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder().build();
+
+        // stub
+        when(tabService.changeOrder(anyLong(), any(TabChangeOrderRequest.class)))
+            .thenReturn(List.of(2L, 1L));
+
+        // when & then
+        mockMvc.perform(post("/tabs/change-order")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isUnauthorized());
     }
 }
