@@ -42,6 +42,12 @@ subprojects {
         }
     }
 
+    processResources {
+        filesMatching("**/application.yml") {
+            expand(project: project.name, profileLevel: "local")
+        }
+    }
+
     repositories {
         mavenCentral()
     }
@@ -63,20 +69,6 @@ subprojects {
         dependencies {
             implementation 'org.springframework.cloud:spring-cloud-starter-config'
         }
-
-        sourceSets {
-            main {
-                resources {
-                    srcDirs += rootProject.file('resources')
-                }
-            }
-        }
-
-        processResources {
-            filesMatching("**/application.yml") {
-                expand(project: project.name)
-            }
-        }
     }
 }
 
@@ -96,12 +88,4 @@ subprojects {
             implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
         }
     }
-}
-
-bootJar {
-    enabled = false
-}
-
-jar {
-    enabled = true
 }
