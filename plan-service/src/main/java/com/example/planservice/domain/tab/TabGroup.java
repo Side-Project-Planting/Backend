@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -84,9 +83,4 @@ public class TabGroup {
             .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
     }
 
-    public Optional<Tab> findByName(@NotNull String name) {
-        return hash.values().stream()
-            .filter(tab -> Objects.equals(tab.getName(), name))
-            .findAny();
-    }
 }

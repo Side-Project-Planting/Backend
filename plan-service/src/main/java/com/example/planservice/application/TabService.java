@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,7 +76,6 @@ public class TabService {
         return result.stream().map(Tab::getId).toList();
     }
 
-    // TODO 해당 로직 역시 락이 필요한듯. 소속된 Plan을 기준으로. 동시에 이름 두 개 들어와버리면 GG -> 학습 후 구현
     // TODO Tab은 Plan에 강하게 의존관계를 가짐. 단독으로 쓰일일도 잘 없음.(앞으로도 그럴거로 예상됨)
     //  Plan 없이는 Tab 기능 수행 못하는데, 이럴거면 Plan에 List<Tab> 양방향 연관관계를 거는게 어떤지
     @Transactional
@@ -84,12 +84,14 @@ public class TabService {
         List<Tab> tabs = tabRepository.findAllByPlanId(plan.getId());
         TabGroup tabGroup = new TabGroup(plan, tabs);
 
-        tabGroup.findByName(request.getName()).ifPresent(m -> {
-            throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
-        });
-
         Tab target = tabGroup.findById(request.getTabId());
         target.changeName(request.getName());
+
+        try {
+            tabRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
+        }
 
         return TabChangeNameResponse.builder()
             .id(target.getId())

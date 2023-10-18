@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,7 +23,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "tabs")
+@Table(name = "tabs",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "UniquePlanAndTabName", columnNames = {"plan_id", "name"})
+    })
 public class Tab extends BaseEntity {
     public static final int TAB_MAX_SIZE = 5;
 
