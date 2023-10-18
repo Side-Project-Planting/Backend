@@ -6,12 +6,12 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Getter
-public class TabServiceResponse {
+public class TabChangeNameResponse {
     private Long id;
     private String name;
 
     @Builder
-    public TabServiceResponse(Long id, String name) {
+    public TabChangeNameResponse(Long id, String name) {
         this.id = id;
         this.name = name;
     }

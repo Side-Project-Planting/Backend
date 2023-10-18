@@ -11,7 +11,8 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.planservice.application.dto.TabServiceResponse;
+import com.example.planservice.application.dto.TabChangeNameResponse;
+import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.domain.memberofplan.repository.MemberOfPlanRepository;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
@@ -20,7 +21,6 @@ import com.example.planservice.domain.tab.TabGroup;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
-import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
@@ -79,8 +79,8 @@ public class TabService {
     // TODO Tab은 Plan에 강하게 의존관계를 가짐. 단독으로 쓰일일도 잘 없음.(앞으로도 그럴거로 예상됨)
     //  Plan 없이는 Tab 기능 수행 못하는데, 이럴거면 Plan에 List<Tab> 양방향 연관관계를 거는게 어떤지
     @Transactional
-    public TabServiceResponse changeName(Long memberId, TabChangeNameRequest request) {
-        Plan plan = getPlanAfterCheckAuthorization(request.getPlanId(), memberId);
+    public TabChangeNameResponse changeName(TabChangeNameServiceRequest request) {
+        Plan plan = getPlanAfterCheckAuthorization(request.getPlanId(), request.getMemberId());
         List<Tab> tabs = tabRepository.findAllByPlanId(plan.getId());
         TabGroup tabGroup = new TabGroup(plan, tabs);
 
@@ -91,7 +91,7 @@ public class TabService {
         Tab target = tabGroup.findById(request.getTabId());
         target.changeName(request.getName());
 
-        return TabServiceResponse.builder()
+        return TabChangeNameResponse.builder()
             .id(target.getId())
             .name(target.getName())
             .build();

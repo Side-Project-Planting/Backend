@@ -13,7 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.planservice.application.dto.TabServiceResponse;
+import com.example.planservice.application.dto.TabChangeNameResponse;
+import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.member.repository.MemberRepository;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
@@ -24,7 +25,6 @@ import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
-import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 
@@ -341,14 +341,15 @@ class TabServiceTest {
         Tab tab = createTab(plan, "TODO", null, true);
         String name = "변경할이름";
 
-        TabChangeNameRequest request = TabChangeNameRequest.builder()
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())
             .name(name)
+            .memberId(member.getId())
             .tabId(tab.getId())
             .build();
 
         // when
-        TabServiceResponse response = tabService.changeName(member.getId(), request);
+        TabChangeNameResponse response = tabService.changeName(request);
 
         // then
         assertThat(response.getId()).isEqualTo(tab.getId());
@@ -364,15 +365,16 @@ class TabServiceTest {
         createMemberOfPlan(plan, member);
         Tab tab = createTab(plan, "이름", null, true);
 
-        TabChangeNameRequest request = TabChangeNameRequest.builder()
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(123123L)
             .name("변경할이름")
+            .memberId(member.getId())
             .tabId(tab.getId())
             .build();
 
         // when & then
         assertThatThrownBy(
-            () -> tabService.changeName(member.getId(), request))
+            () -> tabService.changeName(request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
     }
@@ -385,15 +387,16 @@ class TabServiceTest {
         Member member = createMember();
         Tab tab = createTab(plan, "이름", null, true);
 
-        TabChangeNameRequest request = TabChangeNameRequest.builder()
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())
             .name("변경할이름")
+            .memberId(member.getId())
             .tabId(tab.getId())
             .build();
 
         // when & then
         assertThatThrownBy(
-            () -> tabService.changeName(member.getId(), request))
+            () -> tabService.changeName(request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }
@@ -409,15 +412,16 @@ class TabServiceTest {
 
         Tab otherTab = createTab(null, "다른플랜의탭", null, true);
 
-        TabChangeNameRequest request = TabChangeNameRequest.builder()
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())
             .name("변경할이름")
             .tabId(otherTab.getId())
+            .memberId(member.getId())
             .build();
 
         // when & then
         assertThatThrownBy(
-            () -> tabService.changeName(member.getId(), request))
+            () -> tabService.changeName(request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
     }
@@ -433,14 +437,15 @@ class TabServiceTest {
         createMemberOfPlan(plan, member);
         Tab tab = createTab(plan, duplicatedName, null, true);
 
-        TabChangeNameRequest request = TabChangeNameRequest.builder()
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())
             .name(duplicatedName)
             .tabId(tab.getId())
+            .memberId(member.getId())
             .build();
 
         // when & then
-        assertThatThrownBy(() -> tabService.changeName(member.getId(), request))
+        assertThatThrownBy(() -> tabService.changeName(request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.TAB_NAME_DUPLICATE.getMessage());
     }
