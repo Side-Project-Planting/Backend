@@ -16,10 +16,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "tasks")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Where(clause = "is_deleted = false")
+@Getter
 public class Task extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,4 +55,44 @@ public class Task extends BaseEntity {
     private LocalDateTime endDate;
 
     private boolean isDeleted;
+
+    @Setter
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "next_id")
+    private Task next;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prev_id")
+    private Task prev;
+
+    @Version
+    private int version;
+
+    @Builder
+    @SuppressWarnings("java:S107")
+    public Task(Tab tab, Member manager, Member writer, String name, String description, LocalDateTime startDate,
+                LocalDateTime endDate, boolean isDeleted, Task next, Task prev, int version) {
+        this.tab = tab;
+        this.manager = manager;
+        this.writer = writer;
+        this.name = name;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.isDeleted = isDeleted;
+        this.next = next;
+        this.prev = prev;
+        this.version = version;
+    }
+
+    public void connect(Task next) {
+        if (next == null) {
+            this.next = null;
+            return;
+        }
+
+        this.next = next;
+        next.prev = this;
+    }
+
 }
