@@ -193,8 +193,64 @@ class TabGroupTest {
             .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
     }
 
+    @Test
+    @DisplayName("마지막에 탭을 추가한다")
+    void addLast() {
+        // given
+        Plan plan = createPlan();
+        Tab tab4 = createTab(plan, "탭4", null);
+        Tab tab3 = createTab(plan, "탭3", tab4);
+        Tab tab2 = createTab(plan, "탭2", tab3);
+        Tab tab1 = createTab(plan, "탭1", tab2);
 
-    @NotNull
+        Tab addedTab = Tab.builder().build();
+        TabGroup tabGroup = new TabGroup(plan, List.of(tab1, tab2, tab3, tab4));
+
+        // when
+        tabGroup.addLast(addedTab);
+
+        // then
+        assertThat(tab4.getNext()).isEqualTo(addedTab);
+        assertThat(addedTab.getNext()).isNull();
+    }
+
+    @Test
+    @DisplayName("탭그룹에는 개수 제한이 있다")
+    void addLastFailTabSizeLimit() {
+        // given
+        Plan plan = createPlan();
+        Tab tab5 = createTab(plan, "탭5", null);
+        Tab tab4 = createTab(plan, "탭4", tab5);
+        Tab tab3 = createTab(plan, "탭3", tab4);
+        Tab tab2 = createTab(plan, "탭2", tab3);
+        Tab tab1 = createTab(plan, "탭1", tab2);
+
+        Tab addedTab = Tab.builder().build();
+        TabGroup tabGroup = new TabGroup(plan, List.of(tab1, tab2, tab3, tab4, tab5));
+
+        // when & then
+        assertThatThrownBy(() -> tabGroup.addLast(addedTab))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_SIZE_INVALID.getMessage());
+    }
+
+    @Test
+    @DisplayName("탭그룹에는 중복된 이름이 있을 수 없다")
+    void addLastFailTabNameDuplicated() {
+        // given
+        Plan plan = createPlan();
+        Tab tab1 = createTab(plan, "탭1", null);
+
+        Tab addedTab = Tab.builder().name("탭1").build();
+        TabGroup tabGroup = new TabGroup(plan, List.of(tab1));
+
+        // when & then
+        assertThatThrownBy(() -> tabGroup.addLast(addedTab))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_NAME_DUPLICATE.getMessage());
+    }
+
+        @NotNull
     private Plan createPlan() {
         Plan plan = Plan.builder().build();
         planRepository.save(plan);

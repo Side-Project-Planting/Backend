@@ -55,6 +55,7 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
+        createTab(plan, "TODO", null, true);
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), "새로운탭");
 
@@ -127,7 +128,7 @@ class TabServiceTest {
         Member member = createMember();
         createMemberOfPlan(plan, member);
 
-        Tab tab1 = Tab.builder().plan(plan).build();
+        Tab tab1 = Tab.builder().first(true).plan(plan).build();
         Tab tab2 = Tab.builder().plan(plan).build();
         Tab tab3 = Tab.builder().plan(plan).build();
         Tab tab4 = Tab.builder().plan(plan).build();
@@ -210,26 +211,6 @@ class TabServiceTest {
         Tab savedTab = tabRepository.findById(savedId).get();
         assertThat(tab2.getNext()).isEqualTo(savedTab);
         assertThat(savedTab.getNext()).isNull();
-    }
-
-    @Test
-    @DisplayName("플랜에 소속된 탭 중 last가 null인 탭은 한개 이상 존재할 수 없다")
-    void createFailLastTabOver1() {
-        // given
-        Plan plan = createPlan();
-        Member member = createMember();
-        createMemberOfPlan(plan, member);
-        Tab tab2 = createTab(plan, "탭2", null, false);
-        Tab tab1 = createTab(plan, "탭1", null, true);
-
-        tabRepository.saveAll(List.of(tab1, tab2));
-
-        TabCreateRequest request = createTabCreateRequest(plan.getId(), "이름");
-
-        // when & then
-        assertThatThrownBy(() -> tabService.create(member.getId(), request))
-            .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.SERVER_ERROR.getMessage());
     }
 
     @Test

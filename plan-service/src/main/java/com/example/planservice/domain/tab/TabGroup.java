@@ -19,7 +19,7 @@ public class TabGroup {
     private Map<Long, Tab> hash;
 
     @Getter
-    private Tab first;
+    private final Tab first;
 
     public TabGroup(Plan plan, List<Tab> tabs) {
         validate(plan, tabs);
@@ -35,13 +35,20 @@ public class TabGroup {
             .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
     }
 
-    private void validate(Plan plan, List<Tab> tabs) {
-        if (tabs.isEmpty() || TAB_MAX_SIZE < tabs.size()) {
+    public void add(Tab newPrev, Tab target) {
+        if (hash.size() >= TAB_MAX_SIZE) {
             throw new ApiException(ErrorCode.TAB_SIZE_INVALID);
         }
-        if (!Objects.equals(plan, tabs.get(0).getPlan())) {
-            throw new ApiException(ErrorCode.PLAN_TAB_MISMATCH);
-        }
+        checkDuplicatedName(target.getName());
+
+        Tab temp = newPrev.getNext();
+        newPrev.connect(target);
+        target.connect(temp);
+    }
+
+    public void addLast(Tab target) {
+        Tab last = findPrev(null);
+        add(last, target);
     }
 
     public List<Tab> changeOrder(long targetId, long newPrevId) {
@@ -76,11 +83,39 @@ public class TabGroup {
         return hash.get(id);
     }
 
-    private Tab findPrev(@NotNull Tab target) {
+    private Tab findPrev(Tab target) {
         return hash.values().stream()
             .filter(tab -> Objects.equals(tab.getNext(), target))
             .findAny()
             .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
     }
 
+    private void checkDuplicatedName(@NotNull String name) {
+        List<Tab> sortedTabs = getSortedTabs();
+        boolean duplicated = sortedTabs.stream()
+            .anyMatch(tab -> Objects.equals(name, tab.getName()));
+        if (duplicated) {
+            throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
+        }
+    }
+
+    private List<Tab> getSortedTabs() {
+        List<Tab> result = new ArrayList<>();
+
+        Tab temp = first;
+        while (temp != null) {
+            result.add(temp);
+            temp = temp.getNext();
+        }
+        return result;
+    }
+
+    private void validate(Plan plan, List<Tab> tabs) {
+        if (tabs.isEmpty() || TAB_MAX_SIZE < tabs.size()) {
+            throw new ApiException(ErrorCode.TAB_SIZE_INVALID);
+        }
+        if (!Objects.equals(plan, tabs.get(0).getPlan())) {
+            throw new ApiException(ErrorCode.PLAN_TAB_MISMATCH);
+        }
+    }
 }
