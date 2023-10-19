@@ -30,7 +30,7 @@ import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest
+@WebMvcTest(controllers = {TabController.class})
 class TabControllerTest {
     @Autowired
     private MockMvc mockMvc;
