@@ -60,20 +60,13 @@ public class TabGroup {
             throw new ApiException(ErrorCode.TAB_ORDER_FIXED);
         }
 
-        Tab newPrev = findById(newPrevId);
         Tab oldPrev = findPrev(target);
-
         oldPrev.connect(target.getNext());
-        target.connect(newPrev.getNext());
-        newPrev.connect(target);
 
-        List<Tab> result = new ArrayList<>();
-        Tab temp = first;
-        while (temp != null) {
-            result.add(temp);
-            temp = temp.getNext();
-        }
-        return result;
+        Tab newPrev = findById(newPrevId);
+        add(newPrev, target);
+
+        return getSortedTabs();
     }
 
     public Tab findById(long id) {
