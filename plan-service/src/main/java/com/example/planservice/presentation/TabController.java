@@ -3,14 +3,13 @@ package com.example.planservice.presentation;
 import java.net.URI;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,21 +31,14 @@ public class TabController {
 
     @PostMapping
     public ResponseEntity<Void> create(@Valid @RequestBody TabCreateRequest request,
-                                       @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+                                       @RequestAttribute Long userId) {
         Long createdId = tabService.create(userId, request);
         return ResponseEntity.created(URI.create("/tabs/" + createdId)).build();
     }
 
     @PostMapping("/change-order")
     public ResponseEntity<ChangeOrderResponse> changeOrder(@Valid @RequestBody TabChangeOrderRequest request,
-                                                           @RequestHeader(value = "X-User-Id",
-                                                               required = false) Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+                                                           @RequestAttribute Long userId) {
         List<Long> sortedTabList = tabService.changeOrder(userId, request);
         return ResponseEntity.ok().body(new ChangeOrderResponse(sortedTabList));
     }
@@ -54,21 +46,13 @@ public class TabController {
     @PatchMapping("/{tabId}/name")
     public ResponseEntity<TabChangeNameResponse> changeName(@PathVariable Long tabId,
                                                             @Valid @RequestBody TabChangeNameRequest request,
-                                                            @RequestHeader(value = "X-User-Id",
-                                                                required = false) Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+                                                            @RequestAttribute Long userId) {
         return ResponseEntity.ok().body(tabService.changeName(request.toServiceRequest(userId, tabId)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TabRetrieveResponse> retrieve(@PathVariable(name = "id") Long tabId,
-                                                        @RequestHeader(
-                                                            value = "X-User-Id", required = false) Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+                                                        @RequestAttribute Long userId) {
         return ResponseEntity.ok().body(tabService.retrieve(tabId, userId));
     }
 }
