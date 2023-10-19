@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.plan.Plan;
+import com.example.planservice.domain.task.Task;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -47,15 +48,19 @@ public class Tab extends BaseEntity {
 
     private boolean first;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Task lastTask;
+
     @Version
     private int version;
 
     @Builder
-    private Tab(Plan plan, String name, Tab next, boolean first) {
+    private Tab(Plan plan, String name, Tab next, boolean first, Task lastTask) {
         this.plan = plan;
         this.name = name;
         this.next = next;
         this.first = first;
+        this.lastTask = lastTask;
     }
 
     public static Tab create(Plan plan, String name) {
@@ -88,5 +93,11 @@ public class Tab extends BaseEntity {
     public void changeName(@NotNull String name) {
         // TODO Tab 이름에 대한 제약조건 이야기해보기
         this.name = name;
+    }
+
+    public Task makeLastTask(Task task) {
+        Task temp = this.lastTask;
+        this.lastTask = task;
+        return temp;
     }
 }
