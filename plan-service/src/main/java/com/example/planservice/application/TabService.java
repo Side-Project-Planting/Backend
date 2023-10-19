@@ -14,9 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
-import com.example.planservice.domain.memberofplan.repository.MemberOfPlanRepository;
 import com.example.planservice.domain.plan.Plan;
-import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.TabGroup;
 import com.example.planservice.domain.tab.repository.TabRepository;
@@ -31,15 +29,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TabService {
-
-    private final PlanRepository planRepository;
-    private final MemberOfPlanRepository memberOfPlanRepository;
+    private final PlanMembershipVerificationService planMembershipVerificationService;
     private final TabRepository tabRepository;
 
     @Transactional
     public Long create(Long memberId, TabCreateRequest request) {
         try {
-            Plan plan = getPlanAfterCheckAuthorization(request.getPlanId(), memberId);
+            Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
+            // TODO 여기도 탭그룹으로 관리할 수 있겠는데??
             List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
             if (tabsOfPlan.size() >= TAB_MAX_SIZE) {
                 throw new ApiException(ErrorCode.TAB_SIZE_INVALID);
@@ -51,15 +48,15 @@ public class TabService {
                 throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
             }
 
-            Tab tab = Tab.create(plan, request.getName());
+            Tab createdTab = Tab.create(plan, request.getName());
 
             Optional<Tab> lastOpt = findLastTab(tabsOfPlan);
             if (lastOpt.isPresent()) {
                 Tab last = lastOpt.get();
-                last.connect(tab);
+                last.connect(createdTab);
             }
 
-            Tab savedTab = tabRepository.save(tab);
+            Tab savedTab = tabRepository.save(createdTab);
             return savedTab.getId();
         } catch (ObjectOptimisticLockingFailureException e) {
             throw new ApiException(ErrorCode.REQUEST_CONFLICT);
@@ -68,7 +65,7 @@ public class TabService {
 
     @Transactional
     public List<Long> changeOrder(Long memberId, TabChangeOrderRequest request) {
-        Plan plan = getPlanAfterCheckAuthorization(request.getPlanId(), memberId);
+        Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
 
         List<Tab> tabs = tabRepository.findAllByPlanId(request.getPlanId());
         TabGroup tabGroup = new TabGroup(plan, tabs);
@@ -80,7 +77,7 @@ public class TabService {
     //  Plan 없이는 Tab 기능 수행 못하는데, 이럴거면 Plan에 List<Tab> 양방향 연관관계를 거는게 어떤지
     @Transactional
     public TabChangeNameResponse changeName(TabChangeNameServiceRequest request) {
-        Plan plan = getPlanAfterCheckAuthorization(request.getPlanId(), request.getMemberId());
+        Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), request.getMemberId());
         List<Tab> tabs = tabRepository.findAllByPlanId(plan.getId());
         TabGroup tabGroup = new TabGroup(plan, tabs);
 
@@ -99,17 +96,6 @@ public class TabService {
             .build();
     }
 
-    @NotNull
-    private Plan getPlanAfterCheckAuthorization(Long planId, Long memberId) {
-        Plan plan = planRepository.findById(planId)
-            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-
-        boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), memberId);
-        if (!existsInPlan) {
-            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
-        }
-        return plan;
-    }
 
     @NotNull
     private Optional<Tab> findLastTab(List<Tab> tabsOfPlan) {
@@ -128,6 +114,5 @@ public class TabService {
     public TabRetrieveResponse retrieve(Long id, Long userId) {
         return null;
     }
-
 
 }
