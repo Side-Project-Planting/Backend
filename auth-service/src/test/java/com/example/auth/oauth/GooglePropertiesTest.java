@@ -6,12 +6,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import com.example.auth.oauth.google.GoogleProperties;
 
 @SpringBootTest
-@ActiveProfiles("test")
 @DisplayName("Google Properties 파일이 잘 초기화되었는지 확인하는 테스트")
 class GooglePropertiesTest {
     @Autowired
@@ -32,7 +30,7 @@ class GooglePropertiesTest {
     @Test
     @DisplayName("구글 프로퍼티는 1개 이상의 Scope 값을 반환한다")
     void canReturnScope() {
-        String[] scope = properties.getScope();
+        final String[] scope = properties.getScope();
         assertThat(scope).isNotEmpty();
         for (String eachScope : scope) {
             assertThat(eachScope).isNotBlank();
