@@ -6,10 +6,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-@ActiveProfiles("test")
 @DisplayName("JWT Properties 파일이 잘 초기화되었는지 확인하는 테스트")
 class JwtPropertiesTest {
     @Autowired

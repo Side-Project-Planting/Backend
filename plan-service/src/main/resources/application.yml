@@ -1,3 +1,7 @@
 spring:
+  application:
+    name: ${project}
   profiles:
-    active: local
+    active: ${profileLevel}
+  mail:
+    host: smtp.gmail.com

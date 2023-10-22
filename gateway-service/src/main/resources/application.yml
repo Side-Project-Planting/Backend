@@ -1,32 +1,5 @@
-server:
-  port: 8000
-
 spring:
-  profiles:
-    active: local
   application:
-    name: gateway-service
-  rabbitmq:
-    host: 127.0.0.1
-    port: 5672
-    username: guest
-    password: guest
-  cloud:
-    gateway:
-      routes:
-        - id: auth-service
-          uri: http://localhost:8080/
-          predicates:
-            - Path=/auth-service/**
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: refresh, health, beans, httptrace, busrefresh
+    name: ${project}
+  profiles:
+    active: ${profileLevel}

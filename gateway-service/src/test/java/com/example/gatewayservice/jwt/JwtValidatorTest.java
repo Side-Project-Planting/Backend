@@ -12,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -20,7 +19,6 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 @SpringBootTest
-@ActiveProfiles("test")
 class JwtValidatorTest {
     @Autowired
     JwtValidator jwtValidator;
@@ -32,7 +30,7 @@ class JwtValidatorTest {
 
     @BeforeEach
     void setup() {
-        byte[] keyBytes = Decoders.BASE64.decode(properties.getSecret());
+        final byte[] keyBytes = Decoders.BASE64.decode(properties.getSecret());
         key = Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -40,8 +38,8 @@ class JwtValidatorTest {
     @DisplayName("토큰이 기한이 만료되지 않으면 true를 반환한다")
     void validateToken() {
         // given
-        LocalDateTime expired = LocalDateTime.of(3099, 1, 1, 0, 0);
-        String token = makeToken("1L", expired);
+        final LocalDateTime expired = LocalDateTime.of(3099, 1, 1, 0, 0);
+        final String token = makeToken("1L", expired);
 
         // when & then
         assertThat(jwtValidator.validateToken(token)).isTrue();
@@ -51,20 +49,20 @@ class JwtValidatorTest {
     @DisplayName("토큰이 기한이 만료되었으면 false를 반환한다")
     void validateExpiredToken() {
         // given
-        LocalDateTime expired = LocalDateTime.of(1999, 1, 1, 0, 0);
-        String token = makeToken("1L", expired);
+        final LocalDateTime expired = LocalDateTime.of(1999, 1, 1, 0, 0);
+        final String token = makeToken("1L", expired);
 
         // when & then
         assertThat(jwtValidator.validateToken(token)).isFalse();
     }
 
     private String makeToken(String subject, LocalDateTime expiredDateTime) {
-        Date expiredDate = Date.from(expiredDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        final Date expiredDate = Date.from(expiredDateTime.atZone(ZoneId.systemDefault()).toInstant());
         return Jwts.builder()
-            .setSubject(subject)
-            .setExpiration(expiredDate)
-            .signWith(key, SignatureAlgorithm.HS256)
-            .compact();
+                   .setSubject(subject)
+                   .setExpiration(expiredDate)
+                   .signWith(key, SignatureAlgorithm.HS256)
+                   .compact();
     }
 
 }
