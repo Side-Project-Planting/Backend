@@ -1,6 +1,7 @@
 package com.example.planservice.presentation;
 
 import java.net.URI;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.planservice.application.TabService;
+import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
+import com.example.planservice.presentation.dto.response.ChangeOrderResponse;
 import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,17 @@ public class TabController {
         }
         Long createdId = tabService.create(userId, request);
         return ResponseEntity.created(URI.create("/tabs/" + createdId)).build();
+    }
+
+    @PostMapping("change-order")
+    public ResponseEntity<ChangeOrderResponse> changeOrder(@Valid @RequestBody TabChangeOrderRequest request,
+                                                           @RequestHeader(value = "X-User-Id",
+                                                               required = false) Long userId) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<Long> sortedTabList = tabService.changeOrder(userId, request);
+        return ResponseEntity.ok().body(new ChangeOrderResponse(sortedTabList));
     }
 
     @GetMapping("/{id}")

@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.example.planservice.application.TabService;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
+import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +49,11 @@ class TabControllerTest {
             .name("탭이름")
             .planId(planId)
             .build();
+        Long createdTabId = 2L;
+
+        // stub
+        when(tabService.create(anyLong(), any(TabCreateRequest.class)))
+            .thenReturn(createdTabId);
 
         // when & then
         mockMvc.perform(post("/tabs")
@@ -53,7 +61,7 @@ class TabControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(header().exists("Location"))
+            .andExpect(header().string("Location", "/tabs/" + createdTabId))
             .andExpect(redirectedUrlPattern("/tabs/*"));
     }
 
@@ -88,7 +96,7 @@ class TabControllerTest {
             .build();
 
         when(tabService.create(anyLong(), any(TabCreateRequest.class)))
-            .thenThrow(new ApiException(ErrorCode.TAB_SIZE_LIMIT));
+            .thenThrow(new ApiException(ErrorCode.TAB_SIZE_INVALID));
 
         // when & then
         mockMvc.perform(post("/tabs")
@@ -181,6 +189,45 @@ class TabControllerTest {
         // when & then
         mockMvc.perform(get("/tabs/" + tabId)
                 .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Tab의 순서를 변경한다")
+    void changeTabOrder() throws Exception {
+        // given
+        Long userId = 1L;
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder().build();
+
+        // stub
+        when(tabService.changeOrder(anyLong(), any(TabChangeOrderRequest.class)))
+            .thenReturn(List.of(2L, 1L));
+
+        // when & then
+        mockMvc.perform(post("/tabs/change-order")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.sortedTabs").isArray())
+            .andExpect(jsonPath("$.sortedTabs[0]").value(2L))
+            .andExpect(jsonPath("$.sortedTabs[1]").value(1L));
+    }
+
+    @Test
+    @DisplayName("인증되지 않은 사용자는 Tab의 순서를 변경할 수 없다")
+    void changeTabOrderFailNotAuthorized() throws Exception {
+        // given
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder().build();
+
+        // stub
+        when(tabService.changeOrder(anyLong(), any(TabChangeOrderRequest.class)))
+            .thenReturn(List.of(2L, 1L));
+
+        // when & then
+        mockMvc.perform(post("/tabs/change-order")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isUnauthorized());
     }
 }

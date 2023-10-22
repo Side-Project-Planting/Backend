@@ -20,6 +20,23 @@ class TabTest {
         // then
         assertThat(tab.getName()).isEqualTo("탭이름");
         assertThat(tab.getNext()).isNull();
+        assertThat(tab.isFirst()).isFalse();
+        assertThat(tab.getPlan()).isEqualTo(plan);
+    }
+
+    @Test
+    @DisplayName("첫 번째 순서인 탭을 생성한다")
+    void createFirstTab() {
+        // given
+        Plan plan = Plan.builder().build();
+
+        // when
+        Tab tab = Tab.createTodoTab(plan);
+
+        // then
+        assertThat(tab.getName()).isEqualTo("TODO");
+        assertThat(tab.getNext()).isNull();
+        assertThat(tab.isFirst()).isTrue();
         assertThat(tab.getPlan()).isEqualTo(plan);
     }
 
@@ -36,5 +53,4 @@ class TabTest {
 
         assertThat(oldTab.getNext()).isEqualTo(newTab);
     }
-
 }

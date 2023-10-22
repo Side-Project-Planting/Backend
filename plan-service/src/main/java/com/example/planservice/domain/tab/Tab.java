@@ -10,7 +10,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
@@ -23,6 +22,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "tabs")
 public class Tab extends BaseEntity {
+    public static final int TAB_MAX_SIZE = 5;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tab_id")
@@ -34,24 +35,36 @@ public class Tab extends BaseEntity {
 
     private String name;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "next_id")
     private Tab next;
+
+    private boolean first;
 
     @Version
     private int version;
 
     @Builder
-    private Tab(Plan plan, String name, Tab next) {
+    private Tab(Plan plan, String name, Tab next, boolean first) {
         this.plan = plan;
         this.name = name;
         this.next = next;
+        this.first = first;
     }
 
     public static Tab create(Plan plan, String name) {
         return Tab.builder()
             .plan(plan)
             .name(name)
+            .first(false)
+            .build();
+    }
+
+    public static Tab createTodoTab(Plan plan) {
+        return Tab.builder()
+            .plan(plan)
+            .name("TODO")
+            .first(true)
             .build();
     }
 
@@ -60,5 +73,9 @@ public class Tab extends BaseEntity {
      */
     public void connect(Tab next) {
         this.next = next;
+    }
+
+    public void makeNotFirst() {
+        this.first = false;
     }
 }

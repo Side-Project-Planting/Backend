@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.domain.member.Member;
@@ -22,9 +23,11 @@ import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
+import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 class TabServiceTest {
     @Autowired
@@ -61,6 +64,26 @@ class TabServiceTest {
         Tab savedTab = tabRepository.findById(savedId).get();
         assertThat(savedTab.getName()).isEqualTo(request.getName());
         assertThat(savedTab.getPlan().getId()).isEqualTo(request.getPlanId());
+    }
+
+    @Test
+    @DisplayName("두 번째 탭부터는 isFirst 속성이 false이다")
+    void checkSecondTabIsNotFirst() {
+        // given
+        Plan plan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+        Tab oldTab = createTab(plan, "과거탭", null, true);
+
+        TabCreateRequest request = createTabCreateRequest(plan.getId(), "새로운탭");
+
+        // when
+        Long savedId = tabService.create(member.getId(), request);
+
+        // then
+        Tab newTab = tabRepository.findById(savedId).get();
+        assertThat(newTab.isFirst()).isFalse();
+        assertThat(oldTab.isFirst()).isTrue();
     }
 
 
@@ -114,7 +137,7 @@ class TabServiceTest {
         // when & then
         assertThatThrownBy(() -> tabService.create(member.getId(), request))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.TAB_SIZE_LIMIT.getMessage());
+            .hasMessageContaining(ErrorCode.TAB_SIZE_INVALID.getMessage());
     }
 
     @Test
@@ -124,10 +147,10 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab tab4 = createTab(plan, "탭4", null);
-        Tab tab3 = createTab(plan, "탭3", tab4);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab4 = createTab(plan, "탭4", null, false);
+        Tab tab3 = createTab(plan, "탭3", tab4, false);
+        Tab tab2 = createTab(plan, "탭2", tab3, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
 
         tabRepository.saveAll(List.of(tab1, tab2, tab3, tab4));
 
@@ -153,7 +176,7 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        createTab(plan, tabName, null);
+        createTab(plan, tabName, null,  true);
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), tabName);
 
@@ -171,8 +194,8 @@ class TabServiceTest {
         Member member = createMember();
         createMemberOfPlan(plan, member);
 
-        Tab tab2 = createTab(plan, "이전탭2", null);
-        Tab tab1 = createTab(plan, "이전탭1", tab2);
+        Tab tab2 = createTab(plan, "이전탭2", null, false);
+        Tab tab1 = createTab(plan, "이전탭1", tab2, true);
         tabRepository.saveAll(List.of(tab1, tab2));
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), "탭이름");
@@ -196,8 +219,8 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab tab2 = createTab(plan, "탭2", null);
-        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", null, false);
+        Tab tab1 = createTab(plan, "탭1", null, true);
 
         tabRepository.saveAll(List.of(tab1, tab2));
 
@@ -209,15 +232,119 @@ class TabServiceTest {
             .hasMessageContaining(ErrorCode.SERVER_ERROR.getMessage());
     }
 
-    private Tab createTab(Plan plan, String name, Tab next) {
+    @Test
+    @DisplayName("3번 탭을 1번 탭 뒤로 위치를 이동한다")
+    void changeTabOrder() {
+        // given
+        Plan plan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+        Tab tab3 = createTab(plan, "탭3", null, false);
+        Tab tab2 = createTab(plan, "탭2", tab3, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
+
+        Long targetId = tab3.getId();
+        Long newPrevId = tab1.getId();
+
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder()
+            .planId(plan.getId())
+            .targetId(targetId)
+            .newPrevId(newPrevId)
+            .build();
+
+        // when
+        List<Long> result = tabService.changeOrder(member.getId(), request);
+
+        // then
+        assertThat(result).hasSize(3)
+            .containsExactly(tab1.getId(), tab3.getId(), tab2.getId());
+        assertThat(tab1.getNext()).isEqualTo(tab3);
+        assertThat(tab3.getNext()).isEqualTo(tab2);
+        assertThat(tab2.getNext()).isNull();
+    }
+
+    @Test
+    @DisplayName("탭 위치 변경은 존재하는 플랜에 대해서만 생성할 수 있다")
+    void changeTabOrderFailNotExistPlan() {
+        // given
+        Long memberId = 1L;
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder()
+            .planId(2L)
+            .targetId(3L)
+            .newPrevId(4L)
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> tabService.changeOrder(memberId, request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("탭을 수정하는 사람은 해당 플랜에 소속되어 있어야 한다")
+    @SuppressWarnings("squid:S5778")
+    void changeTabOrderFailNotFoundMember() {
+        // given
+        Plan plan = createPlan();
+
+        Tab tab3 = createTab(plan, "탭3", null, false);
+        Tab tab2 = createTab(plan, "탭2", tab3, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
+
+        Member otherMember = createMember();
+
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder()
+            .planId(plan.getId())
+            .targetId(3L)
+            .newPrevId(4L)
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> tabService.changeOrder(otherMember.getId() + 12313, request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+    @Test
+    @DisplayName("탭과 플랜이 매핑되지 않으면 예외를 반환한다")
+    @SuppressWarnings("squid:S5778")
+    void changeTabOrderFailInvalidPlan() {
+        // given
+        Plan plan = createPlan();
+
+        Tab tab3 = createTab(plan, "탭3", null, false);
+        Tab tab2 = createTab(plan, "탭2", tab3, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
+
+        Plan otherPlan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(otherPlan, member);
+        createTab(otherPlan, "탭1", null, true);
+
+        TabChangeOrderRequest request = TabChangeOrderRequest.builder()
+            .planId(otherPlan.getId())
+            .targetId(tab1.getId())
+            .newPrevId(tab3.getId())
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> tabService.changeOrder(member.getId(), request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+
+    private Tab createTab(Plan plan, String name, Tab next, boolean isFirst) {
         Tab tab = Tab.builder()
             .plan(plan)
             .name(name)
             .next(next)
+            .first(isFirst)
             .build();
         tabRepository.save(tab);
         return tab;
     }
+
 
     @NotNull
     private MemberOfPlan createMemberOfPlan(Plan plan, Member member) {
