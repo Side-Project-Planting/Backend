@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +24,8 @@ import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
+import com.example.planservice.domain.task.Task;
+import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
@@ -47,6 +50,9 @@ class TabServiceTest {
 
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    TaskRepository taskRepository;
 
     @Test
     @DisplayName("탭을 생성한다")
@@ -401,8 +407,7 @@ class TabServiceTest {
             .build();
 
         // when & then
-        assertThatThrownBy(
-            () -> tabService.changeName(request))
+        assertThatThrownBy(() -> tabService.changeName(request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
     }
@@ -432,6 +437,59 @@ class TabServiceTest {
             .hasMessageContaining(ErrorCode.TAB_NAME_DUPLICATE.getMessage());
     }
 
+    @Test
+    @DisplayName("플랜 소유자는 탭을 삭제할 수 있다")
+    void deleteTab() {
+        // given
+        Member member = createMember();
+        Plan plan = createPlanWithOwner(member);
+        Tab target = createTab(plan, "두번째", null, false);
+        createTab(plan, "TODO", target, true);
+
+        // when
+        Long deletedId = tabService.delete(member.getId(), target.getId());
+
+        // then
+        Optional<Tab> resultOpt = tabRepository.findById(deletedId);
+        assertThat(resultOpt).isEmpty();
+    }
+
+    @Test
+    @DisplayName("플랜 소유자가 아니면 탭을 삭제할 수 있다")
+    void deleteTabFailNotOwner() {
+        // given
+        Member member = createMember();
+        Plan plan = createPlanWithOwner(member);
+        Tab target = createTab(plan, "두번째", null, false);
+        createTab(plan, "TODO", target, true);
+
+        Member otherMember = createMember();
+
+        // when & then
+        assertThatThrownBy(() -> tabService.delete(otherMember.getId(), target.getId()))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.AUTHORIZATION_FAIL.getMessage());
+    }
+
+    @Test
+    @DisplayName("탭이 삭제되면 해당 탭에 속해있던 모든 태스크가 함께 삭제된다")
+    void deleteAllRelatedTaskOnDeleteTab() {
+        // given
+        Member member = createMember();
+        Plan plan = createPlanWithOwner(member);
+        Tab target = createTab(plan, "두번째", null, false);
+        createTab(plan, "TODO", target, true);
+
+        Task task = createTask(target);
+
+        // when
+        tabService.delete(member.getId(), target.getId());
+
+        // then
+        List<Task> resultOpt = taskRepository.findAllByTabId(task.getId());
+        assertThat(resultOpt).isEmpty();
+    }
+
 
     private Tab createTab(Plan plan, String name, Tab next, boolean isFirst) {
         Tab tab = Tab.builder()
@@ -456,6 +514,13 @@ class TabServiceTest {
     }
 
     @NotNull
+    private Task createTask(Tab tab) {
+        Task task = Task.builder().tab(tab).build();
+        taskRepository.save(task);
+        return task;
+    }
+
+    @NotNull
     private Member createMember() {
         Member member = Member.builder()
             .build();
@@ -469,6 +534,14 @@ class TabServiceTest {
         planRepository.save(plan);
         return plan;
     }
+
+    @NotNull
+    private Plan createPlanWithOwner(Member owner) {
+        Plan plan = Plan.builder().owner(owner).build();
+        planRepository.save(plan);
+        return plan;
+    }
+
 
     @NotNull
     private TabCreateRequest createTabCreateRequest(Long planId, String name) {
