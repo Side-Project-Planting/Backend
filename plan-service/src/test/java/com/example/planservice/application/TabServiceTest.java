@@ -447,7 +447,7 @@ class TabServiceTest {
         createTab(plan, "TODO", target, true);
 
         // when
-        Long deletedId = tabService.delete(member.getId(), target.getId());
+        Long deletedId = tabService.delete(member.getId(), target.getId(), plan.getId());
 
         // then
         Optional<Tab> resultOpt = tabRepository.findById(deletedId);
@@ -465,7 +465,7 @@ class TabServiceTest {
         Tab first = createTab(plan, "TODO", second, true);
 
         // when
-        tabService.delete(member.getId(), second.getId());
+        tabService.delete(member.getId(), second.getId(), plan.getId());
 
         // then
         assertThat(first.getNext()).isEqualTo(third);
@@ -483,7 +483,7 @@ class TabServiceTest {
         Member otherMember = createMember();
 
         // when & then
-        assertThatThrownBy(() -> tabService.delete(otherMember.getId(), target.getId()))
+        assertThatThrownBy(() -> tabService.delete(otherMember.getId(), target.getId(), plan.getId()))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.AUTHORIZATION_FAIL.getMessage());
     }
@@ -500,7 +500,7 @@ class TabServiceTest {
         Task task = createTask(target);
 
         // when
-        tabService.delete(member.getId(), target.getId());
+        tabService.delete(member.getId(), target.getId(), plan.getId());
 
         // then
         List<Task> resultOpt = taskRepository.findAllByTabId(task.getId());

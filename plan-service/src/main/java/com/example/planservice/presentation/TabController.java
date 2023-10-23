@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.planservice.application.TabService;
@@ -59,8 +60,9 @@ public class TabController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable(name = "id") Long tabId,
-                                       @RequestAttribute Long userId) {
-        tabService.delete(userId, tabId);
+                                       @RequestAttribute Long userId,
+                                       @RequestParam Long planId) {
+        tabService.delete(userId, tabId, planId);
         return ResponseEntity.noContent().build();
     }
 }
