@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.example.planservice.application.TabService;
 import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
+import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
@@ -286,7 +287,7 @@ class TabControllerTest {
         Long planId = 3L;
 
         // stub
-        when(tabService.delete(userId, tabId, planId))
+        when(tabService.delete(any(TabDeleteServiceRequest.class)))
             .thenReturn(tabId);
 
         // when & then

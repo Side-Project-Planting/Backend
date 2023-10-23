@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
+import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.member.repository.MemberRepository;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
@@ -445,9 +446,10 @@ class TabServiceTest {
         Plan plan = createPlanWithOwner(member);
         Tab target = createTab(plan, "두번째", null, false);
         createTab(plan, "TODO", target, true);
+        TabDeleteServiceRequest request = makeDeleteRequest(member, target, plan);
 
         // when
-        Long deletedId = tabService.delete(member.getId(), target.getId(), plan.getId());
+        Long deletedId = tabService.delete(request);
 
         // then
         Optional<Tab> resultOpt = tabRepository.findById(deletedId);
@@ -464,8 +466,10 @@ class TabServiceTest {
         Tab second = createTab(plan, "두번째", third, false);
         Tab first = createTab(plan, "TODO", second, true);
 
+        TabDeleteServiceRequest request = makeDeleteRequest(member, second, plan);
+
         // when
-        tabService.delete(member.getId(), second.getId(), plan.getId());
+        tabService.delete(request);
 
         // then
         assertThat(first.getNext()).isEqualTo(third);
@@ -482,8 +486,11 @@ class TabServiceTest {
 
         Member otherMember = createMember();
 
+        TabDeleteServiceRequest request = makeDeleteRequest(otherMember, target, plan);
+
+
         // when & then
-        assertThatThrownBy(() -> tabService.delete(otherMember.getId(), target.getId(), plan.getId()))
+        assertThatThrownBy(() -> tabService.delete(request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.AUTHORIZATION_FAIL.getMessage());
     }
@@ -499,8 +506,11 @@ class TabServiceTest {
 
         Task task = createTask(target);
 
+        TabDeleteServiceRequest request = makeDeleteRequest(member, target, plan);
+
+
         // when
-        tabService.delete(member.getId(), target.getId(), plan.getId());
+        tabService.delete(request);
 
         // then
         List<Task> resultOpt = taskRepository.findAllByTabId(task.getId());
@@ -566,5 +576,15 @@ class TabServiceTest {
             .name(name)
             .planId(planId)
             .build();
+    }
+
+    @NotNull
+    private TabDeleteServiceRequest makeDeleteRequest(Member member, Tab target, Plan plan) {
+        return TabDeleteServiceRequest.builder()
+            .memberId(member.getId())
+            .tabId(target.getId())
+            .planId(plan.getId())
+            .build();
+
     }
 }

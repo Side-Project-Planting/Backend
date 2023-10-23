@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.planservice.application.TabService;
 import com.example.planservice.application.dto.TabChangeNameResponse;
+import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
@@ -62,7 +63,12 @@ public class TabController {
     public ResponseEntity<Void> delete(@PathVariable(name = "id") Long tabId,
                                        @RequestAttribute Long userId,
                                        @RequestParam Long planId) {
-        tabService.delete(userId, tabId, planId);
+        TabDeleteServiceRequest request = TabDeleteServiceRequest.builder()
+            .tabId(tabId)
+            .memberId(userId)
+            .planId(planId)
+            .build();
+        tabService.delete(request);
         return ResponseEntity.noContent().build();
     }
 }
