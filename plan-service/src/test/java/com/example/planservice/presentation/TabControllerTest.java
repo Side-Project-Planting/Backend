@@ -283,13 +283,14 @@ class TabControllerTest {
         // given
         Long userId = 1L;
         Long tabId = 2L;
+        Long planId = 3L;
 
         // stub
-        when(tabService.delete(userId, tabId))
+        when(tabService.delete(userId, tabId, planId))
             .thenReturn(tabId);
 
         // when & then
-        mockMvc.perform(delete("/tabs/" + tabId)
+        mockMvc.perform(delete("/tabs/" + tabId + "?planId=" + planId)
                 .header("X-User-Id", userId))
             .andExpect(status().isNoContent());
     }
@@ -298,11 +299,11 @@ class TabControllerTest {
     @DisplayName("탭 삭제는 로그인한 사용자만이 가능하다")
     void deleteTabFailNotAuthenticated() throws Exception {
         // given
-        Long userId = 1L;
         Long tabId = 2L;
+        Long planId = 3L;
 
         // when & then
-        mockMvc.perform(delete("/tabs/" + tabId))
+        mockMvc.perform(delete("/tabs/" + tabId + "?planId=" + planId))
             .andExpect(status().isUnauthorized());
     }
 }

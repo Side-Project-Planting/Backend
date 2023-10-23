@@ -10,7 +10,6 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import lombok.Getter;
@@ -21,8 +20,8 @@ public class TabGroup {
     @Getter
     private final Tab first;
 
-    public TabGroup(Plan plan, List<Tab> tabs) {
-        validate(plan, tabs);
+    public TabGroup(Long planId, List<Tab> tabs) {
+        validate(planId, tabs);
 
         this.hash = new HashMap<>();
         for (Tab tab : tabs) {
@@ -103,11 +102,11 @@ public class TabGroup {
         return result;
     }
 
-    private void validate(Plan plan, List<Tab> tabs) {
+    private void validate(Long planId, List<Tab> tabs) {
         if (tabs.isEmpty() || TAB_MAX_SIZE < tabs.size()) {
             throw new ApiException(ErrorCode.TAB_SIZE_INVALID);
         }
-        if (!Objects.equals(plan, tabs.get(0).getPlan())) {
+        if (!Objects.equals(planId, tabs.get(0).getPlan().getId())) {
             throw new ApiException(ErrorCode.PLAN_TAB_MISMATCH);
         }
     }
