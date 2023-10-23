@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,5 +55,12 @@ public class TabController {
     public ResponseEntity<TabRetrieveResponse> retrieve(@PathVariable(name = "id") Long tabId,
                                                         @RequestAttribute Long userId) {
         return ResponseEntity.ok().body(tabService.retrieve(tabId, userId));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable(name = "id") Long tabId,
+                                       @RequestAttribute Long userId) {
+        tabService.delete(userId, tabId);
+        return ResponseEntity.noContent().build();
     }
 }
