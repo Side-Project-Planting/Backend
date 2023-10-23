@@ -455,7 +455,24 @@ class TabServiceTest {
     }
 
     @Test
-    @DisplayName("플랜 소유자가 아니면 탭을 삭제할 수 있다")
+    @DisplayName("탭 삭제 시 자신의 prev 탭과 next 탭을 연결한다")
+    void checkConnectingIfTabDelete() {
+        // given
+        Member member = createMember();
+        Plan plan = createPlanWithOwner(member);
+        Tab third = createTab(plan, "세번째", null, false);
+        Tab second = createTab(plan, "두번째", third, false);
+        Tab first = createTab(plan, "TODO", second, true);
+
+        // when
+        tabService.delete(member.getId(), second.getId());
+
+        // then
+        assertThat(first.getNext()).isEqualTo(third);
+    }
+
+    @Test
+    @DisplayName("플랜 소유자가 아니면 탭을 삭제할 수 없다")
     void deleteTabFailNotOwner() {
         // given
         Member member = createMember();

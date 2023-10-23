@@ -111,4 +111,20 @@ public class TabGroup {
             throw new ApiException(ErrorCode.PLAN_TAB_MISMATCH);
         }
     }
+
+    public void deleteById(Long tabId) {
+        List<Tab> sortedTabs = getSortedTabs();
+        Tab prev = sortedTabs.get(0);
+        if (Objects.equals(prev.getId(), tabId)) {
+            throw new ApiException(ErrorCode.TAB_CANNOT_DELETE);
+        }
+
+        for (Tab tab : sortedTabs) {
+            if (Objects.equals(tabId, tab.getId())) {
+                prev.connect(tab.getNext());
+                return;
+            }
+            prev = tab;
+        }
+    }
 }

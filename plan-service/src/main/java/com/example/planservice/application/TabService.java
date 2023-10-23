@@ -90,7 +90,10 @@ public class TabService {
             throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
         }
 
-        tabRepository.delete(tab);
+        List<Tab> tabs = tabRepository.findAllByPlanId(plan.getId());
+        TabGroup tabGroup = new TabGroup(plan, tabs);
+        tabGroup.deleteById(tabId);
+        tabRepository.deleteById(tabId);
         return tabId;
     }
 
