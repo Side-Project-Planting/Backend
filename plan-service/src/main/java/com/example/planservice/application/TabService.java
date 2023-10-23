@@ -79,6 +79,21 @@ public class TabService {
             .build();
     }
 
+    @Transactional
+    public Long delete(Long memberId, Long tabId) {
+        Tab tab = tabRepository.findById(tabId)
+            .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND));
+        Plan plan = tab.getPlan();
+
+        boolean isAdmin = planMembershipVerificationService.validateOwner(plan.getId(), memberId);
+        if (!isAdmin) {
+            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
+        }
+
+        tabRepository.delete(tab);
+        return tabId;
+    }
+
 
     @NotNull
     private Optional<Tab> findLastTab(List<Tab> tabsOfPlan) {
