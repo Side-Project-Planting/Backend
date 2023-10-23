@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
+import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.TabGroup;
@@ -80,7 +81,11 @@ public class TabService {
     }
 
     @Transactional
-    public Long delete(Long memberId, Long tabId, Long planId) {
+    public Long delete(TabDeleteServiceRequest request) {
+        Long planId = request.getPlanId();
+        Long tabId = request.getTabId();
+        Long memberId = request.getMemberId();
+
         boolean isAdmin = planMembershipVerificationService.validateOwner(planId, memberId);
         if (!isAdmin) {
             throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
