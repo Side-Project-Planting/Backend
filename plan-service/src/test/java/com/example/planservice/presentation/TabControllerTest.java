@@ -218,7 +218,7 @@ class TabControllerTest {
 
     @Test
     @DisplayName("인증되지 않은 사용자는 Tab의 순서를 변경할 수 없다")
-    void changeTabOrderFailNotAuthorized() throws Exception {
+    void changeTabOrderFailNotAuthenticated() throws Exception {
         // given
         TabChangeOrderRequest request = TabChangeOrderRequest.builder().build();
 
@@ -261,7 +261,7 @@ class TabControllerTest {
 
     @Test
     @DisplayName("인증되지 않은 사용자는 Tab의 이름을 변경할 수 없다")
-    void changeTabNameFailNotAuthorized() throws Exception {
+    void changeTabNameFailNotAuthenticated() throws Exception {
         // given
         TabChangeNameRequest request = TabChangeNameRequest.builder().build();
         TabChangeNameResponse response = TabChangeNameResponse.builder().build();
@@ -274,6 +274,35 @@ class TabControllerTest {
         mockMvc.perform(patch("/tabs/1/name")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("탭 삭제에 성공하면 204 상태를 반환한다")
+    void deleteTab() throws Exception {
+        // given
+        Long userId = 1L;
+        Long tabId = 2L;
+
+        // stub
+        when(tabService.delete(userId, tabId))
+            .thenReturn(tabId);
+
+        // when & then
+        mockMvc.perform(delete("/tabs/" + tabId)
+                .header("X-User-Id", userId))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("탭 삭제는 로그인한 사용자만이 가능하다")
+    void deleteTabFailNotAuthenticated() throws Exception {
+        // given
+        Long userId = 1L;
+        Long tabId = 2L;
+
+        // when & then
+        mockMvc.perform(delete("/tabs/" + tabId))
             .andExpect(status().isUnauthorized());
     }
 }
