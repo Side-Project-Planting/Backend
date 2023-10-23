@@ -250,7 +250,39 @@ class TabGroupTest {
             .hasMessageContaining(ErrorCode.TAB_NAME_DUPLICATE.getMessage());
     }
 
-        @NotNull
+    @Test
+    @DisplayName("탭 삭제 시 자신의 prev탭과 next탭을 연결한다")
+    void checkConnectingIfTabDelete() {
+        // given
+        Plan plan = createPlan();
+        Tab third = createTab(plan, "세번째", null);
+        Tab second = createTab(plan, "두번째", third);
+        Tab first = createTab(plan, "TODO", second);
+        TabGroup tabGroup = new TabGroup(plan, List.of(first, second, third));
+
+        // when
+        tabGroup.deleteById(second.getId());
+
+        // then
+        assertThat(first.getNext()).isEqualTo(third);
+    }
+
+    @Test
+    @DisplayName("첫 번째 탭은 삭제할 수 없다")
+    void cannotDeleteFirstTab() {
+        // given
+        Plan plan = createPlan();
+        Tab tab1 = createTab(plan, "TODO", null);
+        TabGroup tabGroup = new TabGroup(plan, List.of(tab1));
+
+        // when
+        assertThatThrownBy(() -> tabGroup.deleteById(tab1.getId()))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_CANNOT_DELETE.getMessage());
+    }
+
+
+    @NotNull
     private Plan createPlan() {
         Plan plan = Plan.builder().build();
         planRepository.save(plan);
