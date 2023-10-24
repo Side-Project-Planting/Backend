@@ -9,9 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.planservice.application.dto.LabelDeleteServiceRequest;
 import com.example.planservice.domain.label.Label;
 import com.example.planservice.domain.label.repository.LabelRepository;
-import com.example.planservice.domain.memberofplan.repository.MemberOfPlanRepository;
 import com.example.planservice.domain.plan.Plan;
-import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.LabelCreateRequest;
@@ -22,21 +20,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LabelService {
     private final LabelRepository labelRepository;
-    private final PlanRepository planRepository;
-    private final MemberOfPlanRepository memberOfPlanRepository;
     private final PlanMembershipVerificationService planMembershipVerificationService;
 
     @Transactional
     public Long create(Long memberId, LabelCreateRequest request) {
-        Long planId = request.getPlanId();
-        String name = request.getName();
-        Plan plan = planRepository.findById(planId)
-            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
 
-        boolean existMemberInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(planId, memberId);
-        if (!existMemberInPlan) {
-            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
-        }
+        String name = request.getName();
         if (plan.existsDuplicatedLabelName(name)) {
             throw new ApiException(ErrorCode.LABEL_NAME_DUPLICATE);
         }
