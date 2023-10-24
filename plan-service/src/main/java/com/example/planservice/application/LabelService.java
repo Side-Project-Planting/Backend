@@ -10,6 +10,7 @@ import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
+import com.example.planservice.presentation.dto.request.LabelCreateRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,7 +22,10 @@ public class LabelService {
     private final MemberOfPlanRepository memberOfPlanRepository;
 
     @Transactional
-    public Long create(String name, Long planId, Long memberId) {
+    public Long create(Long memberId, LabelCreateRequest request) {
+        Long planId = request.getPlanId();
+        String name = request.getName();
+
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         boolean isExists = memberOfPlanRepository.existsByPlanIdAndMemberId(planId, memberId);
