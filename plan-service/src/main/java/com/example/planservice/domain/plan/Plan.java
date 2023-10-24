@@ -70,4 +70,8 @@ public class Plan extends BaseEntity {
         return labels.stream()
             .anyMatch(label -> Objects.equals(label.getName(), name));
     }
+
+    public void remove(Label label) {
+        labels.remove(label);
+    }
 }
