@@ -1,5 +1,7 @@
 package com.example.planservice.presentation;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -44,7 +46,7 @@ class LabelControllerTest {
             .build();
 
         // stub
-        when(labelService.create(labelName, planId, userId))
+        when(labelService.create(anyLong(), any(LabelCreateRequest.class)))
             .thenReturn(createdLabelId);
 
         // when & then

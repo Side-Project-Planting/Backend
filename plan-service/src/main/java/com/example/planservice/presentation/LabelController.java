@@ -23,7 +23,7 @@ public class LabelController {
     @PostMapping
     ResponseEntity<Void> create(@RequestBody @Valid LabelCreateRequest labelCreateRequest,
                                 @RequestAttribute Long userId) {
-        Long createdId = labelService.create(labelCreateRequest.getName(), labelCreateRequest.getPlanId(), userId);
+        Long createdId = labelService.create(userId, labelCreateRequest);
         return ResponseEntity.created(URI.create("/labels/" + createdId)).build();
     }
 }

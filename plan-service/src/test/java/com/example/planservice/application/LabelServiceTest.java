@@ -16,6 +16,7 @@ import com.example.planservice.domain.memberofplan.MemberOfPlan;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
+import com.example.planservice.presentation.dto.request.LabelCreateRequest;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest
@@ -36,8 +37,13 @@ class LabelServiceTest {
         Plan plan = createPlanUsingTest();
         Member member = createMemberWithPlanUsingTest(plan);
 
+        LabelCreateRequest request = LabelCreateRequest.builder()
+            .planId(plan.getId())
+            .name(name)
+            .build();
+
         // when
-        Long createdId = labelService.create(name, plan.getId(), member.getId());
+        Long createdId = labelService.create(member.getId(), request);
 
         // then
         Label result = em.find(Label.class, createdId);
@@ -51,8 +57,13 @@ class LabelServiceTest {
         String name = "라벨1";
         Member member = createMemberWithPlanUsingTest(null);
 
+        LabelCreateRequest request = LabelCreateRequest.builder()
+            .planId(1231412L)
+            .name(name)
+            .build();
+
         // when & then
-        assertThatThrownBy(() -> labelService.create(name, 123456L, member.getId()))
+        assertThatThrownBy(() -> labelService.create(member.getId(), request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
     }
@@ -65,8 +76,13 @@ class LabelServiceTest {
         Plan plan = createPlanUsingTest();
         Member member = createMemberWithPlanUsingTest(null);
 
+        LabelCreateRequest request = LabelCreateRequest.builder()
+            .planId(plan.getId())
+            .name(name)
+            .build();
+
         // when & then
-        assertThatThrownBy(() -> labelService.create(name, plan.getId(), member.getId()))
+        assertThatThrownBy(() -> labelService.create(member.getId(), request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }
