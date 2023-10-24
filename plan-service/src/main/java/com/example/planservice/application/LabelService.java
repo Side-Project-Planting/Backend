@@ -1,5 +1,6 @@
 package com.example.planservice.application;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +26,25 @@ public class LabelService {
     public Long create(Long memberId, LabelCreateRequest request) {
         Long planId = request.getPlanId();
         String name = request.getName();
-
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        boolean isExists = memberOfPlanRepository.existsByPlanIdAndMemberId(planId, memberId);
-        if (!isExists) {
+
+        boolean existMemberInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(planId, memberId);
+        if (!existMemberInPlan) {
             throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
+        }
+        if (plan.existsDuplicatedLabelName(name)) {
+            throw new ApiException(ErrorCode.LABEL_NAME_DUPLICATE);
         }
 
         Label label = Label.create(name, plan);
         Label savedEntity = labelRepository.save(label);
+
+        try {
+            labelRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ApiException(ErrorCode.REQUEST_CONFLICT);
+        }
         return savedEntity.getId();
     }
 }
