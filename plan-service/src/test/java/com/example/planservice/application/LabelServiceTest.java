@@ -35,7 +35,7 @@ class LabelServiceTest {
         // given
         String name = "라벨1";
         Plan plan = createPlanUsingTest();
-        Member member = createMemberWithPlanUsingTest(plan);
+        Member member = createMemberUsingTest(plan);
 
         LabelCreateRequest request = LabelCreateRequest.builder()
             .planId(plan.getId())
@@ -55,7 +55,7 @@ class LabelServiceTest {
     void testCreateLabelFailPlanNotFound() throws Exception {
         // given
         String name = "라벨1";
-        Member member = createMemberWithPlanUsingTest(null);
+        Member member = createMemberUsingTest(null);
 
         LabelCreateRequest request = LabelCreateRequest.builder()
             .planId(1231412L)
@@ -74,7 +74,7 @@ class LabelServiceTest {
         // given
         String name = "라벨1";
         Plan plan = createPlanUsingTest();
-        Member member = createMemberWithPlanUsingTest(null);
+        Member member = createMemberUsingTest(null);
 
         LabelCreateRequest request = LabelCreateRequest.builder()
             .planId(plan.getId())
@@ -87,7 +87,34 @@ class LabelServiceTest {
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }
 
-    private Member createMemberWithPlanUsingTest(Plan plan) {
+    @Test
+    @DisplayName("하나의 플랜 안에서는 동일한 이름의 라벨이 등록될 수 없다")
+    void testCreateLabelFailNameDuplicated() throws Exception {
+        // given
+        String duplicatedName = "중복이름";
+        Plan plan = createPlanUsingTest();
+        Member member = createMemberUsingTest(plan);
+        createLabelUsingTest(duplicatedName, plan);
+
+        LabelCreateRequest request = LabelCreateRequest.builder()
+            .planId(plan.getId())
+            .name(duplicatedName)
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> labelService.create(member.getId(), request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.LABEL_NAME_DUPLICATE.getMessage());
+    }
+
+    private Label createLabelUsingTest(String name, Plan plan) {
+        Label label = Label.create(name, plan);
+        em.persist(label);
+        plan.getLabels().add(label);
+        return label;
+    }
+
+    private Member createMemberUsingTest(Plan plan) {
         Member member = Member.builder().build();
         em.persist(member);
         if (plan == null) {

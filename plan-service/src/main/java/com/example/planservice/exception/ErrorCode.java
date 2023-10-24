@@ -19,7 +19,8 @@ public enum ErrorCode {
     TAB_ORDER_FIXED(HttpStatus.BAD_REQUEST, "해당 탭은 순서를 변경할 수 없습니다"),
     TAB_CANNOT_DELETE(HttpStatus.BAD_REQUEST, "해당 탭은 삭제할 수 없습니다"),
     AUTHORIZATION_FAIL(HttpStatus.FORBIDDEN, "해당되는 권한이 없습니다"),
-    TAB_NOT_FOUND(HttpStatus.NOT_FOUND, "탭을 찾을 수 없습니다");
+    TAB_NOT_FOUND(HttpStatus.NOT_FOUND, "탭을 찾을 수 없습니다"),
+    LABEL_NAME_DUPLICATE(HttpStatus.BAD_REQUEST, "라벨 이름이 중복되었습니다");
 
     private final HttpStatus status;
     private final String message;
