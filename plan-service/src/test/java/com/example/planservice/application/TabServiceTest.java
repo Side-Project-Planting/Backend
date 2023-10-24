@@ -13,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.planservice.application.dto.TabChangeNameResponse;
+import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.member.repository.MemberRepository;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
@@ -29,6 +31,7 @@ import com.example.planservice.presentation.dto.request.TabCreateRequest;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@SuppressWarnings("squid:S5778")
 class TabServiceTest {
     @Autowired
     TabService tabService;
@@ -118,7 +121,6 @@ class TabServiceTest {
 
     @Test
     @DisplayName("하나의 플랜에 탭은 최대 5개까지 생성 가능하다")
-    @SuppressWarnings("squid:S5778")
     void createFailTabLimitOver() {
         // given
         Plan plan = createPlan();
@@ -169,14 +171,13 @@ class TabServiceTest {
 
     @Test
     @DisplayName("동일한 플랜에서 탭 이름은 중복될 수 없다")
-    @SuppressWarnings("squid:S5778")
     void createFailDuplicatedTabName() {
         // given
         String tabName = "탭이름";
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        createTab(plan, tabName, null,  true);
+        createTab(plan, tabName, null, true);
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), tabName);
 
@@ -213,7 +214,6 @@ class TabServiceTest {
 
     @Test
     @DisplayName("플랜에 소속된 탭 중 last가 null인 탭은 한개 이상 존재할 수 없다")
-    @SuppressWarnings("squid:S5778")
     void createFailLastTabOver1() {
         // given
         Plan plan = createPlan();
@@ -282,7 +282,6 @@ class TabServiceTest {
 
     @Test
     @DisplayName("탭을 수정하는 사람은 해당 플랜에 소속되어 있어야 한다")
-    @SuppressWarnings("squid:S5778")
     void changeTabOrderFailNotFoundMember() {
         // given
         Plan plan = createPlan();
@@ -307,7 +306,6 @@ class TabServiceTest {
 
     @Test
     @DisplayName("탭과 플랜이 매핑되지 않으면 예외를 반환한다")
-    @SuppressWarnings("squid:S5778")
     void changeTabOrderFailInvalidPlan() {
         // given
         Plan plan = createPlan();
@@ -331,6 +329,126 @@ class TabServiceTest {
         assertThatThrownBy(() -> tabService.changeOrder(member.getId(), request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+    @Test
+    @DisplayName("탭의 이름을 변경한다")
+    void changeName() {
+        // given
+        Plan plan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+        Tab tab = createTab(plan, "TODO", null, true);
+        String name = "변경할이름";
+
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+            .planId(plan.getId())
+            .name(name)
+            .memberId(member.getId())
+            .tabId(tab.getId())
+            .build();
+
+        // when
+        TabChangeNameResponse response = tabService.changeName(request);
+
+        // then
+        assertThat(response.getId()).isEqualTo(tab.getId());
+        assertThat(response.getName()).isEqualTo(name);
+    }
+
+    @Test
+    @DisplayName("탭 이름 변경 시 Plan은 존재해야 한다")
+    void changeNameFailNotExistsPlan() {
+        // given
+        Plan plan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+        Tab tab = createTab(plan, "이름", null, true);
+
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+            .planId(123123L)
+            .name("변경할이름")
+            .memberId(member.getId())
+            .tabId(tab.getId())
+            .build();
+
+        // when & then
+        assertThatThrownBy(
+            () -> tabService.changeName(request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("해당되는 Plan에 소속된 멤버만 탭 이름을 변경할 수 있다")
+    void chageNameFailNotFoundInPlan() {
+        // given
+        Plan plan = createPlan();
+        Member member = createMember();
+        Tab tab = createTab(plan, "이름", null, true);
+
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+            .planId(plan.getId())
+            .name("변경할이름")
+            .memberId(member.getId())
+            .tabId(tab.getId())
+            .build();
+
+        // when & then
+        assertThatThrownBy(
+            () -> tabService.changeName(request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+    @Test
+    @DisplayName("해당 플랜에 속한 탭에 대해서만 이름을 변경할 수 있다")
+    void chageNameFailNotFoundTab() {
+        // given
+        Plan plan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+        createTab(plan, "이름", null, true);
+
+        Tab otherTab = createTab(null, "다른플랜의탭", null, true);
+
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+            .planId(plan.getId())
+            .name("변경할이름")
+            .tabId(otherTab.getId())
+            .memberId(member.getId())
+            .build();
+
+        // when & then
+        assertThatThrownBy(
+            () -> tabService.changeName(request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+    @Test
+    @DisplayName("동일한 플랜에 속해있는 탭들은 이름이 달라야 한다")
+    void changeNameFailSameName() {
+        // given
+        String duplicatedName = "동일이름";
+
+        Plan plan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+        Tab target = createTab(plan, "시작탭", null, true);
+        createTab(plan, duplicatedName, target, true);
+
+        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+            .planId(plan.getId())
+            .name(duplicatedName)
+            .tabId(target.getId())
+            .memberId(member.getId())
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> tabService.changeName(request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_NAME_DUPLICATE.getMessage());
     }
 
 

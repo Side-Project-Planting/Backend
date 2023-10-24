@@ -4,8 +4,7 @@ package com.example.planservice.presentation;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
@@ -21,8 +20,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.TabService;
+import com.example.planservice.application.dto.TabChangeNameResponse;
+import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
+import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
@@ -226,6 +228,50 @@ class TabControllerTest {
 
         // when & then
         mockMvc.perform(post("/tabs/change-order")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Tab의 이름을 변경한다")
+    void changeTabName() throws Exception {
+        // given
+        Long userId = 1L;
+        TabChangeNameRequest request = TabChangeNameRequest.builder()
+            .build();
+        TabChangeNameResponse response = TabChangeNameResponse.builder()
+            .name("변경된이름")
+            .id(3L)
+            .build();
+
+        // stub
+        when(tabService.changeName(any(TabChangeNameServiceRequest.class)))
+            .thenReturn(response);
+
+        // when & then
+        mockMvc.perform(patch("/tabs/1/name")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(response.getId()))
+            .andExpect(jsonPath("$.name").value(response.getName()));
+    }
+
+    @Test
+    @DisplayName("인증되지 않은 사용자는 Tab의 이름을 변경할 수 없다")
+    void changeTabNameFailNotAuthorized() throws Exception {
+        // given
+        TabChangeNameRequest request = TabChangeNameRequest.builder().build();
+        TabChangeNameResponse response = TabChangeNameResponse.builder().build();
+
+        // stub
+        when(tabService.changeName(any(TabChangeNameServiceRequest.class)))
+            .thenReturn(response);
+
+        // when & then
+        mockMvc.perform(patch("/tabs/1/name")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isUnauthorized());

@@ -1,5 +1,7 @@
 package com.example.planservice.domain.tab;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.plan.Plan;
 import jakarta.persistence.Column;
@@ -11,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,7 +23,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "tabs")
+@Table(name = "tabs",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "UniquePlanAndTabName", columnNames = {"plan_id", "name"})
+    })
 public class Tab extends BaseEntity {
     public static final int TAB_MAX_SIZE = 5;
 
@@ -77,5 +83,10 @@ public class Tab extends BaseEntity {
 
     public void makeNotFirst() {
         this.first = false;
+    }
+
+    public void changeName(@NotNull String name) {
+        // TODO Tab 이름에 대한 제약조건 이야기해보기
+        this.name = name;
     }
 }

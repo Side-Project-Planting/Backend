@@ -189,8 +189,10 @@ class TabGroupTest {
 
         // when & then
         assertThatThrownBy(() -> tabGroup.findById(otherTab.getId()))
-            .isInstanceOf(ApiException.class);
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
     }
+
 
     @NotNull
     private Plan createPlan() {

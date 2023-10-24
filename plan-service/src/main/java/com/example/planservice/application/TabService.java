@@ -7,10 +7,13 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.planservice.application.dto.TabChangeNameResponse;
+import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.domain.memberofplan.repository.MemberOfPlanRepository;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
@@ -34,16 +37,9 @@ public class TabService {
     private final TabRepository tabRepository;
 
     @Transactional
-    public Long create(Long userId, TabCreateRequest request) {
+    public Long create(Long memberId, TabCreateRequest request) {
         try {
-            Plan plan = planRepository.findById(request.getPlanId())
-                .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-
-            boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), userId);
-            if (!existsInPlan) {
-                throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
-            }
-
+            Plan plan = getPlanAfterCheckAuthorization(request.getPlanId(), memberId);
             List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
             if (tabsOfPlan.size() >= TAB_MAX_SIZE) {
                 throw new ApiException(ErrorCode.TAB_SIZE_INVALID);
@@ -72,18 +68,47 @@ public class TabService {
 
     @Transactional
     public List<Long> changeOrder(Long memberId, TabChangeOrderRequest request) {
-        Plan plan = planRepository.findById(request.getPlanId())
+        Plan plan = getPlanAfterCheckAuthorization(request.getPlanId(), memberId);
+
+        List<Tab> tabs = tabRepository.findAllByPlanId(request.getPlanId());
+        TabGroup tabGroup = new TabGroup(plan, tabs);
+        List<Tab> result = tabGroup.changeOrder(request.getTargetId(), request.getNewPrevId());
+        return result.stream().map(Tab::getId).toList();
+    }
+
+    // TODO Tab은 Plan에 강하게 의존관계를 가짐. 단독으로 쓰일일도 잘 없음.(앞으로도 그럴거로 예상됨)
+    //  Plan 없이는 Tab 기능 수행 못하는데, 이럴거면 Plan에 List<Tab> 양방향 연관관계를 거는게 어떤지
+    @Transactional
+    public TabChangeNameResponse changeName(TabChangeNameServiceRequest request) {
+        Plan plan = getPlanAfterCheckAuthorization(request.getPlanId(), request.getMemberId());
+        List<Tab> tabs = tabRepository.findAllByPlanId(plan.getId());
+        TabGroup tabGroup = new TabGroup(plan, tabs);
+
+        Tab target = tabGroup.findById(request.getTabId());
+        target.changeName(request.getName());
+
+        try {
+            tabRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
+        }
+
+        return TabChangeNameResponse.builder()
+            .id(target.getId())
+            .name(target.getName())
+            .build();
+    }
+
+    @NotNull
+    private Plan getPlanAfterCheckAuthorization(Long planId, Long memberId) {
+        Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
 
         boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), memberId);
         if (!existsInPlan) {
             throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
         }
-
-        List<Tab> tabs = tabRepository.findAllByPlanId(request.getPlanId());
-        TabGroup tabGroup = new TabGroup(plan, tabs);
-        List<Tab> result = tabGroup.changeOrder(request.getTargetId(), request.getNewPrevId());
-        return result.stream().map(Tab::getId).toList();
+        return plan;
     }
 
     @NotNull
