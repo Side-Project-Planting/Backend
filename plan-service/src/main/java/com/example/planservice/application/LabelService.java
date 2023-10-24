@@ -29,11 +29,7 @@ public class LabelService {
             throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
         }
 
-        Label label = Label.builder()
-            .name(name)
-            .plan(plan)
-            .build();
-
+        Label label = Label.create(name, plan);
         Label savedEntity = labelRepository.save(label);
         return savedEntity.getId();
     }

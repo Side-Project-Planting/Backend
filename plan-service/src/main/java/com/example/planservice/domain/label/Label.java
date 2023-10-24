@@ -37,4 +37,11 @@ public class Label extends BaseEntity {
         this.plan = plan;
         this.name = name;
     }
+
+    public static Label create(String name, Plan plan) {
+        return Label.builder()
+            .name(name)
+            .plan(plan)
+            .build();
+    }
 }
