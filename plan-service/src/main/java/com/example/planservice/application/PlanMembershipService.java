@@ -3,6 +3,7 @@ package com.example.planservice.application;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PlanMembershipService {
     private final PlanRepository planRepository;
     private final MemberOfPlanRepository memberOfPlanRepository;
