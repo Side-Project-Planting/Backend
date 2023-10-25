@@ -1,9 +1,7 @@
 package com.example.planservice.application;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -34,12 +32,11 @@ public class TabService {
     public Long create(Long memberId, TabCreateRequest request) {
         try {
             Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), memberId);
-            List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
 
             Tab createdTab = Tab.create(plan, request.getName());
+            List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
             TabGroup tabGroup = new TabGroup(plan.getId(), tabsOfPlan);
             tabGroup.addLast(createdTab);
-
             Tab savedTab = tabRepository.save(createdTab);
             return savedTab.getId();
         } catch (ObjectOptimisticLockingFailureException e) {
@@ -73,7 +70,6 @@ public class TabService {
         } catch (DataIntegrityViolationException e) {
             throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
         }
-
         return TabChangeNameResponse.builder()
             .id(target.getId())
             .name(target.getName())
@@ -96,21 +92,6 @@ public class TabService {
         tabGroup.deleteById(tabId);
         tabRepository.deleteById(tabId);
         return tabId;
-    }
-
-
-    @NotNull
-    private Optional<Tab> findLastTab(List<Tab> tabsOfPlan) {
-        List<Tab> tabs = tabsOfPlan.stream()
-            .filter(each -> each.getNext() == null)
-            .toList();
-        if (tabs.size() > 1) {
-            throw new ApiException(ErrorCode.SERVER_ERROR);
-        }
-        if (tabs.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(tabs.get(0));
     }
 
     public TabRetrieveResponse retrieve(Long id, Long userId) {
