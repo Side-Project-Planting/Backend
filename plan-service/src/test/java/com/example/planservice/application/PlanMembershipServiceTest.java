@@ -38,8 +38,8 @@ class PlanMembershipServiceTest {
     MemberRepository memberRepository;
 
     @Test
-    @DisplayName("멤버가 플랜에 소속되어 있으면 정상적으로 플랜을 반환한다")
-    void verifySuccess() {
+    @DisplayName("플랜에 소속된 멤버는 플랜에 접근할 수 있다")
+    void testGetPlanAfterValidateAuthorization() {
         // given
         Plan plan = createPlan();
         Member member = createMember();
@@ -53,20 +53,20 @@ class PlanMembershipServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 플랜에 대해서는 예외를 반환한다")
-    void verifyFailPlanNotFound() {
+    @DisplayName("존재하지 않는 플랜에는 접근할 수 없다")
+    void testGetPlanAfterValidateAuthorizationFailNotFound() {
         // given
         Member member = createMember();
-
+        long notRegisteredPlanId = 123123L;
         // when & then
-        assertThatThrownBy(() -> service.getPlanAfterValidateAuthorization(123123L, member.getId()))
+        assertThatThrownBy(() -> service.getPlanAfterValidateAuthorization(notRegisteredPlanId, member.getId()))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
     }
 
     @Test
-    @DisplayName("플랜에 소속되어 있지 않는 멤버에 대해서는 예외를 반환한다")
-    void verifyFailMemberNotExistInPlan() {
+    @DisplayName("플랜에 소속되어 있지 않는 멤버는 해당 플랜에 접근이 불가능하다")
+    void testGetPlanAfterValidateAuthorizationFailNotAuthorization() {
         // given
         Plan plan = createPlan();
         Member member = createMember();
@@ -78,8 +78,8 @@ class PlanMembershipServiceTest {
     }
 
     @Test
-    @DisplayName("해당 플랜의 소유주가 맞으면 validate 결과로 true를 반환한다")
-    void validateOwner() {
+    @DisplayName("플랜의 소유주를 검사한다")
+    void testValidatePlanOwner() {
         // given
         Member member = createMember();
         Plan plan = Plan.builder().owner(member).build();
@@ -93,7 +93,7 @@ class PlanMembershipServiceTest {
     }
 
     @Test
-    @DisplayName("해당 플랜의 소유주가 아니면 validate 결과로 false를 반환한다")
+    @DisplayName("플랜의 소유주가 아니면 false를 반환한다")
     void validateOwnerFail() {
         // given
         Member member = createMember();
