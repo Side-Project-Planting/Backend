@@ -108,6 +108,35 @@ class PlanMembershipServiceTest {
         assertThat(result).isFalse();
     }
 
+    @Test
+    @DisplayName("플랜에 소속된 멤버는 MemberOfPlan을 가져올 수 있다")
+    void testValidateMemberIsInThePlan() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+
+        // when
+        MemberOfPlan memberOfPlan = service.validateMemberIsInThePlan(member.getId(), plan);
+
+        // then
+        assertThat(memberOfPlan.getMember()).isEqualTo(member);
+        assertThat(memberOfPlan.getPlan()).isEqualTo(plan);
+    }
+
+    @Test
+    @DisplayName("플랜에 소속되지 않은 멤버는 MemberOfPlan을 가져올 수 없다")
+    void testValidateMemberIsInThePlanFailNotFoundMember() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Member otherPlanMember = createMember();
+
+        // when & then
+        assertThatThrownBy(() -> service.validateMemberIsInThePlan(otherPlanMember.getId(), plan))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
     @NotNull
     private MemberOfPlan createMemberOfPlan(Plan plan, Member member) {
         MemberOfPlan memberOfPlan = MemberOfPlan.builder()
