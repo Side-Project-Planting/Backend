@@ -36,11 +36,7 @@ public class TaskService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .build();
-            Task oldLastTask = tab.makeLastTask(task);
-            if (oldLastTask != null) {
-                oldLastTask.connect(task);
-            }
-
+            tab.changeLastTask(task);
             Task savedTask = taskRepository.save(task);
             return savedTask.getId();
         } catch (ObjectOptimisticLockingFailureException e) {

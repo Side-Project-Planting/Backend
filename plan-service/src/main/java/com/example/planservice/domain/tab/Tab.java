@@ -95,9 +95,10 @@ public class Tab extends BaseEntity {
         this.name = name;
     }
 
-    public Task makeLastTask(Task task) {
-        Task temp = this.lastTask;
+    public void changeLastTask(Task task) {
+        if (lastTask != null) {
+            lastTask.connect(task);
+        }
         this.lastTask = task;
-        return temp;
     }
 }
