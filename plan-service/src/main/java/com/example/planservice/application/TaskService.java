@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.domain.member.Member;
-import com.example.planservice.domain.member.repository.MemberRepository;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.domain.task.Task;
@@ -21,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 public class TaskService {
     private final TaskRepository taskRepository;
     private final TabRepository tabRepository;
-    private final MemberRepository memberRepository;
     private final PlanMembershipService planMembershipService;
 
     @Transactional
@@ -30,10 +28,7 @@ public class TaskService {
             Tab tab = tabRepository.findById(request.getTabId())
                 .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND_IN_PLAN));
             planMembershipService.verifyMemberIsInThePlan(memberId, tab.getPlan());
-            planMembershipService.verifyMemberIsInThePlan(request.getManagerId(), tab.getPlan());
-
-            Member manager = memberRepository.findById(request.getManagerId())
-                .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
+            Member manager = planMembershipService.getMemberBelongingToPlan(request.getManagerId(), tab.getPlan());
 
             Task task = Task.builder()
                 .tab(tab)
@@ -41,7 +36,6 @@ public class TaskService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .build();
-
             Task oldLastTask = tab.makeLastTask(task);
             if (oldLastTask != null) {
                 oldLastTask.connect(task);

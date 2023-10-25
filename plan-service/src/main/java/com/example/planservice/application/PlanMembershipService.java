@@ -5,6 +5,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 
 import com.example.planservice.domain.member.Member;
+import com.example.planservice.domain.memberofplan.MemberOfPlan;
 import com.example.planservice.domain.memberofplan.repository.MemberOfPlanRepository;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
@@ -37,10 +38,13 @@ public class PlanMembershipService {
         return Objects.equals(memberId, owner.getId());
     }
 
-    public void verifyMemberIsInThePlan(Long memberId, Plan plan) {
-        boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), memberId);
-        if (!existsInPlan) {
-            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
-        }
+    public MemberOfPlan verifyMemberIsInThePlan(Long memberId, Plan plan) {
+        return memberOfPlanRepository.findByPlanIdAndMemberId(plan.getId(), memberId)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
+    }
+
+    public Member getMemberBelongingToPlan(Long memberId, Plan plan) {
+        MemberOfPlan memberOfPlan = verifyMemberIsInThePlan(memberId, plan);
+        return memberOfPlan.getMember();
     }
 }
