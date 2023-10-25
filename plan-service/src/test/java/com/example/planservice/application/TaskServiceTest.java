@@ -49,12 +49,12 @@ class TaskServiceTest {
     MemberOfPlanRepository memberOfPlanRepository;
 
     @Test
-    @DisplayName("특정 탭의 첫 태스크를 생성한다")
+    @DisplayName("탭의 첫 번째 태스크를 생성한다")
     void createTaskOrderFirst() {
         // given
         Plan plan = createPlan();
         Tab tab = createTab(plan);
-        Member loginMember = createMemberWithPlan(plan);
+        Member member = createMemberWithPlan(plan);
         Member taskManager = createMemberWithPlan(plan);
 
         TaskCreateRequest request = TaskCreateRequest.builder()
@@ -67,7 +67,7 @@ class TaskServiceTest {
             .build();
 
         // when
-        Long createdId = taskService.create(loginMember.getId(), request);
+        Long createdId = taskService.create(member.getId(), request);
 
         // then
         Task task = taskRepository.findById(createdId).get();
@@ -85,7 +85,7 @@ class TaskServiceTest {
 
 
     @Test
-    @DisplayName("특정 탭의 N번째 태스크를 생성한다(첫 번째가 아님)")
+    @DisplayName("탭의 N번째(첫 번째가 아닌) 태스크를 생성한다")
     void createTaskOrderNotFirst() {
         // given
         Task originalFirstTab = createTask();
@@ -109,6 +109,10 @@ class TaskServiceTest {
         // then
         Task task = taskRepository.findById(createdId).get();
 
+        assertThat(task.getPrev()).isEqualTo(originalFirstTab);
+        assertThat(task.getNext()).isNull();
+        assertThat(originalFirstTab.getNext()).isEqualTo(task);
+
         assertThat(task.getId()).isEqualTo(createdId);
         assertThat(task.getTab().getId()).isEqualTo(request.getTabId());
         assertThat(task.getManager().getId()).isEqualTo(request.getManagerId());
@@ -117,15 +121,13 @@ class TaskServiceTest {
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
 
-        assertThat(task.getPrev()).isEqualTo(originalFirstTab);
-        assertThat(originalFirstTab.getNext()).isEqualTo(task);
     }
 
     @Test
-    @DisplayName("플랜에 속한 사람만 태스크를 만들 수 있다")
+    @DisplayName("태스크는 플랜에 소속된 사람만 만들 수 있다")
     void createFailNotExistMemberInPlan() {
         // given
-        Member loginMember = createMember();
+        Member member = createMember();
         Member manager = createMember();
         Plan plan = createPlan();
         Tab tab = createTab(plan);
@@ -140,7 +142,7 @@ class TaskServiceTest {
             .build();
 
         // when & then
-        assertThatThrownBy(() -> taskService.create(loginMember.getId(), request))
+        assertThatThrownBy(() -> taskService.create(member.getId(), request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }
