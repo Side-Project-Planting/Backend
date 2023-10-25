@@ -1,6 +1,5 @@
 package com.example.planservice.application;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,12 +29,6 @@ public class LabelService {
         }
         Label label = Label.create(name, plan);
         Label savedEntity = labelRepository.save(label);
-
-        try {
-            labelRepository.flush();
-        } catch (DataIntegrityViolationException e) {
-            throw new ApiException(ErrorCode.REQUEST_CONFLICT);
-        }
         return savedEntity.getId();
     }
 

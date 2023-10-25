@@ -126,4 +126,11 @@ public class TabGroup {
             prev = tab;
         }
     }
+
+    public Tab changeName(Long tabId, String name) {
+        checkDuplicatedName(name);
+        Tab target = findById(tabId);
+        target.changeName(name);
+        return target;
+    }
 }

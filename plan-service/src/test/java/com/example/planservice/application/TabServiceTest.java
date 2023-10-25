@@ -422,8 +422,8 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab target = createTab(plan, "시작탭", null, true);
-        createTab(plan, duplicatedName, target, true);
+        Tab tab = createTab(plan, duplicatedName, null, false);
+        Tab target = createTab(plan, "시작탭", tab, true);
 
         TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())

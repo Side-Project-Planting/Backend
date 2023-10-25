@@ -2,7 +2,6 @@ package com.example.planservice.application;
 
 import java.util.List;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,18 +60,11 @@ public class TabService {
         Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), request.getMemberId());
         List<Tab> tabs = tabRepository.findAllByPlanId(plan.getId());
         TabGroup tabGroup = new TabGroup(plan.getId(), tabs);
+        Tab tab = tabGroup.changeName(request.getTabId(), request.getName());
 
-        Tab target = tabGroup.findById(request.getTabId());
-        target.changeName(request.getName());
-
-        try {
-            tabRepository.flush();
-        } catch (DataIntegrityViolationException e) {
-            throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
-        }
         return TabChangeNameResponse.builder()
-            .id(target.getId())
-            .name(target.getName())
+            .id(tab.getId())
+            .name(tab.getName())
             .build();
     }
 
