@@ -46,7 +46,7 @@ class PlanMembershipServiceTest {
         createMemberOfPlan(plan, member);
 
         // when
-        Plan result = service.verifyAndReturnPlan(plan.getId(), member.getId());
+        Plan result = service.getPlanAfterValidateAuthorization(plan.getId(), member.getId());
 
         // then
         assertThat(result.getId()).isEqualTo(plan.getId());
@@ -59,7 +59,7 @@ class PlanMembershipServiceTest {
         Member member = createMember();
 
         // when & then
-        assertThatThrownBy(() -> service.verifyAndReturnPlan(123123L, member.getId()))
+        assertThatThrownBy(() -> service.getPlanAfterValidateAuthorization(123123L, member.getId()))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
     }
@@ -72,7 +72,7 @@ class PlanMembershipServiceTest {
         Member member = createMember();
 
         // when & then
-        assertThatThrownBy(() -> service.verifyAndReturnPlan(plan.getId(), member.getId()))
+        assertThatThrownBy(() -> service.getPlanAfterValidateAuthorization(plan.getId(), member.getId()))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }
@@ -86,7 +86,7 @@ class PlanMembershipServiceTest {
         planRepository.save(plan);
 
         // when
-        boolean result = service.validateOwner(plan.getId(), member.getId());
+        boolean result = service.validatePlanOwner(plan.getId(), member.getId());
 
         // then
         assertThat(result).isTrue();
@@ -102,7 +102,7 @@ class PlanMembershipServiceTest {
         planRepository.save(plan);
 
         // when
-        boolean result = service.validateOwner(plan.getId(), otherMember.getId());
+        boolean result = service.validatePlanOwner(plan.getId(), otherMember.getId());
 
         // then
         assertThat(result).isFalse();

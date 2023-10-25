@@ -27,7 +27,7 @@ public class TaskService {
         try {
             Tab tab = tabRepository.findById(request.getTabId())
                 .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND_IN_PLAN));
-            planMembershipService.verifyMemberIsInThePlan(memberId, tab.getPlan());
+            planMembershipService.validateMemberIsInThePlan(memberId, tab.getPlan());
             Member manager = planMembershipService.getMemberBelongingToPlan(request.getManagerId(), tab.getPlan());
 
             Task task = Task.builder()

@@ -24,7 +24,7 @@ public class LabelService {
 
     @Transactional
     public Long create(Long memberId, LabelCreateRequest request) {
-        Plan plan = planMembershipService.verifyAndReturnPlan(request.getPlanId(), memberId);
+        Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), memberId);
 
         String name = request.getName();
         if (plan.existsDuplicatedLabelName(name)) {
@@ -47,7 +47,7 @@ public class LabelService {
         Long planId = request.getPlanId();
         Long memberId = request.getMemberId();
 
-        Plan plan = planMembershipService.verifyAndReturnPlan(planId, memberId);
+        Plan plan = planMembershipService.getPlanAfterValidateAuthorization(planId, memberId);
         Label label = labelRepository.findById(request.getLabelId())
             .orElseThrow(() -> new ApiException(ErrorCode.LABEL_NOT_FOUND));
         if (!Objects.equals(label.getPlan().getId(), planId)) {
