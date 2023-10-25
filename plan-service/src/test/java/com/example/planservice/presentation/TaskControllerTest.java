@@ -38,7 +38,7 @@ class TaskControllerTest {
         Long userId = 2L;
 
         // stub
-        Mockito.when(taskService.createTask(anyLong(), any(TaskCreateRequest.class)))
+        Mockito.when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
             .thenReturn(createdId);
 
         // when & then

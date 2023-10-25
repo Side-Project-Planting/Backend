@@ -69,7 +69,7 @@ class TaskServiceTest {
             .build();
 
         // when
-        Long createdId = taskService.createTask(loginMember.getId(), request);
+        Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
         Task task = taskRepository.findById(createdId).get();
@@ -107,7 +107,7 @@ class TaskServiceTest {
             .build();
 
         // when
-        Long createdId = taskService.createTask(loginMember.getId(), request);
+        Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
         Task task = taskRepository.findById(createdId).get();
@@ -143,7 +143,7 @@ class TaskServiceTest {
             .build();
 
         // when & then
-        assertThatThrownBy(() -> taskService.createTask(loginMember.getId(), request))
+        assertThatThrownBy(() -> taskService.create(loginMember.getId(), request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
     }
@@ -168,7 +168,7 @@ class TaskServiceTest {
             .build();
 
         // when & then
-        assertThatThrownBy(() -> taskService.createTask(loginMember.getId(), request))
+        assertThatThrownBy(() -> taskService.create(loginMember.getId(), request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }

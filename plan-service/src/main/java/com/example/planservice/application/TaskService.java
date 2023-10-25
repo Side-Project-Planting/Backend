@@ -25,7 +25,7 @@ public class TaskService {
     private final PlanMembershipVerificationService planMembershipVerificationService;
 
     @Transactional
-    public Long createTask(Long memberId, TaskCreateRequest request) {
+    public Long create(Long memberId, TaskCreateRequest request) {
         try {
             planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
             Tab tab = tabRepository.findById(request.getTabId())
