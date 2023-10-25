@@ -2,6 +2,8 @@ package com.example.planservice.domain.label;
 
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.plan.Plan;
+import com.example.planservice.exception.ApiException;
+import com.example.planservice.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,6 +18,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.Objects;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -47,5 +51,11 @@ public class Label extends BaseEntity {
             .name(name)
             .plan(plan)
             .build();
+    }
+
+    public void validateBelongsToPlan(Plan plan) {
+        if (!Objects.equals(this.plan.getId(), plan.getId())) {
+            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
+        }
     }
 }

@@ -1,7 +1,5 @@
 package com.example.planservice.application;
 
-import java.util.Objects;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +28,6 @@ public class LabelService {
         if (plan.existsDuplicatedLabelName(name)) {
             throw new ApiException(ErrorCode.LABEL_NAME_DUPLICATE);
         }
-
         Label label = Label.create(name, plan);
         Label savedEntity = labelRepository.save(label);
 
@@ -44,17 +41,12 @@ public class LabelService {
 
     @Transactional
     public void delete(LabelDeleteServiceRequest request) {
-        Long planId = request.getPlanId();
-        Long memberId = request.getMemberId();
-
-        Plan plan = planMembershipService.getPlanAfterValidateAuthorization(planId, memberId);
+        Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), request.getMemberId());
         Label label = labelRepository.findById(request.getLabelId())
             .orElseThrow(() -> new ApiException(ErrorCode.LABEL_NOT_FOUND));
-        if (!Objects.equals(label.getPlan().getId(), planId)) {
-            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
-        }
+        label.validateBelongsToPlan(plan);
 
-        plan.remove(label);
         labelRepository.delete(label);
+        plan.remove(label);
     }
 }
