@@ -24,11 +24,7 @@ public class PlanMembershipService {
     public Plan getPlanAfterValidateAuthorization(Long planId, Long memberId) {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-
-        boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), memberId);
-        if (!existsInPlan) {
-            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
-        }
+        validateMemberIsInThePlan(memberId, plan);
         return plan;
     }
 

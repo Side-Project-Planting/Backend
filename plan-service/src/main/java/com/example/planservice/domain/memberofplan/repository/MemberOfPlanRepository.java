@@ -9,7 +9,5 @@ import java.util.Optional;
 
 @Repository
 public interface MemberOfPlanRepository extends JpaRepository<MemberOfPlan, Long> {
-    boolean existsByPlanIdAndMemberId(Long planId, Long memberId);
-
-    Optional<MemberOfPlan> findByPlanIdAndMemberId(Long id, Long memberId);
+    Optional<MemberOfPlan> findByPlanIdAndMemberId(Long planId, Long memberId);
 }
