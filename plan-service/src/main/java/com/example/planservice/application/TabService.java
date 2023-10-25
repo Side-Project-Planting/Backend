@@ -27,13 +27,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TabService {
-    private final PlanMembershipVerificationService planMembershipVerificationService;
+    private final PlanMembershipService planMembershipService;
     private final TabRepository tabRepository;
 
     @Transactional
     public Long create(Long memberId, TabCreateRequest request) {
         try {
-            Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
+            Plan plan = planMembershipService.verifyAndReturnPlan(request.getPlanId(), memberId);
             List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
 
             Tab createdTab = Tab.create(plan, request.getName());
@@ -49,7 +49,7 @@ public class TabService {
 
     @Transactional
     public List<Long> changeOrder(Long memberId, TabChangeOrderRequest request) {
-        Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
+        Plan plan = planMembershipService.verifyAndReturnPlan(request.getPlanId(), memberId);
 
         List<Tab> tabs = tabRepository.findAllByPlanId(request.getPlanId());
         TabGroup tabGroup = new TabGroup(plan.getId(), tabs);
@@ -61,7 +61,7 @@ public class TabService {
     //  Plan 없이는 Tab 기능 수행 못하는데, 이럴거면 Plan에 List<Tab> 양방향 연관관계를 거는게 어떤지
     @Transactional
     public TabChangeNameResponse changeName(TabChangeNameServiceRequest request) {
-        Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), request.getMemberId());
+        Plan plan = planMembershipService.verifyAndReturnPlan(request.getPlanId(), request.getMemberId());
         List<Tab> tabs = tabRepository.findAllByPlanId(plan.getId());
         TabGroup tabGroup = new TabGroup(plan.getId(), tabs);
 
@@ -86,7 +86,7 @@ public class TabService {
         Long tabId = request.getTabId();
         Long memberId = request.getMemberId();
 
-        boolean isAdmin = planMembershipVerificationService.validateOwner(planId, memberId);
+        boolean isAdmin = planMembershipService.validateOwner(planId, memberId);
         if (!isAdmin) {
             throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
         }

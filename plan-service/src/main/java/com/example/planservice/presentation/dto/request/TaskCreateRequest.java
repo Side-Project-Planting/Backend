@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class TaskCreateRequest {
-    private Long planId;
     private Long tabId;
     private Long managerId;
     private String name;
@@ -19,9 +18,8 @@ public class TaskCreateRequest {
     private LocalDateTime endDate;
 
     @Builder
-    private TaskCreateRequest(Long planId, Long tabId, Long managerId, String name, String description,
+    private TaskCreateRequest(Long tabId, Long managerId, String name, String description,
                               LocalDateTime startDate, LocalDateTime endDate) {
-        this.planId = planId;
         this.tabId = tabId;
         this.managerId = managerId;
         this.name = name;

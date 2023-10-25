@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class PlanMembershipVerificationService {
+public class PlanMembershipService {
     private final PlanRepository planRepository;
     private final MemberOfPlanRepository memberOfPlanRepository;
 
@@ -35,5 +35,12 @@ public class PlanMembershipVerificationService {
 
         Member owner = plan.getOwner();
         return Objects.equals(memberId, owner.getId());
+    }
+
+    public void verifyMemberIsInThePlan(Long memberId, Plan plan) {
+        boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), memberId);
+        if (!existsInPlan) {
+            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
+        }
     }
 }

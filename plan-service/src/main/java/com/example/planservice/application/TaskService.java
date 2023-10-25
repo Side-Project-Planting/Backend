@@ -22,14 +22,16 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final TabRepository tabRepository;
     private final MemberRepository memberRepository;
-    private final PlanMembershipVerificationService planMembershipVerificationService;
+    private final PlanMembershipService planMembershipService;
 
     @Transactional
     public Long create(Long memberId, TaskCreateRequest request) {
         try {
-            planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
             Tab tab = tabRepository.findById(request.getTabId())
                 .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND_IN_PLAN));
+            planMembershipService.verifyMemberIsInThePlan(memberId, tab.getPlan());
+            planMembershipService.verifyMemberIsInThePlan(request.getManagerId(), tab.getPlan());
+
             Member manager = memberRepository.findById(request.getManagerId())
                 .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
 

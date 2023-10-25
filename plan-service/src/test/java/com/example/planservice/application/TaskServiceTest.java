@@ -52,16 +52,14 @@ class TaskServiceTest {
     @DisplayName("특정 탭의 첫 태스크를 생성한다")
     void createTaskOrderFirst() {
         // given
-        Member loginMember = createMember();
-        Member manager = createMember();
-        Tab tab = createTab();
         Plan plan = createPlan();
-        createMemberOfPlan(plan, loginMember);
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Member taskManager = createMemberWithPlan(plan);
 
         TaskCreateRequest request = TaskCreateRequest.builder()
-            .planId(plan.getId())
             .tabId(tab.getId())
-            .managerId(manager.getId())
+            .managerId(taskManager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
@@ -85,19 +83,18 @@ class TaskServiceTest {
         assertThat(tab.getLastTask()).isEqualTo(task);
     }
 
+
     @Test
     @DisplayName("특정 탭의 N번째 태스크를 생성한다(첫 번째가 아님)")
     void createTaskOrderNotFirst() {
         // given
-        Member loginMember = createMember();
-        Member manager = createMember();
         Task originalFirstTab = createTask();
-        Tab tab = createTabWithLastTask(originalFirstTab);
         Plan plan = createPlan();
-        createMemberOfPlan(plan, loginMember);
+        Tab tab = createTabWithLastTask(originalFirstTab, plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Member manager = createMemberWithPlan(plan);
 
         TaskCreateRequest request = TaskCreateRequest.builder()
-            .planId(plan.getId())
             .tabId(tab.getId())
             .managerId(manager.getId())
             .name("스프링공부하기")
@@ -125,40 +122,15 @@ class TaskServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 플랜에는 태스크를 만들 수 없다")
-    void createFailNotExistPlan() {
-        // given
-        Member loginMember = createMember();
-        Member manager = createMember();
-        Tab tab = createTab();
-
-        TaskCreateRequest request = TaskCreateRequest.builder()
-            .planId(123123L)
-            .tabId(tab.getId())
-            .managerId(manager.getId())
-            .name("스프링공부하기")
-            .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
-            .startDate(null)
-            .endDate(null)
-            .build();
-
-        // when & then
-        assertThatThrownBy(() -> taskService.create(loginMember.getId(), request))
-            .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
-    }
-
-    @Test
     @DisplayName("플랜에 속한 사람만 태스크를 만들 수 있다")
     void createFailNotExistMemberInPlan() {
         // given
         Member loginMember = createMember();
         Member manager = createMember();
-        Tab tab = createTab();
         Plan plan = createPlan();
+        Tab tab = createTab(plan);
 
         TaskCreateRequest request = TaskCreateRequest.builder()
-            .planId(plan.getId())
             .tabId(tab.getId())
             .managerId(manager.getId())
             .name("스프링공부하기")
@@ -180,16 +152,28 @@ class TaskServiceTest {
         return plan;
     }
 
-    private Tab createTab() {
-        Tab tab = Tab.builder().build();
+    private Member createMemberWithPlan(Plan plan) {
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+        return member;
+    }
+
+    private Tab createTab(Plan plan) {
+        Tab.TabBuilder builder = Tab.builder();
+        if (plan != null) {
+            builder.plan(plan);
+        }
+        Tab tab = builder.build();
         tabRepository.save(tab);
         return tab;
     }
 
-    private Tab createTabWithLastTask(Task lastTask) {
-        Tab tab = Tab.builder()
-            .lastTask(lastTask)
-            .build();
+    private Tab createTabWithLastTask(@NotNull Task lastTask, Plan plan) {
+        Tab.TabBuilder builder = Tab.builder();
+        if (plan != null) {
+            builder.plan(plan);
+        }
+        Tab tab = builder.lastTask(lastTask).build();
         tabRepository.save(tab);
         return tab;
     }

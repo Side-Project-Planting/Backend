@@ -24,9 +24,9 @@ import com.example.planservice.exception.ErrorCode;
 @ActiveProfiles("test")
 @Transactional
 @SuppressWarnings("squid:S5778")
-class PlanMembershipVerificationServiceTest {
+class PlanMembershipServiceTest {
     @Autowired
-    PlanMembershipVerificationService service;
+    PlanMembershipService service;
 
     @Autowired
     PlanRepository planRepository;
