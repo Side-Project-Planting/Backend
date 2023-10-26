@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Getter
 public class MemberRegisterRequest {
     @URL
-    private String profileUrl;
+    private String profileUri;
 
     @NotBlank
     private String name;
@@ -24,8 +24,8 @@ public class MemberRegisterRequest {
     private boolean receiveEmails;
 
     @Builder
-    private MemberRegisterRequest(String profileUrl, String name, String email, boolean receiveEmails) {
-        this.profileUrl = profileUrl;
+    private MemberRegisterRequest(String profileUri, String name, String email, boolean receiveEmails) {
+        this.profileUri = profileUri;
         this.name = name;
         this.email = email;
         this.receiveEmails = receiveEmails;
@@ -33,7 +33,7 @@ public class MemberRegisterRequest {
 
     public Member toEntity() {
         return Member.createNormalUser()
-            .profileUri(profileUrl)
+            .profileUri(profileUri)
             .name(name)
             .email(email)
             .receiveEmails(receiveEmails)

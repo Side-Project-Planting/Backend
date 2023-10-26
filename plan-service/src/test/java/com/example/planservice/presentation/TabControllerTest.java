@@ -65,7 +65,7 @@ class TabControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
             .andExpect(header().string("Location", "/tabs/" + createdTabId))
-            .andExpect(redirectedUrlPattern("/tabs/*"));
+            .andExpect(redirectedUrlPattern("/tabs/*")); // TODO 리다이렉트를 왜 적었지?? 심신미약이었나봄,,
     }
 
     @Test

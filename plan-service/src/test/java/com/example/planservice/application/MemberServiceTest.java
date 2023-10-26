@@ -29,13 +29,13 @@ class MemberServiceTest {
     void testRegister() throws Exception {
         // given
         String email = "a@naver.ocm";
-        String profileUrl = "https:/sd2sw2.com";
+        String profileUri = "https:/sd2sw2.com";
         String name = "김태훈";
         boolean receiveEmails = false;
 
         MemberRegisterRequest request = MemberRegisterRequest.builder()
             .email(email)
-            .profileUrl(profileUrl)
+            .profileUri(profileUri)
             .name(name)
             .receiveEmails(receiveEmails)
             .build();
@@ -46,13 +46,13 @@ class MemberServiceTest {
         // then
         assertThat(response.getId()).isNotNull();
         assertThat(response.getEmail()).isEqualTo(email);
-        assertThat(response.getProfileUri()).isEqualTo(profileUrl);
+        assertThat(response.getProfileUri()).isEqualTo(profileUri);
         assertThat(response.getName()).isEqualTo(name);
         assertThat(response.isReceiveEmails()).isEqualTo(receiveEmails);
 
         Member result = em.find(Member.class, response.getId());
         assertThat(result.getEmail()).isEqualTo(email);
-        assertThat(result.getProfileUri()).isEqualTo(profileUrl);
+        assertThat(result.getProfileUri()).isEqualTo(profileUri);
         assertThat(result.getName()).isEqualTo(name);
         assertThat(result.isReceiveEmails()).isEqualTo(receiveEmails);
     }
