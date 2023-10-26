@@ -11,9 +11,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "labels")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class Label extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,4 +31,10 @@ public class Label extends BaseEntity {
     private Plan plan;
 
     private String name;
+
+    @Builder
+    private Label(Plan plan, String name) {
+        this.plan = plan;
+        this.name = name;
+    }
 }

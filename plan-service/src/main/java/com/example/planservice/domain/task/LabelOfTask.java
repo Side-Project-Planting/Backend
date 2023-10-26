@@ -11,9 +11,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "labels_of_task")
+@Getter
 public class LabelOfTask extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,4 +33,17 @@ public class LabelOfTask extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "label_id")
     private Label label;
+
+    @Builder
+    private LabelOfTask(Task task, Label label) {
+        this.task = task;
+        this.label = label;
+    }
+
+    public static LabelOfTask create(Label label, Task task) {
+        return LabelOfTask.builder()
+            .label(label)
+            .task(task)
+            .build();
+    }
 }
