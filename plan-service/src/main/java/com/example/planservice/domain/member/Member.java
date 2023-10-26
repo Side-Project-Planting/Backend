@@ -27,10 +27,11 @@ public class Member extends BaseEntity {
     @Column(name = "member_id")
     private Long id;
 
-    private String profileImgUri;
+    private String profileUri;
 
     private String name;
 
+    @Column(unique = true)
     private String email;
 
     private boolean receiveEmails;
@@ -41,13 +42,23 @@ public class Member extends BaseEntity {
     private boolean isDeleted;
 
     @Builder
-    private Member(String profileImgUri, String name, String email, boolean receiveEmails, Role role,
+    private Member(String profileUri, String name, String email, boolean receiveEmails, Role role,
                    boolean isDeleted) {
-        this.profileImgUri = profileImgUri;
+        this.profileUri = profileUri;
         this.name = name;
         this.email = email;
         this.receiveEmails = receiveEmails;
         this.role = role;
         this.isDeleted = isDeleted;
+    }
+
+    @Builder(builderMethodName = "createNormalUser")
+    private Member(String profileUri, String name, String email, boolean receiveEmails) {
+        this.profileUri = profileUri;
+        this.name = name;
+        this.email = email;
+        this.receiveEmails = receiveEmails;
+        this.role = Role.USER;
+        this.isDeleted = false;
     }
 }
