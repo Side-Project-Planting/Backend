@@ -1,6 +1,7 @@
 package com.example.planservice.presentation.dto.request;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.example.planservice.domain.task.Task;
 import lombok.Builder;
@@ -17,10 +18,12 @@ public class TaskCreateRequest {
     private String description;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+    private List<Long> labels;
 
     @Builder
+    @SuppressWarnings("java:S107")
     private TaskCreateRequest(Long planId, Long tabId, Long managerId, String name, String description,
-                              LocalDateTime startDate, LocalDateTime endDate) {
+                              LocalDateTime startDate, LocalDateTime endDate, List<Long> labels) {
         this.planId = planId;
         this.tabId = tabId;
         this.managerId = managerId;
@@ -28,6 +31,7 @@ public class TaskCreateRequest {
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.labels = labels;
     }
 
     public Task toEntity() {
