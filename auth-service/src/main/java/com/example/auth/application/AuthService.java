@@ -48,6 +48,12 @@ public class AuthService {
         return new GetAuthorizedUriResponse(oAuthProvider.getAuthorizedUriWithParams(state));
     }
 
+    /**
+     * 어떤 OAuthProvider와 상호작용중인지, 그리고 해당 Proviver에게 받아온 AuthCode를 입력한다. ex. google, google에게 받아온 authCode
+     * 기존에 등록된 적 없던 사용자면 DB에 저장해주고, 기존에 등록된 적 있는 사용자의 경우 해당 데이터를 불러온다.
+     * 불러온 데이터를 사용해 TokenInfo를 만들어 사용자에게 반환한다.
+     * OAuthInfo의 refreshToken 필드를 새롭게 만들어진 RefreshToken으로 갱신한다
+     */
     @Transactional
     public OAuthLoginResponse login(String providerName, String authCode) {
         OAuthProvider oAuthProvider = oAuthProviderResolver.find(providerName);
@@ -56,22 +62,18 @@ public class AuthService {
 
         TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(oAuthInfo.getId(), LocalDateTime.now());
         // TODO 현재는 Auth Service의 ID를 담아서 토큰을 생성하는중
+        //  Auth Service와 PlanService가 동일한 ID를 사용하게 만들어야 할지, UUID를 사용해야 할지 고민하기
 
         oAuthInfo.changeRefreshToken(tokenInfo.getRefreshToken());
         return OAuthLoginResponse.create(oAuthInfo, tokenInfo, response.getProfileUrl());
     }
 
-    private OAuthInfo retrieveOrCreateMemberUsingAuthCode(OAuthType type, OAuthUserResponse response) {
-        Optional<OAuthInfo> oAuthInfoOpt = authInfoRepository.findByIdUsingResourceServerAndType(
-            response.getIdUsingResourceServer(), type);
-
-        if (oAuthInfoOpt.isEmpty()) {
-            OAuthInfo oAuthInfo = response.toEntity(type);
-            return authInfoRepository.save(oAuthInfo);
-        }
-        return oAuthInfoOpt.get();
-    }
-
+    /**
+     * 서비스를 이용하기 위해 필요한 초기값을 입력받는다.
+     * OAuth 방식으로 인증이 끝난 사용자는 profileUrl, name, email을 추가로 입력한다.
+     * Member를 관리하는 MSA 서버에게 register 요청을 보낸다.
+     * 요청이 성공하면 OAuthInfo의 registered 필드를 true로 변경하고 응답을 반환한다
+     */
     @Transactional
     public RegisterResponse register(RegisterRequest request, Long userId) {
         OAuthInfo info = authInfoRepository.findById(userId)
@@ -85,10 +87,10 @@ public class AuthService {
         return new RegisterResponse(response.getId());
     }
 
-    public TokenInfoResponse parse(String token) {
-        return jwtTokenProvider.parse(token);
-    }
-
+    /**
+     * 리프레쉬 토큰을 사용해 TokenInfo를 재발급한다.
+     * 만약 리프레쉬 토큰이 잘못되었거나, 만료되었다면 예외를 반환한다.
+     */
     @Transactional
     public TokenInfo refreshToken(TokenRefreshRequest request, Long userId) {
         OAuthInfo info = authInfoRepository.findById(userId)
@@ -106,5 +108,24 @@ public class AuthService {
 
         info.changeRefreshToken(generatedTokenInfo.getRefreshToken());
         return generatedTokenInfo;
+    }
+
+    /**
+     * 입력된 토큰이 적절한지 파싱한다.
+     */
+    public TokenInfoResponse parse(String token) {
+        return jwtTokenProvider.parse(token);
+    }
+
+
+    private OAuthInfo retrieveOrCreateMemberUsingAuthCode(OAuthType type, OAuthUserResponse response) {
+        Optional<OAuthInfo> oAuthInfoOpt = authInfoRepository.findByIdUsingResourceServerAndType(
+            response.getIdUsingResourceServer(), type);
+
+        if (oAuthInfoOpt.isEmpty()) {
+            OAuthInfo oAuthInfo = response.toEntity(type);
+            return authInfoRepository.save(oAuthInfo);
+        }
+        return oAuthInfoOpt.get();
     }
 }
