@@ -20,14 +20,13 @@ eureka:
   client:
     enabled: false
 mail:
-  smtp:
-    host: smtp.test.com
-    port: 0000
-    auth: false
-    ssl:
-      trust: smtp.test.com
-      enable: false
-    starttls:
-      enable: false
+  host: smtp.test.com
+  port: 0000
+  auth: false
+  ssl:
+    trust: smtp.test.com
+    enable: false
+  starttls:
+    enable: false
   username: sa
   password: 00

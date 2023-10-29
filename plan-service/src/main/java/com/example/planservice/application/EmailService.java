@@ -1,7 +1,9 @@
 package com.example.planservice.application;
 
-import java.util.Properties;
-
+import com.example.planservice.config.MailProperties;
+import com.example.planservice.exception.ApiException;
+import com.example.planservice.exception.ErrorCode;
+import jakarta.annotation.PostConstruct;
 import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -10,14 +12,8 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.example.planservice.exception.ApiException;
-import com.example.planservice.exception.ErrorCode;
-
-import jakarta.annotation.PostConstruct;
 
 @Component
 public class EmailService {
@@ -26,29 +22,8 @@ public class EmailService {
 
     private Session session;
 
-    @Value("${mail.username}")
-    private String userEmail;
-
-    @Value("${mail.password}")
-    private String password;
-
-    @Value("${mail.smtp.host}")
-    private String host;
-
-    @Value("${mail.smtp.port}")
-    private String port;
-
-    @Value("${mail.smtp.auth}")
-    private String auth;
-
-    @Value("${mail.smtp.starttls.enable}")
-    private String starttlsEnable;
-
-    @Value("${mail.smtp.ssl.trust}")
-    private String sslTrust;
-
-    @Value("${mail.smtp.ssl.enable}")
-    private String sslEnable;
+    @Autowired
+    private MailProperties mailProperties;
 
     @PostConstruct
     public void init() {
@@ -58,7 +33,7 @@ public class EmailService {
     public void sendEmail(String to, String text) {
         try {
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(userEmail));
+            message.setFrom(new InternetAddress(mailProperties.getUsername()));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
             message.setSubject(INVITING_SUBJECT);
             String content = text + ' ' + INVITING_ANNOUNCEMENT;
@@ -78,19 +53,10 @@ public class EmailService {
     }
 
     private Session initSession() {
-        Properties props = new Properties();
-
-        props.setProperty("mail.smtp.host", host);
-        props.setProperty("mail.smtp.port", port);
-        props.setProperty("mail.smtp.auth", auth);
-        props.setProperty("mail.smtp.starttls.enable", starttlsEnable);
-        props.setProperty("mail.smtp.ssl.trust", sslTrust);
-        props.setProperty("mail.smtp.ssl.enable", sslEnable);
-
-        return Session.getInstance(props, new Authenticator() {
+        return Session.getInstance(mailProperties.toProperties(), new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(userEmail, password);
+                return new PasswordAuthentication(mailProperties.getUsername(), mailProperties.getPassword());
             }
         });
     }
