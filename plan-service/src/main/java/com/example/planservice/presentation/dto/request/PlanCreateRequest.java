@@ -23,7 +23,7 @@ public class PlanCreateRequest {
     private List<@Email String> invitedEmails;
 
     @Builder
-    public PlanCreateRequest(String title, String intro, boolean isPublic, List<String> invitedEmails) {
+    private PlanCreateRequest(String title, String intro, boolean isPublic, List<String> invitedEmails) {
         this.title = title;
         this.intro = intro;
         this.isPublic = isPublic;
