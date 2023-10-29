@@ -13,7 +13,7 @@ import com.example.auth.application.dto.response.RegisterResponse;
 import com.example.auth.client.MemberServiceClient;
 import com.example.auth.client.dto.MemberRegisterRequest;
 import com.example.auth.client.dto.MemberRegisterResponse;
-import com.example.auth.domain.AuthMemberRepository;
+import com.example.auth.domain.AuthInfoRepository;
 import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
 import com.example.auth.exception.ApiException;
@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class AuthService {
     private final OAuthProviderResolver oAuthProviderResolver;
-    private final AuthMemberRepository authMemberRepository;
+    private final AuthInfoRepository authInfoRepository;
     private final RandomStringFactory randomStringFactory;
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberServiceClient memberServiceClient;
@@ -62,30 +62,26 @@ public class AuthService {
     }
 
     private OAuthInfo retrieveOrCreateMemberUsingAuthCode(OAuthType type, OAuthUserResponse response) {
-        Optional<OAuthInfo> oAuthMemberOpt = authMemberRepository.findByIdUsingResourceServerAndType(
+        Optional<OAuthInfo> oAuthInfoOpt = authInfoRepository.findByIdUsingResourceServerAndType(
             response.getIdUsingResourceServer(), type);
 
-        if (oAuthMemberOpt.isEmpty()) {
+        if (oAuthInfoOpt.isEmpty()) {
             OAuthInfo oAuthInfo = response.toEntity(type);
-            return authMemberRepository.save(oAuthInfo);
+            return authInfoRepository.save(oAuthInfo);
         }
-        return oAuthMemberOpt.get();
+        return oAuthInfoOpt.get();
     }
 
     @Transactional
     public RegisterResponse register(RegisterRequest request, Long userId) {
-        Optional<OAuthInfo> memberOpt = authMemberRepository.findById(userId);
-        if (memberOpt.isEmpty()) {
-            throw new ApiException(ErrorCode.USER_NOT_FOUND);
-        }
-
-        OAuthInfo member = memberOpt.get();
+        OAuthInfo info = authInfoRepository.findById(userId)
+            .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
         MemberRegisterRequest requestUsingMemberService =
-            MemberRegisterRequest.create(request.getProfileUrl(), request.getName(), member.getEmail());
+            MemberRegisterRequest.create(request.getProfileUrl(), request.getName(), info.getEmail());
         MemberRegisterResponse response = memberServiceClient.register(requestUsingMemberService);
 
-        member.init();
+        info.init();
         return new RegisterResponse(response.getId());
     }
 
@@ -95,23 +91,20 @@ public class AuthService {
 
     @Transactional
     public TokenInfo refreshToken(TokenRefreshRequest request, Long userId) {
-        Optional<OAuthInfo> memberOpt = authMemberRepository.findById(userId);
-        if (memberOpt.isEmpty()) {
-            throw new ApiException(ErrorCode.USER_NOT_FOUND);
-        }
+        OAuthInfo info = authInfoRepository.findById(userId)
+            .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
-        OAuthInfo member = memberOpt.get();
-        if (!member.isRefreshTokenMatching(request.getRefreshToken())) {
+        if (!info.isRefreshTokenMatching(request.getRefreshToken())) {
             throw new ApiException(ErrorCode.REFRESH_TOKEN_INVALID);
         }
 
-        if (jwtTokenProvider.isTokenExpired(member.getRefreshToken())) {
+        if (jwtTokenProvider.isTokenExpired(info.getRefreshToken())) {
             throw new ApiException(ErrorCode.TOKEN_TIMEOVER);
         }
 
-        TokenInfo generatedTokenInfo = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now());
+        TokenInfo generatedTokenInfo = jwtTokenProvider.generateTokenInfo(info.getId(), LocalDateTime.now());
 
-        member.changeRefreshToken(generatedTokenInfo.getRefreshToken());
+        info.changeRefreshToken(generatedTokenInfo.getRefreshToken());
         return generatedTokenInfo;
     }
 }

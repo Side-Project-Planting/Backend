@@ -12,13 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
-class AuthMemberRepositoryTest {
+class AuthInfoRepositoryTest {
     @Autowired
-    AuthMemberRepository authMemberRepository;
+    AuthInfoRepository authInfoRepository;
 
     @Test
     @DisplayName("리소스서버의 id와 OAuthType을 사용해 조회한다")
-    void getOAuthMemberUsingIdUsingResourceServerAndType() {
+    void getOAuthInfoUsingIdUsingResourceServerAndType() {
         // given
         final String idUsingResourceServer = "1234";
         final OAuthType type = OAuthType.GOOGLE;
@@ -28,11 +28,11 @@ class AuthMemberRepositoryTest {
             .idUsingResourceServer(idUsingResourceServer)
             .oAuthType(OAuthType.GOOGLE)
             .build();
-        authMemberRepository.save(oAuthInfo);
+        authInfoRepository.save(oAuthInfo);
 
         // when
         final OAuthInfo result =
-            authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type).get();
+            authInfoRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type).get();
 
         // then
         assertThat(result.getId()).isNotNull();
@@ -50,7 +50,7 @@ class AuthMemberRepositoryTest {
 
         // when
         final Optional<OAuthInfo> resultOpt =
-            authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type);
+            authInfoRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type);
 
         // then
         assertThat(resultOpt).isEmpty();

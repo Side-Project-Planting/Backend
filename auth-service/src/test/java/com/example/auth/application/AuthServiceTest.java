@@ -29,7 +29,7 @@ import com.example.auth.application.dto.response.RegisterResponse;
 import com.example.auth.client.MemberServiceClient;
 import com.example.auth.client.dto.MemberRegisterRequest;
 import com.example.auth.client.dto.MemberRegisterResponse;
-import com.example.auth.domain.AuthMemberRepository;
+import com.example.auth.domain.AuthInfoRepository;
 import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
 import com.example.auth.exception.ApiException;
@@ -53,7 +53,7 @@ class AuthServiceTest {
     AuthService authService;
 
     @Autowired
-    AuthMemberRepository authMemberRepository;
+    AuthInfoRepository authInfoRepository;
 
     @Autowired
     RandomStringFactory factory;
@@ -78,7 +78,7 @@ class AuthServiceTest {
     void setUp() {
         provider = new GoogleOAuthProvider(oAuthProperties, googleOAuthClient);
         resolver = new OAuthProviderResolver(List.of(provider));
-        authService = new AuthService(resolver, authMemberRepository, factory, jwtTokenProvider, memberServiceClient);
+        authService = new AuthService(resolver, authInfoRepository, factory, jwtTokenProvider, memberServiceClient);
     }
 
     @Test
@@ -125,8 +125,8 @@ class AuthServiceTest {
         final String idUsingResourceServer = "1";
 
         final OAuthUserResponse oAuthUserResponse = createOAuthUserResponse(email, profileUrl, idUsingResourceServer);
-        final OAuthInfo member = createOAuthMember(email, idUsingResourceServer);
-        authMemberRepository.save(member);
+        final OAuthInfo info = createOAuthInfo(email, idUsingResourceServer);
+        authInfoRepository.save(info);
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
@@ -144,7 +144,7 @@ class AuthServiceTest {
         assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
         assertThat(response.getGrantType()).isEqualTo("Bearer");
 
-        assertThat(member.getRefreshToken()).isNotBlank();
+        assertThat(info.getRefreshToken()).isNotBlank();
     }
 
     @Test
@@ -232,7 +232,7 @@ class AuthServiceTest {
         final OAuthInfo member = OAuthInfo.builder()
             .build();
         final long registeredId = 1L;
-        authMemberRepository.save(member);
+        authInfoRepository.save(member);
 
         MemberRegisterResponse responseAboutMemberService = MemberRegisterResponse.builder()
             .id(registeredId)
@@ -251,7 +251,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("회원가입 시 userId를 사용해 OAuthMember를 조회할 수 없으면 예외를 반환한다")
+    @DisplayName("회원가입 시 userId를 사용해 OAuthInfo를 조회할 수 없으면 예외를 반환한다")
     void registerFailNotFoundUser() {
         // given
         final RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
@@ -268,7 +268,7 @@ class AuthServiceTest {
         // given
         final OAuthInfo member = OAuthInfo.builder()
             .build();
-        authMemberRepository.save(member);
+        authInfoRepository.save(member);
 
         final String refreshToken = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now())
             .getRefreshToken();
@@ -309,7 +309,7 @@ class AuthServiceTest {
         final OAuthInfo member = OAuthInfo.builder()
             .refreshToken("기존 RefreshToken")
             .build();
-        authMemberRepository.save(member);
+        authInfoRepository.save(member);
 
         final Long memberId = member.getId();
         final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now())
@@ -328,7 +328,7 @@ class AuthServiceTest {
         // given
         final OAuthInfo member = OAuthInfo.builder()
             .build();
-        authMemberRepository.save(member);
+        authInfoRepository.save(member);
         final Long memberId = member.getId();
         final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId,
                 LocalDateTime.of(1900, 1, 1, 1, 1))
@@ -351,7 +351,7 @@ class AuthServiceTest {
         return params;
     }
 
-    private OAuthInfo createOAuthMember(String email, String idUsingResourceServer) {
+    private OAuthInfo createOAuthInfo(String email, String idUsingResourceServer) {
         return OAuthInfo.builder()
             .oAuthType(OAuthType.GOOGLE)
             .email(email)
