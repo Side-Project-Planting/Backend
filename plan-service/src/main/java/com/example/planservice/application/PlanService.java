@@ -2,7 +2,6 @@ package com.example.planservice.application;
 
 import java.util.List;
 
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,24 +29,20 @@ public class PlanService {
 
     @Transactional
     public Long create(PlanCreateRequest request, Long userId) {
-        try {
-            Member member = memberRepository.findById(userId).orElseThrow(() -> new ApiException(
-                ErrorCode.MEMBER_NOT_FOUND));
-            Plan plan = Plan.builder()
-                .title(request.getTitle())
-                .intro(request.getIntro())
-                .isPublic(request.isPublic())
-                .owner(member)
-                .build();
+        Member member = memberRepository.findById(userId).orElseThrow(() -> new ApiException(
+            ErrorCode.MEMBER_NOT_FOUND));
+        Plan plan = Plan.builder()
+            .title(request.getTitle())
+            .intro(request.getIntro())
+            .isPublic(request.isPublic())
+            .owner(member)
+            .build();
 
-            sendInviteMail(request.getInvitedEmails(), request.getTitle());
-            createDefaultTab(plan);
+        sendInviteMail(request.getInvitedEmails(), request.getTitle());
+        createDefaultTab(plan);
 
-            Plan savedPlan = planRepository.save(plan);
-            return savedPlan.getId();
-        } catch (ObjectOptimisticLockingFailureException e) {
-            throw new ApiException(ErrorCode.REQUEST_CONFLICT);
-        }
+        Plan savedPlan = planRepository.save(plan);
+        return savedPlan.getId();
     }
 
     private void sendInviteMail(List<String> invitedEmails, String title) {
