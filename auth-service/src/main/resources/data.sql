@@ -1,0 +1,1 @@
+insert into auth_members(id, email, registered) values (1, "not-registered@naver.com", false);
