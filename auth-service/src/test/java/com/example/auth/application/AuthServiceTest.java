@@ -2,6 +2,7 @@ package com.example.auth.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -25,8 +26,11 @@ import com.example.auth.application.dto.response.GetAuthorizedUriResponse;
 import com.example.auth.application.dto.response.OAuthLoginResponse;
 import com.example.auth.application.dto.response.OAuthUserResponse;
 import com.example.auth.application.dto.response.RegisterResponse;
+import com.example.auth.client.MemberServiceClient;
+import com.example.auth.client.dto.MemberRegisterRequest;
+import com.example.auth.client.dto.MemberRegisterResponse;
 import com.example.auth.domain.AuthMemberRepository;
-import com.example.auth.domain.OAuthMember;
+import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
 import com.example.auth.exception.ApiException;
 import com.example.auth.exception.ErrorCode;
@@ -67,11 +71,14 @@ class AuthServiceTest {
     @MockBean
     GoogleOAuthClient googleOAuthClient;
 
+    @MockBean
+    MemberServiceClient memberServiceClient;
+
     @BeforeEach
     void setUp() {
         provider = new GoogleOAuthProvider(oAuthProperties, googleOAuthClient);
         resolver = new OAuthProviderResolver(List.of(provider));
-        authService = new AuthService(resolver, authMemberRepository, factory, jwtTokenProvider);
+        authService = new AuthService(resolver, authMemberRepository, factory, jwtTokenProvider, memberServiceClient);
     }
 
     @Test
@@ -88,21 +95,21 @@ class AuthServiceTest {
 
         assertThat(endpoint).isNotBlank();
         assertThat(params)
-                .hasSize(5)
-                .containsKey("client_id")
-                .containsKey("redirect_uri")
-                .containsKey("scope")
-                .containsKey("response_type")
-                .containsKey("state");
+            .hasSize(5)
+            .containsKey("client_id")
+            .containsKey("redirect_uri")
+            .containsKey("scope")
+            .containsKey("response_type")
+            .containsKey("state");
     }
 
     @ParameterizedTest
     @DisplayName("처리할 수 없는 ProviderName으로는 AuthorizedUrl을 가져올 수 없다")
-    @ValueSource(strings = { "naver", "kakao", "Google", " ", "" })
+    @ValueSource(strings = {"naver", "kakao", "Google", " ", ""})
     void cantGetAuthorizedUrlAboutNotSupportedProviderName(String providerName) {
         assertThatThrownBy(() -> authService.getAuthorizedUri(providerName))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining(ErrorCode.OAUTH_PROVIDER_NOT_FOUND.getMessage());
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.OAUTH_PROVIDER_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -118,14 +125,14 @@ class AuthServiceTest {
         final String idUsingResourceServer = "1";
 
         final OAuthUserResponse oAuthUserResponse = createOAuthUserResponse(email, profileUrl, idUsingResourceServer);
-        final OAuthMember member = createOAuthMember(email, profileUrl, idUsingResourceServer);
+        final OAuthInfo member = createOAuthMember(email, profileUrl, idUsingResourceServer);
         authMemberRepository.save(member);
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
-                .thenReturn(new AccessTokenResponse(accessToken));
+            .thenReturn(new AccessTokenResponse(accessToken));
         when(googleOAuthClient.getOAuthUserResponse(accessToken))
-                .thenReturn(oAuthUserResponse);
+            .thenReturn(oAuthUserResponse);
 
         //when
         final OAuthLoginResponse response = authService.login(providerName, authCode);
@@ -148,13 +155,13 @@ class AuthServiceTest {
         final String authCode = "authcode";
         final String accessToken = "accessToken";
         final OAuthUserResponse oAuthUserResponse =
-                createOAuthUserResponse("hello@naver.com", "https://imageurl", "1");
+            createOAuthUserResponse("hello@naver.com", "https://imageurl", "1");
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
-                .thenReturn(new AccessTokenResponse(accessToken));
+            .thenReturn(new AccessTokenResponse(accessToken));
         when(googleOAuthClient.getOAuthUserResponse(accessToken))
-                .thenReturn(oAuthUserResponse);
+            .thenReturn(oAuthUserResponse);
 
         //when
         final OAuthLoginResponse response = authService.login(providerName, authCode);
@@ -169,15 +176,15 @@ class AuthServiceTest {
 
     @ParameterizedTest
     @DisplayName("로그인할 때 지원하지 않는 ProviderName에 대해 예외를 반환한다")
-    @ValueSource(strings = { "naver", "kakao", "Google", " ", "" })
+    @ValueSource(strings = {"naver", "kakao", "Google", " ", ""})
     void returnExceptionAboutNotSupportedProviderName(String providerName) {
         // given
         final String authCode = "authcode";
 
         // when & then
         assertThatThrownBy(() -> authService.login(providerName, authCode))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining(ErrorCode.OAUTH_PROVIDER_NOT_FOUND.getMessage());
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.OAUTH_PROVIDER_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -189,12 +196,12 @@ class AuthServiceTest {
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
-                .thenThrow(new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL));
+            .thenThrow(new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL));
 
         //when & then
         assertThatThrownBy(() -> authService.login(providerName, authCode))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining(ErrorCode.ACCESS_TOKEN_FETCH_FAIL.getMessage());
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.ACCESS_TOKEN_FETCH_FAIL.getMessage());
     }
 
     @Test
@@ -207,25 +214,34 @@ class AuthServiceTest {
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
-                .thenReturn(new AccessTokenResponse(accessToken));
+            .thenReturn(new AccessTokenResponse(accessToken));
         when(googleOAuthClient.getOAuthUserResponse(accessToken))
-                .thenThrow(new ApiException(ErrorCode.USER_INFO_FETCH_FAIL));
+            .thenThrow(new ApiException(ErrorCode.USER_INFO_FETCH_FAIL));
 
         //when & then
         assertThatThrownBy(() -> authService.login(providerName, authCode))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining(ErrorCode.USER_INFO_FETCH_FAIL.getMessage());
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.USER_INFO_FETCH_FAIL.getMessage());
     }
 
     @Test
-    @DisplayName("OAuthMember를 등록한다")
-    void registerOAuthMember() {
+    @DisplayName("OAuthInfo를 등록한다")
+    void registerOAuthInfo() {
         // given
         final RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
-        final OAuthMember member = OAuthMember.builder()
-                                              .profileUrl("https://oldUrl")
-                                              .build();
+        final OAuthInfo member = OAuthInfo.builder()
+            .profileUrl("https://oldUrl")
+            .build();
+        final long registeredId = 1L;
         authMemberRepository.save(member);
+
+        MemberRegisterResponse responseAboutMemberService = MemberRegisterResponse.builder()
+            .id(registeredId)
+            .build();
+
+        // stub
+        when(memberServiceClient.register(any(MemberRegisterRequest.class)))
+            .thenReturn(responseAboutMemberService);
 
         // when
         final RegisterResponse response = authService.register(request, member.getId());
@@ -244,20 +260,20 @@ class AuthServiceTest {
 
         // when & then
         assertThatThrownBy(() -> authService.register(request, 1L))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
     }
 
     @Test
     @DisplayName("refresh token으로 access token을 재발급한다")
     void refreshToken() {
         // given
-        final OAuthMember member = OAuthMember.builder()
-                                              .build();
+        final OAuthInfo member = OAuthInfo.builder()
+            .build();
         authMemberRepository.save(member);
 
         final String refreshToken = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now())
-                                                    .getRefreshToken();
+            .getRefreshToken();
         member.changeRefreshToken(refreshToken);
         final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
         final Long memberId = member.getId();
@@ -279,53 +295,53 @@ class AuthServiceTest {
         // given
         final Long memberId = 1L;
         final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now())
-                                                    .getRefreshToken();
+            .getRefreshToken();
         final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
 
         // when & then
         assertThatThrownBy(() -> authService.refreshToken(request, memberId))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
     }
 
     @Test
     @DisplayName("입력받은 RefreshToken이 기존에 발급한 Refresh Token과 일치하지 않으면 예외를 반환한다")
     void refreshTokenNotEqualPrevValue() {
         // given
-        final OAuthMember member = OAuthMember.builder()
-                                              .refreshToken("기존 RefreshToken")
-                                              .build();
+        final OAuthInfo member = OAuthInfo.builder()
+            .refreshToken("기존 RefreshToken")
+            .build();
         authMemberRepository.save(member);
 
         final Long memberId = member.getId();
         final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now())
-                                                    .getRefreshToken();
+            .getRefreshToken();
         final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
 
         // when & then
         assertThatThrownBy(() -> authService.refreshToken(request, memberId))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining(ErrorCode.REFRESH_TOKEN_INVALID.getMessage());
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.REFRESH_TOKEN_INVALID.getMessage());
     }
 
     @Test
     @DisplayName("Refresh Token의 기한이 지났으면 예외를 반환한다")
     void refreshTokenExpired() {
         // given
-        final OAuthMember member = OAuthMember.builder()
-                                              .build();
+        final OAuthInfo member = OAuthInfo.builder()
+            .build();
         authMemberRepository.save(member);
         final Long memberId = member.getId();
         final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId,
-                                                                       LocalDateTime.of(1900, 1, 1, 1, 1))
-                                                    .getRefreshToken();
+                LocalDateTime.of(1900, 1, 1, 1, 1))
+            .getRefreshToken();
         member.changeRefreshToken(refreshToken);
         final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
 
         // when & then
         assertThatThrownBy(() -> authService.refreshToken(request, memberId))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining(ErrorCode.TOKEN_TIMEOVER.getMessage());
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TOKEN_TIMEOVER.getMessage());
     }
 
     private Map<String, String> extractParams(String paramsStr) {
@@ -337,21 +353,21 @@ class AuthServiceTest {
         return params;
     }
 
-    private OAuthMember createOAuthMember(String email, String profileUrl, String idUsingResourceServer) {
-        return OAuthMember.builder()
-                          .oAuthType(OAuthType.GOOGLE)
-                          .email(email)
-                          .profileUrl(profileUrl)
-                          .idUsingResourceServer(idUsingResourceServer)
-                          .build();
+    private OAuthInfo createOAuthMember(String email, String profileUrl, String idUsingResourceServer) {
+        return OAuthInfo.builder()
+            .oAuthType(OAuthType.GOOGLE)
+            .email(email)
+            .profileUrl(profileUrl)
+            .idUsingResourceServer(idUsingResourceServer)
+            .build();
     }
 
     private OAuthUserResponse createOAuthUserResponse(String email, String profileUrl,
                                                       String idUsingResourceServer) {
         return OAuthUserResponse.builder()
-                                .email(email)
-                                .profileUrl(profileUrl)
-                                .idUsingResourceServer(idUsingResourceServer)
-                                .build();
+            .email(email)
+            .profileUrl(profileUrl)
+            .idUsingResourceServer(idUsingResourceServer)
+            .build();
     }
 }
