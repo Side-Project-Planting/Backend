@@ -1,9 +1,5 @@
 package com.example.planservice.application;
 
-import com.example.planservice.config.MailProperties;
-import com.example.planservice.exception.ApiException;
-import com.example.planservice.exception.ErrorCode;
-import jakarta.annotation.PostConstruct;
 import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -12,8 +8,14 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.example.planservice.config.MailProperties;
+import com.example.planservice.exception.ApiException;
+import com.example.planservice.exception.ErrorCode;
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class EmailService {

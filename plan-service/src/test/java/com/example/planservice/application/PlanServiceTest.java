@@ -41,7 +41,10 @@ class PlanServiceTest {
 
     @BeforeEach
     void testSetUp() {
-        Member member = Member.builder().name("tester").email("test@example.com").build();
+        Member member = Member.builder()
+            .name("tester")
+            .email("test@example.com")
+            .build();
         Member savedMember = memberRepository.save(member);
         userId = savedMember.getId();
 

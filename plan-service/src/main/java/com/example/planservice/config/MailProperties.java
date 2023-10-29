@@ -1,10 +1,12 @@
 package com.example.planservice.config;
 
 import java.util.Properties;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Configuration
 @ConfigurationProperties("mail")
@@ -25,22 +27,24 @@ public class MailProperties {
         props.setProperty("mail.smtp.host", host);
         props.setProperty("mail.smtp.port", port);
         props.setProperty("mail.smtp.auth", auth);
-        props.setProperty("mail.smtp.starttls.enable", String.valueOf(starttls.isEnable()));
+        props.setProperty("mail.smtp.starttls.enable", starttls.getEnable());
         props.setProperty("mail.smtp.ssl.trust", ssl.getTrust());
-        props.setProperty("mail.smtp.ssl.enable", String.valueOf(ssl.isEnable()));
+        props.setProperty("mail.smtp.ssl.enable", ssl.getEnable());
         return props;
     }
 
     @Getter
     @Setter
-    public static class Starttls {
-        private boolean enable;
+    private static class Starttls {
+        private String enable;
     }
 
     @Getter
     @Setter
-    public static class Ssl {
+    private static class Ssl {
         private String trust;
-        private boolean enable;
+        private String enable;
     }
+
+
 }

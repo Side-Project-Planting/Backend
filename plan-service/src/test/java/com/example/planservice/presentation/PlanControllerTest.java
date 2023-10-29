@@ -1,15 +1,8 @@
 package com.example.planservice.presentation;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.example.planservice.application.PlanService;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +10,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PlanController.class)
 class PlanControllerTest {
@@ -34,23 +36,23 @@ class PlanControllerTest {
         Long userId = 1L;
         List<String> invitedEmails = List.of("test@example.com");
         PlanCreateRequest request = PlanCreateRequest.builder()
-            .title("플랜 제목")
-            .intro("플랜 소개")
-            .isPublic(true)
-            .invitedEmails(invitedEmails)
-            .build();
+                .title("플랜 제목")
+                .intro("플랜 소개")
+                .isPublic(true)
+                .invitedEmails(invitedEmails)
+                .build();
 
         when(planService.create(any(PlanCreateRequest.class), anyLong()))
-            .thenReturn(1L);
+                .thenReturn(1L);
 
         // when & then
         mockMvc.perform(post("/plans")
-                .header("X-User-Id", userId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(header().exists("Location"))
-            .andExpect(redirectedUrlPattern("/plans/*"));
+                        .header("X-User-Id", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andExpect(redirectedUrlPattern("/plans/*"));
     }
 
     @Test
@@ -62,17 +64,17 @@ class PlanControllerTest {
         invitedEmails.add("B@gmail.com");
 
         PlanCreateRequest request = PlanCreateRequest.builder()
-            .title("플랜 제목")
-            .intro("플랜 소개")
-            .isPublic(true)
-            .invitedEmails(invitedEmails)
-            .build();
+                .title("플랜 제목")
+                .intro("플랜 소개")
+                .isPublic(true)
+                .invitedEmails(invitedEmails)
+                .build();
 
         // when & then
         mockMvc.perform(post("/plans")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isUnauthorized());
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -83,17 +85,17 @@ class PlanControllerTest {
         List<String> invalidEmails = List.of("invalid-email");
 
         PlanCreateRequest request = PlanCreateRequest.builder()
-            .title("플랜 제목")
-            .intro("플랜 소개")
-            .isPublic(true)
-            .invitedEmails(invalidEmails)
-            .build();
+                .title("플랜 제목")
+                .intro("플랜 소개")
+                .isPublic(true)
+                .invitedEmails(invalidEmails)
+                .build();
 
         // when & then
         mockMvc.perform(post("/plans")
-                .header("X-User-Id", userId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isBadRequest());
+                        .header("X-User-Id", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }
