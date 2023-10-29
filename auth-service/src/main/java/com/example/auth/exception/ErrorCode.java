@@ -12,7 +12,8 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다."),
     TOKEN_ID_INVALID(HttpStatus.BAD_REQUEST, "토큰의 ID값이 잘못되었습니다."),
     TOKEN_TIMEOVER(HttpStatus.BAD_REQUEST, "토큰이 만료되었습니다"),
-    REFRESH_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "사용자의 refresh token이 일치하지 않습니다");
+    REFRESH_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "사용자의 refresh token이 일치하지 않습니다"),
+    SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에러입니다. 관리자에게 문의하세요");
 
     private final HttpStatus status;
     private String message;

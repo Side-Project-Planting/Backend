@@ -1,10 +1,12 @@
 package com.example.auth.exception;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 public class ErrorResponse {
-    private final String message;
+    private String message;
 }

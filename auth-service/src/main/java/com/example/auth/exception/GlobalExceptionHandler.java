@@ -16,10 +16,17 @@ public class GlobalExceptionHandler {
             .body(new ErrorResponse(exception.getMessage()));
     }
 
+    @ExceptionHandler(MicroserviceException.class)
+    public ResponseEntity<ErrorResponse> handleMicroserviceException(MicroserviceException exception) {
+        return ResponseEntity.status(exception.getCode())
+            .body(new ErrorResponse(exception.getMessage()));
+    }
+
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorResponse> handleBindingResultException(BindException exception) {
         List<ObjectError> allErrors = exception.getBindingResult().getAllErrors();
         return ResponseEntity.badRequest()
             .body(new ErrorResponse(allErrors.get(0).getDefaultMessage()));
     }
+
 }
