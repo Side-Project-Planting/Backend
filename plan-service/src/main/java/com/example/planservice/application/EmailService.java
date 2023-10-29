@@ -57,7 +57,7 @@ public class EmailService {
 
     public void sendEmail(String to, String text) {
         try {
-            final Message message = new MimeMessage(session);
+            Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(userEmail));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
             message.setSubject(INVITING_SUBJECT);
@@ -78,7 +78,7 @@ public class EmailService {
     }
 
     private Session initSession() {
-        final Properties props = new Properties();
+        Properties props = new Properties();
 
         props.setProperty("mail.smtp.host", host);
         props.setProperty("mail.smtp.port", port);

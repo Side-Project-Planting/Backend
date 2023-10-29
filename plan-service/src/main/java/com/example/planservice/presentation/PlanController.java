@@ -28,7 +28,7 @@ public class PlanController {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        final Long createdId = planService.create(request, userId);
+        Long createdId = planService.create(request, userId);
         return ResponseEntity.created(URI.create("/plans/" + createdId)).build();
     }
 }

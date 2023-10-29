@@ -28,18 +28,18 @@ class EmailServiceTest {
     @Test
     void sendEmail() throws MessagingException {
         // given
-        final String recipient = "test@example.com";
-        final String text = "Hello, this is a test email.";
-        final EmailService emailServiceMock = Mockito.spy(emailService);
+        String recipient = "test@example.com";
+        String text = "Hello, this is a test email.";
+        EmailService emailServiceMock = Mockito.spy(emailService);
         Mockito.doNothing().when(emailServiceMock).send(any(Message.class));
 
         // when
         emailServiceMock.sendEmail(recipient, text);
 
         // then
-        final ArgumentCaptor<Message> messageCaptor = ArgumentCaptor.forClass(Message.class);
+        ArgumentCaptor<Message> messageCaptor = ArgumentCaptor.forClass(Message.class);
         Mockito.verify(emailServiceMock, times(1)).send(messageCaptor.capture());
-        final Message sentMessage = messageCaptor.getValue();
+        Message sentMessage = messageCaptor.getValue();
         assertEquals(sentMessage.getRecipients(Message.RecipientType.TO)[0].toString(), recipient);
         assertEquals(sentMessage.getSubject(), "Planting의 플랜에 초대되었습니다");
     }

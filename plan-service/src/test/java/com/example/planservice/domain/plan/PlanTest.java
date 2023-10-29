@@ -2,11 +2,9 @@ package com.example.planservice.domain.plan;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-
+import com.example.planservice.domain.member.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import com.example.planservice.domain.member.Member;
 
 class PlanTest {
 
@@ -14,18 +12,18 @@ class PlanTest {
     @DisplayName("플랜을 생성한다")
     void createPlan() {
         // given
-        final Member member = mock(Member.class);
+        Member member = mock(Member.class);
 
         // when
-        final Plan plan = Plan.builder()
-                              .owner(member)
-                              .title("플랜 제목")
-                              .intro("플랜 소개")
-                              .isPublic(true)
-                              .starCnt(0)
-                              .viewCnt(0)
-                              .isDeleted(false)
-                              .build();
+        Plan plan = Plan.builder()
+            .owner(member)
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .starCnt(0)
+            .viewCnt(0)
+            .isDeleted(false)
+            .build();
 
         // then
         assertThat(plan.getOwner()).isEqualTo(member);

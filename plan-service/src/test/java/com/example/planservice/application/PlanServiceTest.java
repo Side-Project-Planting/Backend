@@ -41,34 +41,34 @@ class PlanServiceTest {
 
     @BeforeEach
     void testSetUp() {
-        final Member member = Member.builder().name("tester").email("test@example.com").build();
-        final Member savedMember = memberRepository.save(member);
+        Member member = Member.builder().name("tester").email("test@example.com").build();
+        Member savedMember = memberRepository.save(member);
         userId = savedMember.getId();
 
         Mockito.doNothing().when(emailService).sendEmail(ArgumentMatchers.anyString(),
-                                                         ArgumentMatchers.anyString());
+            ArgumentMatchers.anyString());
     }
 
     @Test
     @DisplayName("플랜을 생성한다")
     void create() {
         // given
-        final List<String> invitedEmails = List.of("test@example.com");
+        List<String> invitedEmails = List.of("test@example.com");
 
-        final PlanCreateRequest request = PlanCreateRequest.builder()
-                                                           .title("플랜 제목")
-                                                           .intro("플랜 소개")
-                                                           .isPublic(true)
-                                                           .invitedEmails(invitedEmails)
-                                                           .build();
+        PlanCreateRequest request = PlanCreateRequest.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .invitedEmails(invitedEmails)
+            .build();
 
         // when
-        final Long savedId = planService.create(request, userId);
+        Long savedId = planService.create(request, userId);
 
         // then
         assertThat(savedId).isNotNull();
 
-        final Plan savedPlan = planRepository.findById(savedId).get();
+        Plan savedPlan = planRepository.findById(savedId).get();
         assertThat(savedPlan.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedPlan.getIntro()).isEqualTo(request.getIntro());
     }
@@ -77,19 +77,19 @@ class PlanServiceTest {
     @DisplayName("존재하지 않는 사용자로 플랜을 생성하려고 하면 실패한다")
     void createFailNotExistUser() {
         // given
-        final Long notRegisteredUserId = 10L;
-        final List<String> invitedEmails = List.of("test@example.com");
+        Long notRegisteredUserId = 10L;
+        List<String> invitedEmails = List.of("test@example.com");
 
-        final PlanCreateRequest request = PlanCreateRequest.builder()
-                                                           .title("플랜 제목")
-                                                           .intro("플랜 소개")
-                                                           .isPublic(true)
-                                                           .invitedEmails(invitedEmails)
-                                                           .build();
+        PlanCreateRequest request = PlanCreateRequest.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .invitedEmails(invitedEmails)
+            .build();
 
         // when & then
         assertThatThrownBy(() -> planService.create(request, notRegisteredUserId))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 }
