@@ -1,6 +1,6 @@
 package com.example.auth.application.dto.response;
 
-import com.example.auth.domain.OAuthMember;
+import com.example.auth.domain.OAuthInfo;
 import com.example.auth.jwt.TokenInfo;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,14 +25,14 @@ public class OAuthLoginResponse {
         this.registered = registered;
     }
 
-    public static OAuthLoginResponse create(OAuthMember oAuthMember, TokenInfo tokenInfo) {
+    public static OAuthLoginResponse create(OAuthInfo oAuthInfo, TokenInfo tokenInfo) {
         return OAuthLoginResponse.builder()
             .accessToken(tokenInfo.getAccessToken())
-            .refreshToken(oAuthMember.getRefreshToken())
+            .refreshToken(oAuthInfo.getRefreshToken())
             .grantType(tokenInfo.getGrantType())
-            .profileUrl(oAuthMember.getProfileUrl())
-            .email(oAuthMember.getEmail())
-            .registered(oAuthMember.isRegistered())
+            .profileUrl(oAuthInfo.getProfileUrl())
+            .email(oAuthInfo.getEmail())
+            .registered(oAuthInfo.isRegistered())
             .build();
     }
 }

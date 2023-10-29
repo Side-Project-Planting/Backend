@@ -17,10 +17,10 @@ import lombok.NoArgsConstructor;
 import java.util.Objects;
 
 @Entity
-@Table(name = "auth_members")
+@Table(name = "oauth_infos")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class OAuthMember {
+public class OAuthInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -40,8 +40,8 @@ public class OAuthMember {
     private boolean registered;
 
     @Builder
-    private OAuthMember(String idUsingResourceServer, OAuthType oAuthType, String email, String profileUrl,
-                        String refreshToken) {
+    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, String email, String profileUrl,
+                      String refreshToken) {
         this.idUsingResourceServer = idUsingResourceServer;
         this.type = oAuthType;
         this.email = email;

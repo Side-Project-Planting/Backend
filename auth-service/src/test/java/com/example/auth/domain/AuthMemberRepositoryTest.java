@@ -23,16 +23,16 @@ class AuthMemberRepositoryTest {
         final String idUsingResourceServer = "1234";
         final OAuthType type = OAuthType.GOOGLE;
 
-        final OAuthMember oAuthMember = OAuthMember.builder()
+        final OAuthInfo oAuthInfo = OAuthInfo.builder()
                                                    .email("hello@naver.com")
                                                    .profileUrl("https://imageurl")
                                                    .idUsingResourceServer(idUsingResourceServer)
                                                    .oAuthType(OAuthType.GOOGLE)
                                                    .build();
-        authMemberRepository.save(oAuthMember);
+        authMemberRepository.save(oAuthInfo);
 
         // when
-        final OAuthMember result =
+        final OAuthInfo result =
                 authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type).get();
 
         // then
@@ -51,7 +51,7 @@ class AuthMemberRepositoryTest {
         final OAuthType type = OAuthType.GOOGLE;
 
         // when
-        final Optional<OAuthMember> resultOpt =
+        final Optional<OAuthInfo> resultOpt =
                 authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type);
 
         // then

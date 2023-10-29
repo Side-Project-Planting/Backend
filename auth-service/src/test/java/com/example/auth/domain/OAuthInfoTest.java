@@ -8,12 +8,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("OAuthMember 테스트")
-class OAuthMemberTest {
+class OAuthInfoTest {
     @Test
     @DisplayName("새로운 객체가 생성되면 isOld는 false 값을 갖는다")
     void makeNew() {
         // given
-        OAuthMember member = OAuthMember.builder().build();
+        OAuthInfo member = OAuthInfo.builder().build();
 
         // when & then
         assertThat(member.isRegistered()).isFalse();
@@ -23,7 +23,7 @@ class OAuthMemberTest {
     @DisplayName("init 메서드가 실행되면 isOld는 true가 되고 profileUrl을 변경한다")
     void init() {
         // given
-        OAuthMember member = OAuthMember.builder()
+        OAuthInfo member = OAuthInfo.builder()
             .profileUrl("https://old")
             .build();
 
@@ -38,7 +38,7 @@ class OAuthMemberTest {
     @Test
     @DisplayName("Refresh Token을 갱신한다")
     void changeRefreshToken() {
-        OAuthMember member = OAuthMember.builder()
+        OAuthInfo member = OAuthInfo.builder()
             .refreshToken("초기값")
             .build();
 
@@ -51,7 +51,7 @@ class OAuthMemberTest {
     @DisplayName("입력받은 Refresh Token이 Member의 Refresh Token과 일치한다")
     void sameRefreshToken() {
         // given
-        OAuthMember member = OAuthMember.builder()
+        OAuthInfo member = OAuthInfo.builder()
             .refreshToken("초기값")
             .build();
 
@@ -64,7 +64,7 @@ class OAuthMemberTest {
     @ValueSource(strings = {"다른값", ""})
     void notSameRefreshToken(String token) {
         // given
-        OAuthMember member = OAuthMember.builder()
+        OAuthInfo member = OAuthInfo.builder()
             .refreshToken("초기값")
             .build();
 
@@ -76,7 +76,7 @@ class OAuthMemberTest {
     @DisplayName("Member의 Refresh Token를 비교할 때 null이 입력되면 false를 반환한다")
     void notSameRefreshTokenIfInputIsNull() {
         // given
-        OAuthMember member = OAuthMember.builder()
+        OAuthInfo member = OAuthInfo.builder()
             .refreshToken("초기값")
             .build();
 

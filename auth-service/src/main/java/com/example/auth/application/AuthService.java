@@ -11,7 +11,7 @@ import com.example.auth.application.dto.response.OAuthLoginResponse;
 import com.example.auth.application.dto.response.OAuthUserResponse;
 import com.example.auth.application.dto.response.RegisterResponse;
 import com.example.auth.domain.AuthMemberRepository;
-import com.example.auth.domain.OAuthMember;
+import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
 import com.example.auth.exception.ApiException;
 import com.example.auth.exception.ErrorCode;
@@ -48,28 +48,27 @@ public class AuthService {
     public OAuthLoginResponse login(String providerName, String authCode) {
         OAuthProvider oAuthProvider = oAuthProviderResolver.find(providerName);
         OAuthUserResponse response = oAuthProvider.getOAuthUserResponse(authCode);
-        OAuthMember oAuthMember = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), response);
+        OAuthInfo oAuthInfo = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), response);
 
-        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(oAuthMember.getId(), LocalDateTime.now());
-        oAuthMember.changeRefreshToken(tokenInfo.getRefreshToken());
-        return OAuthLoginResponse.create(oAuthMember, tokenInfo);
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(oAuthInfo.getId(), LocalDateTime.now());
+        oAuthInfo.changeRefreshToken(tokenInfo.getRefreshToken());
+        return OAuthLoginResponse.create(oAuthInfo, tokenInfo);
     }
 
-    private OAuthMember retrieveOrCreateMemberUsingAuthCode(OAuthType type, OAuthUserResponse response) {
-        Optional<OAuthMember> oAuthMemberOpt = authMemberRepository.findByIdUsingResourceServerAndType(
+    private OAuthInfo retrieveOrCreateMemberUsingAuthCode(OAuthType type, OAuthUserResponse response) {
+        Optional<OAuthInfo> oAuthMemberOpt = authMemberRepository.findByIdUsingResourceServerAndType(
             response.getIdUsingResourceServer(), type);
 
         if (oAuthMemberOpt.isEmpty()) {
-            OAuthMember oAuthMember = response.toEntity(type);
-            return authMemberRepository.save(oAuthMember);
+            OAuthInfo oAuthInfo = response.toEntity(type);
+            return authMemberRepository.save(oAuthInfo);
         }
         return oAuthMemberOpt.get();
     }
 
     @Transactional
     public RegisterResponse register(RegisterRequest request, Long userId) {
-        // 입력한 값을 DB에 저장하고, Member Service에 요청을 보낸다
-        Optional<OAuthMember> memberOpt = authMemberRepository.findById(userId);
+        Optional<OAuthInfo> memberOpt = authMemberRepository.findById(userId);
         if (memberOpt.isEmpty()) {
             throw new ApiException(ErrorCode.USER_NOT_FOUND);
         }
