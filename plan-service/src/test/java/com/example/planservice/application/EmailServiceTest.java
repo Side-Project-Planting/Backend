@@ -7,7 +7,6 @@ import static org.mockito.Mockito.times;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -19,11 +18,6 @@ class EmailServiceTest {
 
     @Autowired
     EmailService emailService;
-
-    @BeforeEach
-    void setUp() throws NoSuchFieldException, IllegalAccessException, MessagingException {
-        emailService.init();
-    }
 
     @Test
     void sendEmail() throws MessagingException {
