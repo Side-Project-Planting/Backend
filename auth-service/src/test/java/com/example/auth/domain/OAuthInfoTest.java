@@ -20,18 +20,16 @@ class OAuthInfoTest {
     }
 
     @Test
-    @DisplayName("init 메서드가 실행되면 isOld는 true가 되고 profileUrl을 변경한다")
+    @DisplayName("init 메서드가 실행되면 isOld는 true가 된다")
     void init() {
         // given
         OAuthInfo member = OAuthInfo.builder()
-            .profileUrl("https://old")
             .build();
 
         // when
-        member.init("https://new");
+        member.init();
 
         // then
-        assertThat(member.getProfileUrl()).isEqualTo("https://new");
         assertThat(member.isRegistered()).isTrue();
     }
 

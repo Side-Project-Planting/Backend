@@ -31,6 +31,7 @@ public class MemberRegisterRequest {
         this.receiveEmails = receiveEmails;
     }
 
+    // TODO 그냥 빌더 쓰는게 좋지 않겠는지 고민해보기. 이걸 String String String으로 바꿔서 쓸 필요가 굳이 있나
     public static MemberRegisterRequest create(String profileUri, String name, String email) {
         return MemberRegisterRequest.builder()
             .profileUri(profileUri)

@@ -3,7 +3,6 @@ package com.example.auth.application.dto.response;
 import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +31,6 @@ public class OAuthUserResponse {
             .idUsingResourceServer(response.getIdUsingResourceServer())
             .oAuthType(oAuthType)
             .email(response.getEmail())
-            .profileUrl(response.getProfileUrl())
             .build();
     }
 
@@ -40,7 +38,6 @@ public class OAuthUserResponse {
         return OAuthInfo.builder()
             .idUsingResourceServer(this.getIdUsingResourceServer())
             .email(this.getEmail())
-            .profileUrl(this.getProfileUrl())
             .oAuthType(oAuthType)
             .build();
     }

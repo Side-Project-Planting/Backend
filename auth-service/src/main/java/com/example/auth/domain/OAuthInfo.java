@@ -1,5 +1,7 @@
 package com.example.auth.domain;
 
+import java.util.Objects;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,8 +15,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.Objects;
 
 @Entity
 @Table(name = "oauth_infos")
@@ -33,25 +33,20 @@ public class OAuthInfo {
 
     private String email;
 
-    private String profileUrl;
-
     private String refreshToken;
 
     private boolean registered;
 
     @Builder
-    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, String email, String profileUrl,
-                      String refreshToken) {
+    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, String email, String refreshToken) {
         this.idUsingResourceServer = idUsingResourceServer;
         this.type = oAuthType;
         this.email = email;
-        this.profileUrl = profileUrl;
         this.refreshToken = refreshToken;
         this.registered = false;
     }
 
-    public void init(String profileUrl) {
-        this.profileUrl = profileUrl;
+    public void init() {
         this.registered = true;
     }
 

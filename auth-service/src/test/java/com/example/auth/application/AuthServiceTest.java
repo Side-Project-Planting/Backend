@@ -125,7 +125,7 @@ class AuthServiceTest {
         final String idUsingResourceServer = "1";
 
         final OAuthUserResponse oAuthUserResponse = createOAuthUserResponse(email, profileUrl, idUsingResourceServer);
-        final OAuthInfo member = createOAuthMember(email, profileUrl, idUsingResourceServer);
+        final OAuthInfo member = createOAuthMember(email, idUsingResourceServer);
         authMemberRepository.save(member);
 
         // stub
@@ -230,7 +230,6 @@ class AuthServiceTest {
         // given
         final RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
         final OAuthInfo member = OAuthInfo.builder()
-            .profileUrl("https://oldUrl")
             .build();
         final long registeredId = 1L;
         authMemberRepository.save(member);
@@ -249,7 +248,6 @@ class AuthServiceTest {
         //when & then
         assertThat(response.getId()).isNotNull();
         assertThat(member.isRegistered()).isTrue();
-        assertThat(member.getProfileUrl()).isEqualTo("https://profileUrl");
     }
 
     @Test
@@ -353,11 +351,10 @@ class AuthServiceTest {
         return params;
     }
 
-    private OAuthInfo createOAuthMember(String email, String profileUrl, String idUsingResourceServer) {
+    private OAuthInfo createOAuthMember(String email, String idUsingResourceServer) {
         return OAuthInfo.builder()
             .oAuthType(OAuthType.GOOGLE)
             .email(email)
-            .profileUrl(profileUrl)
             .idUsingResourceServer(idUsingResourceServer)
             .build();
     }

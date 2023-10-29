@@ -55,8 +55,10 @@ public class AuthService {
         OAuthInfo oAuthInfo = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), response);
 
         TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(oAuthInfo.getId(), LocalDateTime.now());
+        // TODO 현재는 Auth Service의 ID를 담아서 토큰을 생성하는중
+
         oAuthInfo.changeRefreshToken(tokenInfo.getRefreshToken());
-        return OAuthLoginResponse.create(oAuthInfo, tokenInfo);
+        return OAuthLoginResponse.create(oAuthInfo, tokenInfo, response.getProfileUrl());
     }
 
     private OAuthInfo retrieveOrCreateMemberUsingAuthCode(OAuthType type, OAuthUserResponse response) {
@@ -83,7 +85,7 @@ public class AuthService {
             MemberRegisterRequest.create(request.getProfileUrl(), request.getName(), member.getEmail());
         MemberRegisterResponse response = memberServiceClient.register(requestUsingMemberService);
 
-        member.init(request.getProfileUrl());
+        member.init();
         return new RegisterResponse(response.getId());
     }
 

@@ -24,21 +24,19 @@ class AuthMemberRepositoryTest {
         final OAuthType type = OAuthType.GOOGLE;
 
         final OAuthInfo oAuthInfo = OAuthInfo.builder()
-                                                   .email("hello@naver.com")
-                                                   .profileUrl("https://imageurl")
-                                                   .idUsingResourceServer(idUsingResourceServer)
-                                                   .oAuthType(OAuthType.GOOGLE)
-                                                   .build();
+            .email("hello@naver.com")
+            .idUsingResourceServer(idUsingResourceServer)
+            .oAuthType(OAuthType.GOOGLE)
+            .build();
         authMemberRepository.save(oAuthInfo);
 
         // when
         final OAuthInfo result =
-                authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type).get();
+            authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type).get();
 
         // then
         assertThat(result.getId()).isNotNull();
         assertThat(result.getEmail()).isEqualTo("hello@naver.com");
-        assertThat(result.getProfileUrl()).isEqualTo("https://imageurl");
         assertThat(result.getIdUsingResourceServer()).isEqualTo(idUsingResourceServer);
         assertThat(result.getType()).isEqualTo(OAuthType.GOOGLE);
     }
@@ -52,7 +50,7 @@ class AuthMemberRepositoryTest {
 
         // when
         final Optional<OAuthInfo> resultOpt =
-                authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type);
+            authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type);
 
         // then
         assertThat(resultOpt).isEmpty();

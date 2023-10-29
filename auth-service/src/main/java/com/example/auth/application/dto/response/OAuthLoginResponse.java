@@ -25,12 +25,12 @@ public class OAuthLoginResponse {
         this.registered = registered;
     }
 
-    public static OAuthLoginResponse create(OAuthInfo oAuthInfo, TokenInfo tokenInfo) {
+    public static OAuthLoginResponse create(OAuthInfo oAuthInfo, TokenInfo tokenInfo, String profileUrl) {
         return OAuthLoginResponse.builder()
             .accessToken(tokenInfo.getAccessToken())
             .refreshToken(oAuthInfo.getRefreshToken())
             .grantType(tokenInfo.getGrantType())
-            .profileUrl(oAuthInfo.getProfileUrl())
+            .profileUrl(profileUrl)
             .email(oAuthInfo.getEmail())
             .registered(oAuthInfo.isRegistered())
             .build();
