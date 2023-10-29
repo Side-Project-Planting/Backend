@@ -12,17 +12,19 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 
+import jakarta.annotation.PostConstruct;
+
 @Component
 public class EmailService {
     private static final String INVITING_ANNOUNCEMENT = " 플랜에 링크를 눌러 초대를 수락할 수 있습니다.";
     private static final String INVITING_SUBJECT = "Planting의 플랜에 초대되었습니다";
-    private final Session session;
+
+    private Session session;
 
     @Value("${mail.username}")
     private String userEmail;
@@ -48,11 +50,11 @@ public class EmailService {
     @Value("${mail.smtp.ssl.enable}")
     private String sslEnable;
 
-    public EmailService() {
+    @PostConstruct
+    public void init() {
         session = initSession();
     }
 
-    @Async
     public void sendEmail(String to, String text) {
         try {
             final Message message = new MimeMessage(session);
@@ -65,10 +67,14 @@ public class EmailService {
 
             message.setContent(content, "text/html; charset=utf-8");
 
-            Transport.send(message);
+            send(message);
         } catch (MessagingException e) {
             throw new ApiException(ErrorCode.SERVER_ERROR);
         }
+    }
+
+    protected void send(Message message) throws MessagingException {
+        Transport.send(message);
     }
 
     private Session initSession() {
