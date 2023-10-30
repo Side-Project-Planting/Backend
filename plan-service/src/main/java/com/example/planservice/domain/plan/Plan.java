@@ -46,8 +46,8 @@ public class Plan extends BaseEntity {
     private boolean isDeleted;
 
     @Builder
-    public Plan(Member owner, String title, String intro, boolean isPublic, int starCnt, int viewCnt,
-                boolean isDeleted) {
+    private Plan(Member owner, String title, String intro, boolean isPublic, int starCnt, int viewCnt,
+                 boolean isDeleted) {
         this.owner = owner;
         this.title = title;
         this.intro = intro;

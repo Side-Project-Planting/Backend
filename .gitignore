@@ -1,5 +1,7 @@
 ### Custom ###
 application-local.yml
+application-docker.yml
+/.env
 
 .gradle
 !gradle/wrapper/gradle-wrapper.jar
