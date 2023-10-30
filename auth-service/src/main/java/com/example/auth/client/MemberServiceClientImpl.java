@@ -1,5 +1,6 @@
 package com.example.auth.client;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -19,10 +20,13 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class MemberServiceClientImpl implements MemberServiceClient {
     private final WebClient webClient;
+    private final MemberServiceProperties properties;
 
-    public MemberServiceClientImpl() {
+    @Autowired
+    public MemberServiceClientImpl(MemberServiceProperties properties) {
+        this.properties = properties;
         this.webClient = WebClient.builder()
-            .baseUrl("http://localhost:8001") // TODO 분리하기
+            .baseUrl(properties.getBaseUri())
             .build();
     }
 
@@ -30,8 +34,7 @@ public class MemberServiceClientImpl implements MemberServiceClient {
     public MemberRegisterResponse register(MemberRegisterRequest request) {
         try {
             return webClient.post()
-                .uri("/members") // TODO 역시 분리하기
-                .header("X-User-Id", "-1") // TODO 해당 요청을 통해 Auth Service에서 보냈음을 알 수 있다
+                .uri(properties.getPath())
                 .body(BodyInserters.fromValue(request))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
