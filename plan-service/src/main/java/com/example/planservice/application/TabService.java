@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
+import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.TabGroup;
@@ -36,7 +37,7 @@ public class TabService {
             List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
 
             Tab createdTab = Tab.create(plan, request.getName());
-            TabGroup tabGroup = new TabGroup(plan, tabsOfPlan);
+            TabGroup tabGroup = new TabGroup(plan.getId(), tabsOfPlan);
             tabGroup.addLast(createdTab);
 
             Tab savedTab = tabRepository.save(createdTab);
@@ -51,7 +52,7 @@ public class TabService {
         Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
 
         List<Tab> tabs = tabRepository.findAllByPlanId(request.getPlanId());
-        TabGroup tabGroup = new TabGroup(plan, tabs);
+        TabGroup tabGroup = new TabGroup(plan.getId(), tabs);
         List<Tab> result = tabGroup.changeOrder(request.getTargetId(), request.getNewPrevId());
         return result.stream().map(Tab::getId).toList();
     }
@@ -62,7 +63,7 @@ public class TabService {
     public TabChangeNameResponse changeName(TabChangeNameServiceRequest request) {
         Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), request.getMemberId());
         List<Tab> tabs = tabRepository.findAllByPlanId(plan.getId());
-        TabGroup tabGroup = new TabGroup(plan, tabs);
+        TabGroup tabGroup = new TabGroup(plan.getId(), tabs);
 
         Tab target = tabGroup.findById(request.getTabId());
         target.changeName(request.getName());
@@ -77,6 +78,24 @@ public class TabService {
             .id(target.getId())
             .name(target.getName())
             .build();
+    }
+
+    @Transactional
+    public Long delete(TabDeleteServiceRequest request) {
+        Long planId = request.getPlanId();
+        Long tabId = request.getTabId();
+        Long memberId = request.getMemberId();
+
+        boolean isAdmin = planMembershipVerificationService.validateOwner(planId, memberId);
+        if (!isAdmin) {
+            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
+        }
+
+        List<Tab> tabs = tabRepository.findAllByPlanId(planId);
+        TabGroup tabGroup = new TabGroup(planId, tabs);
+        tabGroup.deleteById(tabId);
+        tabRepository.deleteById(tabId);
+        return tabId;
     }
 
 

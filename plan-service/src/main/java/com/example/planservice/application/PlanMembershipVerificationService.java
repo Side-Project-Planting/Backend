@@ -1,7 +1,10 @@
 package com.example.planservice.application;
 
+import java.util.Objects;
+
 import org.springframework.stereotype.Service;
 
+import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.memberofplan.repository.MemberOfPlanRepository;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
@@ -24,5 +27,13 @@ public class PlanMembershipVerificationService {
             throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
         }
         return plan;
+    }
+
+    public boolean validateOwner(Long planId, Long memberId) {
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+
+        Member owner = plan.getOwner();
+        return Objects.equals(memberId, owner.getId());
     }
 }

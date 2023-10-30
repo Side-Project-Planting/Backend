@@ -15,7 +15,10 @@ public enum ErrorCode {
     REQUEST_CONFLICT(HttpStatus.CONFLICT, "요청들간 충돌이 발생했습니다. 다시 시도해 주세요"),
     PLAN_TAB_MISMATCH(HttpStatus.BAD_REQUEST, "플랜과 탭 사이 관계가 없습니다"),
     TARGET_TAB_SAME_AS_NEW_PREV(HttpStatus.BAD_REQUEST, "옮기려는 대상의 ID와 옮길 위치 이전에 위치한 탭의 ID는 동일할 수 없습니다"),
-    TAB_ORDER_FIXED(HttpStatus.BAD_REQUEST, "해당 탭은 순서를 변경할 수 없습니다");
+    TAB_ORDER_FIXED(HttpStatus.BAD_REQUEST, "해당 탭은 순서를 변경할 수 없습니다"),
+    TAB_CANNOT_DELETE(HttpStatus.BAD_REQUEST, "해당 탭은 삭제할 수 없습니다"),
+    AUTHORIZATION_FAIL(HttpStatus.FORBIDDEN, "해당되는 권한이 없습니다"),
+    TAB_NOT_FOUND(HttpStatus.NOT_FOUND, "탭을 찾을 수 없습니다");
 
     private final HttpStatus status;
     private String message;

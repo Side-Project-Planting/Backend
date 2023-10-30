@@ -77,6 +77,37 @@ class PlanMembershipVerificationServiceTest {
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }
 
+    @Test
+    @DisplayName("해당 플랜의 소유주가 맞으면 validate 결과로 true를 반환한다")
+    void validateOwner() {
+        // given
+        Member member = createMember();
+        Plan plan = Plan.builder().owner(member).build();
+        planRepository.save(plan);
+
+        // when
+        boolean result = service.validateOwner(plan.getId(), member.getId());
+
+        // then
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("해당 플랜의 소유주가 아니면 validate 결과로 false를 반환한다")
+    void validateOwnerFail() {
+        // given
+        Member member = createMember();
+        Member otherMember = createMember();
+        Plan plan = Plan.builder().owner(member).build();
+        planRepository.save(plan);
+
+        // when
+        boolean result = service.validateOwner(plan.getId(), otherMember.getId());
+
+        // then
+        assertThat(result).isFalse();
+    }
+
     @NotNull
     private MemberOfPlan createMemberOfPlan(Plan plan, Member member) {
         MemberOfPlan memberOfPlan = MemberOfPlan.builder()

@@ -43,7 +43,7 @@ class TabGroupTest {
         Tab tab1 = createTab(plan, "탭1", tab2);
 
         // when
-        TabGroup tabGroup = new TabGroup(plan, List.of(tab1, tab2, tab3, tab4, tab5));
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4, tab5));
 
         // then
         assertThat(tabGroup.getFirst()).isEqualTo(tab1);
@@ -67,7 +67,7 @@ class TabGroupTest {
         Tab tab1 = createTab(plan, "탭1", tab2);
 
         // when & then
-        assertThatThrownBy(() -> new TabGroup(plan, List.of(tab1, tab2, tab3, tab4, tab5, tab6)))
+        assertThatThrownBy(() -> new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4, tab5, tab6)))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.TAB_SIZE_INVALID.getMessage());
     }
@@ -79,7 +79,7 @@ class TabGroupTest {
         Plan plan = createPlan();
 
         // when & then
-        assertThatThrownBy(() -> new TabGroup(plan, Collections.emptyList()))
+        assertThatThrownBy(() -> new TabGroup(plan.getId(), Collections.emptyList()))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.TAB_SIZE_INVALID.getMessage());
     }
@@ -98,7 +98,7 @@ class TabGroupTest {
         Plan otherPlan = createPlan();
 
         // when & then
-        assertThatThrownBy(() -> new TabGroup(otherPlan, List.of(tab1, tab2, tab3, tab4)))
+        assertThatThrownBy(() -> new TabGroup(otherPlan.getId(), List.of(tab1, tab2, tab3, tab4)))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.PLAN_TAB_MISMATCH.getMessage());
     }
@@ -113,7 +113,7 @@ class TabGroupTest {
             .build();
 
         // when & then
-        assertThatThrownBy(() -> new TabGroup(plan, List.of(tab)))
+        assertThatThrownBy(() -> new TabGroup(plan.getId(), List.of(tab)))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.SERVER_ERROR.getMessage());
     }
@@ -126,7 +126,7 @@ class TabGroupTest {
         Tab tab3 = createTab(plan, "탭3", null);
         Tab tab2 = createTab(plan, "탭2", tab3);
         Tab tab1 = createTab(plan, "탭1", tab2);
-        TabGroup tabGroup = new TabGroup(plan, List.of(tab1, tab2, tab3));
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3));
 
         // when
         List<Tab> tabs = tabGroup.changeOrder(tab3.getId(), tab1.getId());
@@ -142,7 +142,7 @@ class TabGroupTest {
         Tab tab3 = createTab(plan, "탭3", null);
         Tab tab2 = createTab(plan, "탭2", tab3);
         Tab tab1 = createTab(plan, "탭1", tab2);
-        TabGroup tabGroup = new TabGroup(plan, List.of(tab1, tab2, tab3));
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3));
 
         // when
         assertThatThrownBy(() -> tabGroup.changeOrder(tab1.getId(), tab2.getId()))
@@ -158,7 +158,7 @@ class TabGroupTest {
         Tab tab3 = createTab(plan, "탭3", null);
         Tab tab2 = createTab(plan, "탭2", tab3);
         Tab tab1 = createTab(plan, "탭1", tab2);
-        TabGroup tabGroup = new TabGroup(plan, List.of(tab1, tab2, tab3));
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3));
 
         // when & then
         assertThatThrownBy(() -> tabGroup.changeOrder(tab2.getId(), tab2.getId()))
@@ -172,7 +172,7 @@ class TabGroupTest {
         // given
         Plan plan = createPlan();
         Tab tab = createTab(plan, "탭", null);
-        TabGroup tabGroup = new TabGroup(plan, List.of(tab));
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab));
 
         assertThat(tabGroup.findById(tab.getId())).isEqualTo(tab);
     }
@@ -183,7 +183,7 @@ class TabGroupTest {
         // given
         Plan plan = createPlan();
         Tab tab = createTab(plan, "탭", null);
-        TabGroup tabGroup = new TabGroup(plan, List.of(tab));
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab));
 
         Tab otherTab = createTab(null, "다른탭", null);
 
@@ -204,7 +204,7 @@ class TabGroupTest {
         Tab tab1 = createTab(plan, "탭1", tab2);
 
         Tab addedTab = Tab.builder().build();
-        TabGroup tabGroup = new TabGroup(plan, List.of(tab1, tab2, tab3, tab4));
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4));
 
         // when
         tabGroup.addLast(addedTab);
@@ -226,7 +226,7 @@ class TabGroupTest {
         Tab tab1 = createTab(plan, "탭1", tab2);
 
         Tab addedTab = Tab.builder().build();
-        TabGroup tabGroup = new TabGroup(plan, List.of(tab1, tab2, tab3, tab4, tab5));
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4, tab5));
 
         // when & then
         assertThatThrownBy(() -> tabGroup.addLast(addedTab))
@@ -242,7 +242,7 @@ class TabGroupTest {
         Tab tab1 = createTab(plan, "탭1", null);
 
         Tab addedTab = Tab.builder().name("탭1").build();
-        TabGroup tabGroup = new TabGroup(plan, List.of(tab1));
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1));
 
         // when & then
         assertThatThrownBy(() -> tabGroup.addLast(addedTab))
@@ -250,7 +250,39 @@ class TabGroupTest {
             .hasMessageContaining(ErrorCode.TAB_NAME_DUPLICATE.getMessage());
     }
 
-        @NotNull
+    @Test
+    @DisplayName("탭 삭제 시 자신의 prev탭과 next탭을 연결한다")
+    void checkConnectingIfTabDelete() {
+        // given
+        Plan plan = createPlan();
+        Tab third = createTab(plan, "세번째", null);
+        Tab second = createTab(plan, "두번째", third);
+        Tab first = createTab(plan, "TODO", second);
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(first, second, third));
+
+        // when
+        tabGroup.deleteById(second.getId());
+
+        // then
+        assertThat(first.getNext()).isEqualTo(third);
+    }
+
+    @Test
+    @DisplayName("첫 번째 탭은 삭제할 수 없다")
+    void cannotDeleteFirstTab() {
+        // given
+        Plan plan = createPlan();
+        Tab tab1 = createTab(plan, "TODO", null);
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1));
+
+        // when
+        assertThatThrownBy(() -> tabGroup.deleteById(tab1.getId()))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_CANNOT_DELETE.getMessage());
+    }
+
+
+    @NotNull
     private Plan createPlan() {
         Plan plan = Plan.builder().build();
         planRepository.save(plan);
