@@ -63,7 +63,7 @@ class MemberControllerTest {
     }
 
     @Test
-    @DisplayName("로그인한 사용자만 Member를 생성할 수 있다")
+    @DisplayName("로그인하지 않아도 Member를 생성할 수 있다")
     void createFailUnAuthentication() throws Exception {
         // given
         MemberRegisterRequest request = MemberRegisterRequest.builder()
@@ -84,6 +84,8 @@ class MemberControllerTest {
         mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isCreated())
+            .andExpect(header().string("Location", "/members/" + response.getId()))
+            .andExpect(jsonPath("$.id").value(response.getId()));
     }
 }
