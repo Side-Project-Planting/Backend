@@ -62,6 +62,7 @@ public class AuthService {
 
         Long memberId = oAuthInfo.getMemberId();
         if (memberId == null) {
+            oAuthInfo.setAuthorizedToken(randomStringFactory.create());
             return OAuthLoginResponse.createWithoutToken(oAuthInfo, response.getProfileUrl());
         }
         TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
@@ -80,6 +81,9 @@ public class AuthService {
     public RegisterResponse register(RegisterRequest request) {
         OAuthInfo info = authInfoRepository.findById(request.getAuthId())
             .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
+        if (!info.validateAuthorizedToken(request.getAuthorizedToken())) {
+            throw new ApiException(ErrorCode.TOKEN_UNAUTHORIZED);
+        }
 
         MemberRegisterRequest requestUsingMemberService =
             MemberRegisterRequest.create(request.getProfileUrl(), request.getName(), info.getEmail());

@@ -113,7 +113,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("로그인 요청시, 회원가입하지 않은 사용자는 email, ProfileUrl, authId를 반환한다")
+    @DisplayName("로그인 요청시, 회원가입하지 않은 사용자는 email, ProfileUrl, authorizedToken을 반환한다")
     void loginSuccessIfNotRegistered() {
         // given
         final String providerName = "google";
@@ -142,10 +142,13 @@ class AuthServiceTest {
         assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
         assertThat(response.getAuthId()).isEqualTo(info.getId());
         assertThat(response.isRegistered()).isFalse();
+        assertThat(response.getAuthorizedToken()).isNotBlank();
 
         assertThat(response.getAccessToken()).isNull();
         assertThat(response.getRefreshToken()).isNull();
         assertThat(response.getGrantType()).isNull();
+
+        assertThat(info.getAuthorizedToken()).isNotBlank();
     }
 
     @Test
@@ -184,6 +187,7 @@ class AuthServiceTest {
         assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
         assertThat(response.isRegistered()).isTrue();
         assertThat(response.getAuthId()).isNull();
+        assertThat(response.getAuthorizedToken()).isBlank();
     }
 
     @ParameterizedTest
@@ -240,10 +244,11 @@ class AuthServiceTest {
     @DisplayName("OAuthInfo를 등록한다")
     void registerOAuthInfo() {
         // given
-        final OAuthInfo info = OAuthInfo.builder().build();
+        String authToken = "인가_토큰";
+        final OAuthInfo info = OAuthInfo.builder().authorizedToken(authToken).build();
         authInfoRepository.save(info);
 
-        final RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태", info.getId());
+        final RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", info.getId(), authToken);
         final long registeredId = 2L;
 
         MemberRegisterResponse responseAboutMemberService = MemberRegisterResponse.builder()
@@ -267,7 +272,7 @@ class AuthServiceTest {
     void registerFailNotFoundUser() {
         // given
         Long notFoundedId = 12451L;
-        final RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태", notFoundedId);
+        final RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", notFoundedId, "인가_코드");
 
         // when & then
         assertThatThrownBy(() -> authService.register(request))
@@ -380,4 +385,14 @@ class AuthServiceTest {
             .idUsingResourceServer(idUsingResourceServer)
             .build();
     }
+
+    private RegisterRequest createRegisterRequest(String url, String name, Long authId, String authToken) {
+        return RegisterRequest.builder()
+            .profileUrl(url)
+            .name(name)
+            .authId(authId)
+            .authorizedToken(authToken)
+            .build();
+    }
+
 }

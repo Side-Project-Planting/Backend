@@ -148,8 +148,7 @@ class AuthControllerTest {
     @DisplayName("회원을 등록한다")
     void register() throws Exception {
         // given
-        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태", 1L);
-
+        RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", 1L, "인가_코드");
         RegisterResponse registerResponse = RegisterResponse.builder().build();
 
         // stub
@@ -167,7 +166,7 @@ class AuthControllerTest {
     @DisplayName("회원가입 시 profile uri 양식이 잘못되면 예외를 반환한다")
     void registerFailAboutInvalidProfileUri() throws Exception {
         // given
-        RegisterRequest request = new RegisterRequest("profileUrl", "김태태", 1L);
+        RegisterRequest request = createRegisterRequest("invalidUrl", "김태태", 1L, "인가_코드");
 
         // when & then
         mockMvc.perform(post("/auth/register")
@@ -180,8 +179,7 @@ class AuthControllerTest {
     @DisplayName("회원가입 시 이름이 공백이면 예외를 반환한다")
     void registerFailAboutEmptyName() throws Exception {
         // given
-        RegisterRequest request = new RegisterRequest("https://profileUrl", "", 1L);
-
+        RegisterRequest request = createRegisterRequest("https://profileUrl", "", 1L, "인가_코드");
         // when & then
         mockMvc.perform(post("/auth/register")
                 .content(objectMapper.writeValueAsString(request))
@@ -193,7 +191,7 @@ class AuthControllerTest {
     @DisplayName("회원가입 시 존재하지 않는 authId가 입력되면 예외를 반환한다")
     void registerFailAboutNotExistUser() throws Exception {
         // given
-        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태", 1L);
+        RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", 1L, "인가_코드");
 
         // stub
         when(authService.register(any(RegisterRequest.class)))
@@ -324,5 +322,14 @@ class AuthControllerTest {
 
     private String makeToken() {
         return UUID.randomUUID().toString();
+    }
+
+    private RegisterRequest createRegisterRequest(String url, String name, Long authId, String authToken) {
+        return RegisterRequest.builder()
+            .profileUrl(url)
+            .name(name)
+            .authId(authId)
+            .authorizedToken(authToken)
+            .build();
     }
 }

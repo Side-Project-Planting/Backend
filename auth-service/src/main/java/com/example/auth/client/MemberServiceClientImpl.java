@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 
 import com.example.auth.client.dto.MemberRegisterRequest;
 import com.example.auth.client.dto.MemberRegisterResponse;
@@ -44,7 +45,7 @@ public class MemberServiceClientImpl implements MemberServiceClient {
                 })
                 .bodyToMono(MemberRegisterResponse.class)
                 .block();
-        } catch (Exception e) {
+        } catch (WebClientRequestException e) {
             log.error("[Auth Service] MemberService를 찾을 수 없습니다.");
             log.error("[Auth Service] {}", e.getMessage());
             throw new ApiException(ErrorCode.SERVER_ERROR);

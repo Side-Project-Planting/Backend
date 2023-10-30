@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "oauth_infos")
@@ -40,13 +41,18 @@ public class OAuthInfo {
     @Column(unique = true)
     private Long memberId;
 
+    @Setter
+    private String authorizedToken;
+
     @Builder
-    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, String email, String refreshToken) {
+    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, String email, String refreshToken,
+                      String authorizedToken) {
         this.idUsingResourceServer = idUsingResourceServer;
         this.type = oAuthType;
         this.email = email;
         this.refreshToken = refreshToken;
         this.registered = false;
+        this.authorizedToken = authorizedToken;
     }
 
     public void init(Long memberId) {
@@ -60,5 +66,9 @@ public class OAuthInfo {
 
     public boolean isRefreshTokenMatching(@NotNull String input) {
         return Objects.equals(this.refreshToken, input);
+    }
+
+    public boolean validateAuthorizedToken(@NotNull String authorizedToken) {
+        return Objects.equals(this.authorizedToken, authorizedToken);
     }
 }
