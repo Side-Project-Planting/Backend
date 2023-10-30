@@ -1,7 +1,9 @@
 package com.example.planservice.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.MemberRegisterResponse;
 import com.example.planservice.domain.member.Member;
+import com.example.planservice.exception.ApiException;
+import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.MemberRegisterRequest;
 import jakarta.persistence.EntityManager;
 
@@ -56,5 +60,23 @@ class MemberServiceTest {
         assertThat(result.getName()).isEqualTo(name);
         assertThat(result.isReceiveEmails()).isEqualTo(receiveEmails);
     }
+
+    @Test
+    @DisplayName("중복된 이메일로 멤버를 등록할 수 없다")
+    void testRegisterFailDuplicatedEmail() throws Exception {
+        // given
+        String duplicatedEmail = "a@naver.com";
+        Member member = Member.builder().email(duplicatedEmail).build();
+        em.persist(member);
+
+        MemberRegisterRequest request = MemberRegisterRequest.builder()
+            .email(duplicatedEmail)
+            .build();
+        // when & then
+        assertThatThrownBy(() -> memberService.register(request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.ALREADY_REGISTERED.getMessage());
+    }
+
 
 }
