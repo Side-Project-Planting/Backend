@@ -27,10 +27,11 @@ class OAuthInfoTest {
             .build();
 
         // when
-        info.init();
+        info.init(1L);
 
         // then
         assertThat(info.isRegistered()).isTrue();
+        assertThat(info.getMemberId()).isEqualTo(1L);
     }
 
     @Test

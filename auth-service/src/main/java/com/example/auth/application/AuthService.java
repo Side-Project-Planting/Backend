@@ -60,9 +60,11 @@ public class AuthService {
         OAuthUserResponse response = oAuthProvider.getOAuthUserResponse(authCode);
         OAuthInfo oAuthInfo = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), response);
 
-        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(oAuthInfo.getId(), LocalDateTime.now());
-        // TODO 현재는 Auth Service의 ID를 담아서 토큰을 생성하는중
-        //  Auth Service와 PlanService가 동일한 ID를 사용하게 만들어야 할지, UUID를 사용해야 할지 고민하기
+        Long memberId = oAuthInfo.getMemberId();
+        if (memberId == null) {
+            return OAuthLoginResponse.createWithoutToken(oAuthInfo, response.getProfileUrl());
+        }
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
 
         oAuthInfo.changeRefreshToken(tokenInfo.getRefreshToken());
         return OAuthLoginResponse.create(oAuthInfo, tokenInfo, response.getProfileUrl());
@@ -75,16 +77,19 @@ public class AuthService {
      * 요청이 성공하면 OAuthInfo의 registered 필드를 true로 변경하고 응답을 반환한다
      */
     @Transactional
-    public RegisterResponse register(RegisterRequest request, Long userId) {
-        OAuthInfo info = authInfoRepository.findById(userId)
-            .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+    public RegisterResponse register(RegisterRequest request) {
+        OAuthInfo info = authInfoRepository.findById(request.getAuthId())
+            .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
 
         MemberRegisterRequest requestUsingMemberService =
             MemberRegisterRequest.create(request.getProfileUrl(), request.getName(), info.getEmail());
         MemberRegisterResponse response = memberServiceClient.register(requestUsingMemberService);
+        info.init(response.getId());
 
-        info.init();
-        return new RegisterResponse(response.getId());
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(response.getId(), LocalDateTime.now());
+
+        info.changeRefreshToken(tokenInfo.getRefreshToken());
+        return RegisterResponse.create(tokenInfo, info.getMemberId());
     }
 
     /**
@@ -94,7 +99,7 @@ public class AuthService {
     @Transactional
     public TokenInfo refreshToken(TokenRefreshRequest request, Long userId) {
         OAuthInfo info = authInfoRepository.findById(userId)
-            .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+            .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
 
         if (!info.isRefreshTokenMatching(request.getRefreshToken())) {
             throw new ApiException(ErrorCode.REFRESH_TOKEN_INVALID);

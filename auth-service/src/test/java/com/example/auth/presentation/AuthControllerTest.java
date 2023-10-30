@@ -148,18 +148,17 @@ class AuthControllerTest {
     @DisplayName("회원을 등록한다")
     void register() throws Exception {
         // given
-        Long userId = 1L;
-        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
-        RegisterResponse registerResponse = new RegisterResponse(userId);
+        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태", 1L);
+
+        RegisterResponse registerResponse = RegisterResponse.builder().build();
 
         // stub
-        when(authService.register(request, userId))
+        when(authService.register(any(RegisterRequest.class)))
             .thenReturn(registerResponse);
 
         // when & then
         mockMvc.perform(post("/auth/register")
                 .content(objectMapper.writeValueAsString(request))
-                .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isCreated());
     }
@@ -168,13 +167,11 @@ class AuthControllerTest {
     @DisplayName("회원가입 시 profile uri 양식이 잘못되면 예외를 반환한다")
     void registerFailAboutInvalidProfileUri() throws Exception {
         // given
-        Long userId = 1L;
-        RegisterRequest request = new RegisterRequest("invalid", "김태태");
+        RegisterRequest request = new RegisterRequest("profileUrl", "김태태", 1L);
 
         // when & then
         mockMvc.perform(post("/auth/register")
                 .content(objectMapper.writeValueAsString(request))
-                .header("X-UserId", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
@@ -183,32 +180,28 @@ class AuthControllerTest {
     @DisplayName("회원가입 시 이름이 공백이면 예외를 반환한다")
     void registerFailAboutEmptyName() throws Exception {
         // given
-        Long userId = 1L;
-        RegisterRequest request = new RegisterRequest("https://profileUrl", "");
+        RegisterRequest request = new RegisterRequest("https://profileUrl", "", 1L);
 
         // when & then
         mockMvc.perform(post("/auth/register")
                 .content(objectMapper.writeValueAsString(request))
-                .header("X-UserId", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("회원가입 시 존재하지 않는 userId가 입력되면 예외를 반환한다")
+    @DisplayName("회원가입 시 존재하지 않는 authId가 입력되면 예외를 반환한다")
     void registerFailAboutNotExistUser() throws Exception {
         // given
-        Long userId = 1L;
-        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
+        RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태", 1L);
 
         // stub
-        when(authService.register(any(RegisterRequest.class), anyLong()))
-            .thenThrow(new ApiException(ErrorCode.USER_NOT_FOUND));
+        when(authService.register(any(RegisterRequest.class)))
+            .thenThrow(new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
 
         // when & then
         mockMvc.perform(post("/auth/register")
                 .content(objectMapper.writeValueAsString(request))
-                .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
     }
@@ -278,7 +271,7 @@ class AuthControllerTest {
                 .accessToken(createdAccessToken)
                 .refreshToken(createdRefreshToken)
                 .grantType("Bearer")
-                    .build());
+                .build());
 
         // when & then
         mockMvc.perform(post("/auth/refresh-token")

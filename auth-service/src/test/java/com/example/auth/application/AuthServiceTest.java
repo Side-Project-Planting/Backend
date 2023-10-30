@@ -104,7 +104,7 @@ class AuthServiceTest {
     }
 
     @ParameterizedTest
-    @DisplayName("처리할 수 없는 ProviderName으로는 AuthorizedUrl을 가져올 수 없다")
+    @DisplayName("처리할 수 없는 ProviderName으로는 AuthorizedUri를 가져올 수 없다")
     @ValueSource(strings = {"naver", "kakao", "Google", " ", ""})
     void cantGetAuthorizedUrlAboutNotSupportedProviderName(String providerName) {
         assertThatThrownBy(() -> authService.getAuthorizedUri(providerName))
@@ -113,8 +113,8 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("기존에 로그인한 적 있는 사용자가 동일한 계정으로 로그인을 할 수 있다")
-    void loginSuccessIfAlreadySaved() {
+    @DisplayName("로그인 요청시, 회원가입하지 않은 사용자는 email, ProfileUrl, authId를 반환한다")
+    void loginSuccessIfNotRegistered() {
         // given
         final String providerName = "google";
         final String authCode = "authcode";
@@ -138,24 +138,33 @@ class AuthServiceTest {
         final OAuthLoginResponse response = authService.login(providerName, authCode);
 
         // then
-        assertThat(response.getAccessToken()).isNotBlank();
-        assertThat(response.getRefreshToken()).isNotBlank();
         assertThat(response.getEmail()).isEqualTo(oAuthUserResponse.getEmail());
         assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
-        assertThat(response.getGrantType()).isEqualTo("Bearer");
+        assertThat(response.getAuthId()).isEqualTo(info.getId());
+        assertThat(response.isRegistered()).isFalse();
 
-        assertThat(info.getRefreshToken()).isNotBlank();
+        assertThat(response.getAccessToken()).isNull();
+        assertThat(response.getRefreshToken()).isNull();
+        assertThat(response.getGrantType()).isNull();
     }
 
     @Test
-    @DisplayName("기존에 로그인한 적 없는 사용자는 로그인이 가능하다")
-    void loginSuccessIfFirstVisit() {
+    @DisplayName("로그인 요청 시, 회원가입한 사용자는 access token, refresh token을 포함하여 응답을 받는다")
+    void loginSuccessIfRegistered() {
         // given
         final String providerName = "google";
         final String authCode = "authcode";
         final String accessToken = "accessToken";
-        final OAuthUserResponse oAuthUserResponse =
-            createOAuthUserResponse("hello@naver.com", "https://imageurl", "1");
+        final long memberId = 1L;
+
+        final String email = "hello@naver.com";
+        final String profileUrl = "https://imageurl";
+        final String idUsingResourceServer = "1";
+        final OAuthUserResponse oAuthUserResponse = createOAuthUserResponse(email, profileUrl, idUsingResourceServer);
+
+        final OAuthInfo info = createOAuthInfo(email, idUsingResourceServer);
+        info.init(memberId);
+        authInfoRepository.save(info);
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
@@ -169,9 +178,12 @@ class AuthServiceTest {
         // then
         assertThat(response.getAccessToken()).isNotBlank();
         assertThat(response.getRefreshToken()).isNotBlank();
+        assertThat(response.getGrantType()).isEqualTo("Bearer");
+
         assertThat(response.getEmail()).isEqualTo(oAuthUserResponse.getEmail());
         assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
-        assertThat(response.getGrantType()).isEqualTo("Bearer");
+        assertThat(response.isRegistered()).isTrue();
+        assertThat(response.getAuthId()).isNull();
     }
 
     @ParameterizedTest
@@ -228,11 +240,11 @@ class AuthServiceTest {
     @DisplayName("OAuthInfo를 등록한다")
     void registerOAuthInfo() {
         // given
-        final RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
-        final OAuthInfo member = OAuthInfo.builder()
-            .build();
-        final long registeredId = 1L;
-        authInfoRepository.save(member);
+        final OAuthInfo info = OAuthInfo.builder().build();
+        authInfoRepository.save(info);
+
+        final RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태", info.getId());
+        final long registeredId = 2L;
 
         MemberRegisterResponse responseAboutMemberService = MemberRegisterResponse.builder()
             .id(registeredId)
@@ -243,23 +255,24 @@ class AuthServiceTest {
             .thenReturn(responseAboutMemberService);
 
         // when
-        final RegisterResponse response = authService.register(request, member.getId());
+        final RegisterResponse response = authService.register(request);
 
         //when & then
         assertThat(response.getId()).isNotNull();
-        assertThat(member.isRegistered()).isTrue();
+        assertThat(info.isRegistered()).isTrue();
     }
 
     @Test
     @DisplayName("회원가입 시 userId를 사용해 OAuthInfo를 조회할 수 없으면 예외를 반환한다")
     void registerFailNotFoundUser() {
         // given
-        final RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태");
+        Long notFoundedId = 12451L;
+        final RegisterRequest request = new RegisterRequest("https://profileUrl", "김태태", notFoundedId);
 
         // when & then
-        assertThatThrownBy(() -> authService.register(request, 1L))
+        assertThatThrownBy(() -> authService.register(request))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+            .hasMessageContaining(ErrorCode.AUTH_INFO_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -299,7 +312,7 @@ class AuthServiceTest {
         // when & then
         assertThatThrownBy(() -> authService.refreshToken(request, memberId))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+            .hasMessageContaining(ErrorCode.AUTH_INFO_NOT_FOUND.getMessage());
     }
 
     @Test

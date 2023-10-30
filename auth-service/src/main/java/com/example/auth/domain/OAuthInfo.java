@@ -37,6 +37,9 @@ public class OAuthInfo {
 
     private boolean registered;
 
+    @Column(unique = true)
+    private Long memberId;
+
     @Builder
     private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, String email, String refreshToken) {
         this.idUsingResourceServer = idUsingResourceServer;
@@ -46,8 +49,9 @@ public class OAuthInfo {
         this.registered = false;
     }
 
-    public void init() {
+    public void init(Long memberId) {
         this.registered = true;
+        this.memberId = memberId;
     }
 
     public void changeRefreshToken(String refreshToken) {

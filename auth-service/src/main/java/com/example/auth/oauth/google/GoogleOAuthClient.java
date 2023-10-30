@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.auth.application.dto.response.AccessTokenResponse;
@@ -18,7 +19,6 @@ import com.example.auth.oauth.OAuthProperties;
 
 import lombok.RequiredArgsConstructor;
 
-// TODO WebClient로 변경하기
 @RequiredArgsConstructor
 public class GoogleOAuthClient implements OAuthClient {
     private final OAuthProperties properties;
@@ -42,10 +42,17 @@ public class GoogleOAuthClient implements OAuthClient {
 
 
         HttpEntity<?> request = new HttpEntity<>(params, headers);
-        ResponseEntity<AccessTokenResponse> response =
-            new RestTemplate().postForEntity(properties.getTokenUri(), request, AccessTokenResponse.class);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return response.getBody();
+        try {
+            ResponseEntity<AccessTokenResponse> response =
+                new RestTemplate().postForEntity(properties.getTokenUri(), request, AccessTokenResponse.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return response.getBody();
+            }
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().is4xxClientError()) {
+                throw new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL);
+            }
+            throw new ApiException(ErrorCode.EXTERNAL_AUTH_SERVER_ERROR);
         }
         throw new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL);
     }

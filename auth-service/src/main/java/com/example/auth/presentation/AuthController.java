@@ -49,10 +49,10 @@ public class AuthController {
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request,
-                                                     @RequestHeader("X-User-Id") Long userId) {
-        return ResponseEntity.created(URI.create("/members/" + userId))
-            .body(authService.register(request, userId));
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+        RegisterResponse response = authService.register(request);
+        return ResponseEntity.created(URI.create("/members/" + response.getId()))
+            .body(response);
     }
 
     @GetMapping("/auth/parse")
