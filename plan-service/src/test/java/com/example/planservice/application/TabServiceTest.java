@@ -3,8 +3,8 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +23,6 @@ import com.example.planservice.domain.memberofplan.repository.MemberOfPlanReposi
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
-import com.example.planservice.domain.tab.TabGroup;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.domain.task.Task;
 import com.example.planservice.domain.task.repository.TaskRepository;
@@ -450,8 +449,8 @@ class TabServiceTest {
         Long deletedId = tabService.delete(request);
 
         // then
-        Optional<Tab> resultOpt = tabRepository.findById(deletedId);
-        assertThat(resultOpt).isEmpty();
+        Tab result = tabRepository.findById(deletedId).get();
+        assertThat(result.isDeleted()).isTrue();
     }
 
     @Test
@@ -521,6 +520,7 @@ class TabServiceTest {
             .name(name)
             .next(next)
             .first(isFirst)
+            .tasks(Collections.emptyList())
             .build();
         tabRepository.save(tab);
         return tab;

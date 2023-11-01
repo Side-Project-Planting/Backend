@@ -82,7 +82,9 @@ public class TabService {
         List<Tab> tabs = tabRepository.findAllByPlanId(planId);
         TabGroup tabGroup = new TabGroup(planId, tabs);
         tabGroup.deleteById(tabId);
-        tabRepository.deleteById(tabId);
+
+        Tab target = tabGroup.findById(tabId);
+        target.delete();
         return tabId;
     }
 
