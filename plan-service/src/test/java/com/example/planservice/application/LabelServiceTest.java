@@ -47,6 +47,8 @@ class LabelServiceTest {
         // then
         Label result = em.find(Label.class, createdId);
         assertThat(result.getName()).isEqualTo(name);
+        assertThat(plan.getLabels()).hasSize(1)
+            .containsExactly(result);
     }
 
     @Test
@@ -195,7 +197,6 @@ class LabelServiceTest {
     private Label createLabelUsingTest(String name, Plan plan) {
         Label label = Label.create(name, plan);
         em.persist(label);
-        plan.getLabels().add(label);
         return label;
     }
 

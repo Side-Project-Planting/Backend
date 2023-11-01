@@ -47,10 +47,12 @@ public class Label extends BaseEntity {
     }
 
     public static Label create(String name, Plan plan) {
-        return Label.builder()
+        Label label = Label.builder()
             .name(name)
             .plan(plan)
             .build();
+        plan.addLabel(label);
+        return label;
     }
 
     public void validateBelongsToPlan(Plan plan) {
