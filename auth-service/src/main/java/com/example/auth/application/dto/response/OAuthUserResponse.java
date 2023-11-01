@@ -1,9 +1,8 @@
 package com.example.auth.application.dto.response;
 
-import com.example.auth.domain.OAuthMember;
+import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,20 +26,18 @@ public class OAuthUserResponse {
         this.idUsingResourceServer = idUsingResourceServer;
     }
 
-    public static OAuthMember create(OAuthUserResponse response, OAuthType oAuthType) {
-        return OAuthMember.builder()
+    public static OAuthInfo create(OAuthUserResponse response, OAuthType oAuthType) {
+        return OAuthInfo.builder()
             .idUsingResourceServer(response.getIdUsingResourceServer())
             .oAuthType(oAuthType)
             .email(response.getEmail())
-            .profileUrl(response.getProfileUrl())
             .build();
     }
 
-    public OAuthMember toEntity(OAuthType oAuthType) {
-        return OAuthMember.builder()
+    public OAuthInfo toEntity(OAuthType oAuthType) {
+        return OAuthInfo.builder()
             .idUsingResourceServer(this.getIdUsingResourceServer())
             .email(this.getEmail())
-            .profileUrl(this.getProfileUrl())
             .oAuthType(oAuthType)
             .build();
     }

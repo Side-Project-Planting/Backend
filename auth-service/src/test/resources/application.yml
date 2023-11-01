@@ -13,6 +13,10 @@ spring:
       enabled: false
     config:
       enabled: false
+  sql:
+    init:
+      mode: never
+
 oauth:
   google:
     client-id: temp
@@ -32,3 +36,4 @@ jwt:
 eureka:
   client:
     enabled: false
+

@@ -12,33 +12,31 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
-class AuthMemberRepositoryTest {
+class AuthInfoRepositoryTest {
     @Autowired
-    AuthMemberRepository authMemberRepository;
+    AuthInfoRepository authInfoRepository;
 
     @Test
     @DisplayName("리소스서버의 id와 OAuthType을 사용해 조회한다")
-    void getOAuthMemberUsingIdUsingResourceServerAndType() {
+    void getOAuthInfoUsingIdUsingResourceServerAndType() {
         // given
         final String idUsingResourceServer = "1234";
         final OAuthType type = OAuthType.GOOGLE;
 
-        final OAuthMember oAuthMember = OAuthMember.builder()
-                                                   .email("hello@naver.com")
-                                                   .profileUrl("https://imageurl")
-                                                   .idUsingResourceServer(idUsingResourceServer)
-                                                   .oAuthType(OAuthType.GOOGLE)
-                                                   .build();
-        authMemberRepository.save(oAuthMember);
+        final OAuthInfo oAuthInfo = OAuthInfo.builder()
+            .email("hello@naver.com")
+            .idUsingResourceServer(idUsingResourceServer)
+            .oAuthType(OAuthType.GOOGLE)
+            .build();
+        authInfoRepository.save(oAuthInfo);
 
         // when
-        final OAuthMember result =
-                authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type).get();
+        final OAuthInfo result =
+            authInfoRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type).get();
 
         // then
         assertThat(result.getId()).isNotNull();
         assertThat(result.getEmail()).isEqualTo("hello@naver.com");
-        assertThat(result.getProfileUrl()).isEqualTo("https://imageurl");
         assertThat(result.getIdUsingResourceServer()).isEqualTo(idUsingResourceServer);
         assertThat(result.getType()).isEqualTo(OAuthType.GOOGLE);
     }
@@ -51,8 +49,8 @@ class AuthMemberRepositoryTest {
         final OAuthType type = OAuthType.GOOGLE;
 
         // when
-        final Optional<OAuthMember> resultOpt =
-                authMemberRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type);
+        final Optional<OAuthInfo> resultOpt =
+            authInfoRepository.findByIdUsingResourceServerAndType(idUsingResourceServer, type);
 
         // then
         assertThat(resultOpt).isEmpty();

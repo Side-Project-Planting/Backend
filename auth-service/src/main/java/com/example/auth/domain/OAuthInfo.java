@@ -1,5 +1,7 @@
 package com.example.auth.domain;
 
+import java.util.Objects;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,14 +15,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.Objects;
+import lombok.Setter;
 
 @Entity
-@Table(name = "auth_members")
+@Table(name = "oauth_infos")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class OAuthMember {
+public class OAuthInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,26 +34,30 @@ public class OAuthMember {
 
     private String email;
 
-    private String profileUrl;
-
     private String refreshToken;
 
     private boolean registered;
 
+    @Column(unique = true)
+    private Long memberId;
+
+    @Setter
+    private String authorizedToken;
+
     @Builder
-    private OAuthMember(String idUsingResourceServer, OAuthType oAuthType, String email, String profileUrl,
-                        String refreshToken) {
+    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, String email, String refreshToken,
+                      String authorizedToken) {
         this.idUsingResourceServer = idUsingResourceServer;
         this.type = oAuthType;
         this.email = email;
-        this.profileUrl = profileUrl;
         this.refreshToken = refreshToken;
         this.registered = false;
+        this.authorizedToken = authorizedToken;
     }
 
-    public void init(String profileUrl) {
-        this.profileUrl = profileUrl;
+    public void init(Long memberId) {
         this.registered = true;
+        this.memberId = memberId;
     }
 
     public void changeRefreshToken(String refreshToken) {
@@ -61,5 +66,9 @@ public class OAuthMember {
 
     public boolean isRefreshTokenMatching(@NotNull String input) {
         return Objects.equals(this.refreshToken, input);
+    }
+
+    public boolean validateAuthorizedToken(@NotNull String authorizedToken) {
+        return Objects.equals(this.authorizedToken, authorizedToken);
     }
 }

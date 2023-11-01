@@ -162,6 +162,7 @@ class PlanMembershipServiceTest {
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }
 
+
     @NotNull
     private MemberOfPlan createMemberOfPlan(Plan plan, Member member) {
         MemberOfPlan memberOfPlan = MemberOfPlan.builder()

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -54,6 +55,36 @@ class AuthenticationInterceptorTest {
     void authenticationInterceptorFailUserIdNotFound(String value) {
         // given
         request.addHeader("X-User-Id", value);
+
+        // when
+        boolean result = interceptor.preHandle(request, response, null);
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {"POST,/members"})
+    @DisplayName("whitelist에 존재하는 값들은 true를 반환한다")
+    void testPreHandleTrueUriInWhitelist(String method, String uri) throws Exception {
+        // given
+        request.setMethod(method);
+        request.setRequestURI(uri);
+
+        // when
+        boolean result = interceptor.preHandle(request, response, null);
+
+        // then
+        assertThat(result).isTrue();
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {"POST,/members/", "POST,/members/1"})
+    @DisplayName("whitelist에 존재하지 않는 값들은 X-User-Id가 없을 때 false를 반환한다")
+    void testPreHandleFalseUriNotInWhitelist(String method, String uri) throws Exception {
+        // given
+        request.setMethod(method);
+        request.setRequestURI(uri);
 
         // when
         boolean result = interceptor.preHandle(request, response, null);
