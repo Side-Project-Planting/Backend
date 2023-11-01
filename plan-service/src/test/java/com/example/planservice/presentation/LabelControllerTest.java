@@ -14,16 +14,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.LabelService;
-import com.example.planservice.application.dto.LabelDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.LabelCreateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = LabelController.class)
-@ActiveProfiles("test")
 class LabelControllerTest {
     @Autowired
     MockMvc mockMvc;
