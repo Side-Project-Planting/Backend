@@ -61,7 +61,7 @@ public class TabGroup {
 
         Tab oldPrev = findPrev(target);
         oldPrev.connect(target.getNext());
-
+        hash.remove(target.getId());
         Tab newPrev = findById(newPrevId);
         add(newPrev, target);
 

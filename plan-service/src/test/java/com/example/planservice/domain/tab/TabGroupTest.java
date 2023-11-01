@@ -127,8 +127,29 @@ class TabGroupTest {
 
         // when
         List<Tab> tabs = tabGroup.changeOrder(tab3.getId(), tab1.getId());
+
+        // then
         assertThat(tabs).hasSize(3)
             .containsExactly(tab1, tab3, tab2);
+    }
+
+    @Test
+    @DisplayName("탭이 가득차 있을 때 탭의 순서를 변경한다")
+    void changeOrderFullTabInPlan() {
+        Plan plan = createPlan();
+        Tab tab5 = createTab(plan, "탭5", null);
+        Tab tab4 = createTab(plan, "탭4", tab5);
+        Tab tab3 = createTab(plan, "탭3", tab4);
+        Tab tab2 = createTab(plan, "탭2", tab3);
+        Tab tab1 = createTab(plan, "탭1", tab2);
+        TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4, tab5));
+
+        // when
+        List<Tab> tabs = tabGroup.changeOrder(tab5.getId(), tab1.getId());
+
+        // then
+        assertThat(tabs).hasSize(5)
+            .containsExactly(tab1, tab5, tab2, tab3, tab4);
     }
 
     @Test
