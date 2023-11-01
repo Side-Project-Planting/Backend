@@ -49,6 +49,7 @@ public class Tab extends BaseEntity {
     private boolean first;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_task_id")
     private Task lastTask;
 
     @Version
