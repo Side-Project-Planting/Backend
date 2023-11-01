@@ -3,8 +3,8 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -419,8 +419,8 @@ class TabServiceTest {
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab target = createTab(plan, "시작탭", null, true);
-        createTab(plan, duplicatedName, target, true);
+        Tab tab = createTab(plan, duplicatedName, null, false);
+        Tab target = createTab(plan, "시작탭", tab, true);
 
         TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())
@@ -449,8 +449,8 @@ class TabServiceTest {
         Long deletedId = tabService.delete(request);
 
         // then
-        Optional<Tab> resultOpt = tabRepository.findById(deletedId);
-        assertThat(resultOpt).isEmpty();
+        Tab result = tabRepository.findById(deletedId).get();
+        assertThat(result.isDeleted()).isTrue();
     }
 
     @Test
@@ -514,13 +514,13 @@ class TabServiceTest {
         assertThat(resultOpt).isEmpty();
     }
 
-
     private Tab createTab(Plan plan, String name, Tab next, boolean isFirst) {
         Tab tab = Tab.builder()
             .plan(plan)
             .name(name)
             .next(next)
             .first(isFirst)
+            .tasks(Collections.emptyList())
             .build();
         tabRepository.save(tab);
         return tab;

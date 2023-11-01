@@ -1,8 +1,5 @@
 package com.example.planservice.application;
 
-import java.util.Objects;
-
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,11 +17,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LabelService {
     private final LabelRepository labelRepository;
-    private final PlanMembershipVerificationService planMembershipVerificationService;
+    private final PlanMembershipService planMembershipService;
 
     @Transactional
     public Long create(Long memberId, LabelCreateRequest request) {
-        Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
+        Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), memberId);
 
         String name = request.getName();
         if (plan.existsDuplicatedLabelName(name)) {
@@ -33,28 +30,17 @@ public class LabelService {
 
         Label label = Label.create(name, plan);
         Label savedEntity = labelRepository.save(label);
-
-        try {
-            labelRepository.flush();
-        } catch (DataIntegrityViolationException e) {
-            throw new ApiException(ErrorCode.REQUEST_CONFLICT);
-        }
         return savedEntity.getId();
     }
 
     @Transactional
     public void delete(LabelDeleteServiceRequest request) {
-        Long planId = request.getPlanId();
-        Long memberId = request.getMemberId();
-
-        Plan plan = planMembershipVerificationService.verifyAndReturnPlan(planId, memberId);
+        Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), request.getMemberId());
         Label label = labelRepository.findById(request.getLabelId())
             .orElseThrow(() -> new ApiException(ErrorCode.LABEL_NOT_FOUND));
-        if (!Objects.equals(label.getPlan().getId(), planId)) {
-            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
-        }
+        label.validateBelongsToPlan(plan);
 
-        plan.remove(label);
         labelRepository.delete(label);
+        plan.remove(label);
     }
 }

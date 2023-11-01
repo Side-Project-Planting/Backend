@@ -1,7 +1,11 @@
 package com.example.planservice.domain.label;
 
+import java.util.Objects;
+
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.plan.Plan;
+import com.example.planservice.exception.ApiException;
+import com.example.planservice.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -43,9 +47,17 @@ public class Label extends BaseEntity {
     }
 
     public static Label create(String name, Plan plan) {
-        return Label.builder()
+        Label label = Label.builder()
             .name(name)
             .plan(plan)
             .build();
+        plan.addLabel(label);
+        return label;
+    }
+
+    public void validateBelongsToPlan(Plan plan) {
+        if (!Objects.equals(this.plan.getId(), plan.getId())) {
+            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
+        }
     }
 }

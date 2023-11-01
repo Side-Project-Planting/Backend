@@ -95,4 +95,8 @@ public class Task extends BaseEntity {
         next.prev = this;
     }
 
+    public void delete() {
+        this.isDeleted = true;
+    }
+
 }

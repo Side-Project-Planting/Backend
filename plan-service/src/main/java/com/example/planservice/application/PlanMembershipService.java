@@ -3,8 +3,10 @@ package com.example.planservice.application;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.domain.member.Member;
+import com.example.planservice.domain.memberofplan.MemberOfPlan;
 import com.example.planservice.domain.memberofplan.repository.MemberOfPlanRepository;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
@@ -14,26 +16,33 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class PlanMembershipVerificationService {
+@Transactional(readOnly = true)
+public class PlanMembershipService {
     private final PlanRepository planRepository;
     private final MemberOfPlanRepository memberOfPlanRepository;
 
-    public Plan verifyAndReturnPlan(Long planId, Long memberId) {
+    public Plan getPlanAfterValidateAuthorization(Long planId, Long memberId) {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-
-        boolean existsInPlan = memberOfPlanRepository.existsByPlanIdAndMemberId(plan.getId(), memberId);
-        if (!existsInPlan) {
-            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN);
-        }
+        validateMemberIsInThePlan(memberId, plan);
         return plan;
     }
 
-    public boolean validateOwner(Long planId, Long memberId) {
+    public boolean validatePlanOwner(Long planId, Long memberId) {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
 
         Member owner = plan.getOwner();
         return Objects.equals(memberId, owner.getId());
+    }
+
+    public MemberOfPlan validateMemberIsInThePlan(Long memberId, Plan plan) {
+        return memberOfPlanRepository.findByPlanIdAndMemberId(plan.getId(), memberId)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
+    }
+
+    public Member getMemberBelongingToPlan(Long memberId, Plan plan) {
+        MemberOfPlan memberOfPlan = validateMemberIsInThePlan(memberId, plan);
+        return memberOfPlan.getMember();
     }
 }

@@ -3,9 +3,6 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +27,9 @@ import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
+
+import java.util.Collections;
+import java.util.List;
 
 @SpringBootTest
 @Transactional
@@ -59,19 +59,17 @@ class TaskServiceTest {
     LabelOfTaskRepository labelOfTaskRepository;
 
     @Test
-    @DisplayName("특정 탭의 첫 태스크를 생성한다")
+    @DisplayName("탭의 첫 번째 태스크를 생성한다")
     void createTaskOrderFirst() {
         // given
-        Member loginMember = createMember();
-        Member manager = createMember();
-        Tab tab = createTab();
         Plan plan = createPlan();
-        createMemberOfPlan(plan, loginMember);
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Member taskManager = createMemberWithPlan(plan);
 
         TaskCreateRequest request = TaskCreateRequest.builder()
-            .planId(plan.getId())
             .tabId(tab.getId())
-            .managerId(manager.getId())
+            .managerId(taskManager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
@@ -80,7 +78,7 @@ class TaskServiceTest {
             .build();
 
         // when
-        Long createdId = taskService.createTask(loginMember.getId(), request);
+        Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
         Task task = taskRepository.findById(createdId).get();
@@ -97,20 +95,19 @@ class TaskServiceTest {
     }
 
     @Test
-    @DisplayName("특정 탭의 N번째 태스크를 생성한다(첫 번째가 아님)")
+    @DisplayName("탭의 N번째(첫 번째가 아닌) 태스크를 생성한다")
     void createTaskOrderNotFirst() {
         // given
-        Member loginMember = createMember();
-        Member manager = createMember();
         Task originalFirstTab = createTask();
-        Tab tab = createTabWithLastTask(originalFirstTab);
+
         Plan plan = createPlan();
-        createMemberOfPlan(plan, loginMember);
+        Tab tab = createTabWithLastTask(originalFirstTab, plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Member taskManager = createMemberWithPlan(plan);
 
         TaskCreateRequest request = TaskCreateRequest.builder()
-            .planId(plan.getId())
             .tabId(tab.getId())
-            .managerId(manager.getId())
+            .managerId(taskManager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
@@ -119,32 +116,52 @@ class TaskServiceTest {
             .build();
 
         // when
-        Long createdId = taskService.createTask(loginMember.getId(), request);
+        Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
         Task task = taskRepository.findById(createdId).get();
 
-        assertThat(task.getId()).isEqualTo(createdId);
-        assertThat(task.getTab().getId()).isEqualTo(request.getTabId());
-        assertThat(task.getManager().getId()).isEqualTo(request.getManagerId());
-        assertThat(task.getName()).isEqualTo(request.getName());
-        assertThat(task.getDescription()).isEqualTo(request.getDescription());
-        assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
-        assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
-
         assertThat(task.getPrev()).isEqualTo(originalFirstTab);
+        assertThat(task.getNext()).isNull();
         assertThat(originalFirstTab.getNext()).isEqualTo(task);
+        assertThat(tab.getLastTask()).isEqualTo(task);
+    }
+
+    @Test
+    @DisplayName("태스크는 플랜에 소속된 사람만 만들 수 있다")
+    void createFailNotExistMemberInPlan() {
+        // given
+        Plan otherPlan = createPlan();
+        Member memberInOtherPlan = createMemberWithPlan(otherPlan);
+
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member manager = createMemberWithPlan(plan);
+
+        TaskCreateRequest request = TaskCreateRequest.builder()
+            .tabId(tab.getId())
+            .managerId(manager.getId())
+            .name("스프링공부하기")
+            .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
+            .startDate(null)
+            .endDate(null)
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> taskService.create(memberInOtherPlan.getId(), request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }
 
     @Test
     @DisplayName("태스크는 라벨을 달고 생성할 수 있다")
     void testCreateTaskWithLabels() {
         // given
-        Member loginMember = createMember();
-        Member manager = createMember();
-        Tab tab = createTab();
         Plan plan = createPlan();
-        createMemberOfPlan(plan, loginMember);
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Member manager = createMemberWithPlan(plan);
+
         Label label1 = createLabelUsingTest(plan);
         Label label2 = createLabelUsingTest(plan);
         Label notUsingLabel = createLabelUsingTest(plan);
@@ -159,7 +176,7 @@ class TaskServiceTest {
             .build();
 
         // when
-        Long createdId = taskService.createTask(loginMember.getId(), request);
+        Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
         List<Label> labels = labelOfTaskRepository.findAll().stream()
@@ -177,11 +194,11 @@ class TaskServiceTest {
     @DisplayName("태스크를 만들 때 존재하지 않는 라벨을 달아도, 존재하는 라벨들만 사용해서 LabelOfTask를 만든다")
     void testCreateTaskFailLabelNotFound() throws Exception {
         // given
-        Member loginMember = createMember();
-        Member manager = createMember();
-        Tab tab = createTab();
         Plan plan = createPlan();
-        createMemberOfPlan(plan, loginMember);
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Member manager = createMemberWithPlan(plan);
+
         Label label1 = createLabelUsingTest(plan);
         Long notRegisteredLabelId = 123123L;
 
@@ -195,16 +212,15 @@ class TaskServiceTest {
             .build();
 
         // when
-        Long createdId = taskService.createTask(loginMember.getId(), request);
+        Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
         List<Label> labels = labelOfTaskRepository.findAll().stream()
             .filter(labelOfTask -> labelOfTask.getTask().getId() == createdId)
             .map(LabelOfTask::getLabel)
             .toList();
-        assertThat(labels).hasSize(1)
-            .contains(label1);
 
+        assertThat(labels).hasSize(1).contains(label1);
         Task task = taskRepository.findById(createdId).get();
         assertThat(task.getId()).isEqualTo(createdId);
     }
@@ -213,13 +229,13 @@ class TaskServiceTest {
     @DisplayName("태스크를 만들 때 다른 플랜의 라벨을 달면, 우리 플랜에 존재하는 라벨만 사용해서 LabelOfTask를 만든다")
     void testCreateTaskFailLabelNotFoundThisPlan() throws Exception {
         // given
-        Member loginMember = createMember();
-        Member manager = createMember();
-        Tab tab = createTab();
-        Plan plan = createPlan();
         Plan otherPlan = createPlan();
-        createMemberOfPlan(plan, loginMember);
         Label otherPlansLabel = createLabelUsingTest(otherPlan);
+
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Member manager = createMemberWithPlan(plan);
 
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(plan.getId())
@@ -231,7 +247,7 @@ class TaskServiceTest {
             .build();
 
         // when
-        Long createdId = taskService.createTask(loginMember.getId(), request);
+        Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
         List<Label> labels = labelOfTaskRepository.findAll().stream()
@@ -248,13 +264,16 @@ class TaskServiceTest {
     @DisplayName("존재하지 않는 플랜에는 태스크를 만들 수 없다")
     void createFailNotExistPlan() {
         // given
-        Member loginMember = createMember();
-        Member manager = createMember();
-        Tab tab = createTab();
+        Long notRegisteredPlanId = 3L;
+        Long notRegisteredTabId = 2L;
+        Plan otherPlan = createPlan();
+
+        Member loginMember = createMemberWithPlan(otherPlan);
+        Member manager = createMemberWithPlan(otherPlan);
 
         TaskCreateRequest request = TaskCreateRequest.builder()
-            .planId(123123L)
-            .tabId(tab.getId())
+            .planId(notRegisteredPlanId)
+            .tabId(notRegisteredTabId)
             .managerId(manager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
@@ -264,44 +283,11 @@ class TaskServiceTest {
             .build();
 
         // when & then
-        assertThatThrownBy(() -> taskService.createTask(loginMember.getId(), request))
+        assertThatThrownBy(() -> taskService.create(loginMember.getId(), request))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
+            .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
     }
 
-    @Test
-    @DisplayName("플랜에 속한 사람만 태스크를 만들 수 있다")
-    void createFailNotExistMemberInPlan() {
-        // given
-        Member loginMember = createMember();
-        Member manager = createMember();
-        Tab tab = createTab();
-        Plan plan = createPlan();
-
-        TaskCreateRequest request = TaskCreateRequest.builder()
-            .planId(plan.getId())
-            .tabId(tab.getId())
-            .managerId(manager.getId())
-            .name("스프링공부하기")
-            .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
-            .startDate(null)
-            .endDate(null)
-            .labels(Collections.emptyList())
-            .build();
-
-        // when & then
-        assertThatThrownBy(() -> taskService.createTask(loginMember.getId(), request))
-            .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
-    }
-
-    private Label createLabelUsingTest(Plan plan) {
-        Label label = Label.builder()
-            .plan(plan)
-            .build();
-        labelRepository.save(label);
-        return label;
-    }
 
     private Plan createPlan() {
         Plan plan = Plan.builder().build();
@@ -309,16 +295,28 @@ class TaskServiceTest {
         return plan;
     }
 
-    private Tab createTab() {
-        Tab tab = Tab.builder().build();
+    private Member createMemberWithPlan(Plan plan) {
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+        return member;
+    }
+
+    private Tab createTab(Plan plan) {
+        Tab.TabBuilder builder = Tab.builder();
+        if (plan != null) {
+            builder.plan(plan);
+        }
+        Tab tab = builder.build();
         tabRepository.save(tab);
         return tab;
     }
 
-    private Tab createTabWithLastTask(Task lastTask) {
-        Tab tab = Tab.builder()
-            .lastTask(lastTask)
-            .build();
+    private Tab createTabWithLastTask(@NotNull Task lastTask, Plan plan) {
+        Tab.TabBuilder builder = Tab.builder();
+        if (plan != null) {
+            builder.plan(plan);
+        }
+        Tab tab = builder.lastTask(lastTask).build();
         tabRepository.save(tab);
         return tab;
     }
@@ -343,6 +341,14 @@ class TaskServiceTest {
             .build();
         memberOfPlanRepository.save(memberOfPlan);
         return memberOfPlan;
+    }
+
+    private Label createLabelUsingTest(Plan plan) {
+        Label label = Label.builder()
+            .plan(plan)
+            .build();
+        labelRepository.save(label);
+        return label;
     }
 
 }

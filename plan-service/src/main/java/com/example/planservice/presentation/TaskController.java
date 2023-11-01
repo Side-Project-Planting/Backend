@@ -23,7 +23,7 @@ public class TaskController {
     @PostMapping
     public ResponseEntity<Void> create(@RequestBody @Valid TaskCreateRequest request,
                                        @RequestAttribute Long userId) {
-        Long createdId = taskService.createTask(userId, request);
+        Long createdId = taskService.create(userId, request);
         return ResponseEntity.created(URI.create("/tasks/" + createdId)).build();
     }
 

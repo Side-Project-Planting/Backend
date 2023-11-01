@@ -61,7 +61,7 @@ public class TabGroup {
 
         Tab oldPrev = findPrev(target);
         oldPrev.connect(target.getNext());
-
+        hash.remove(target.getId());
         Tab newPrev = findById(newPrevId);
         add(newPrev, target);
 
@@ -125,5 +125,12 @@ public class TabGroup {
             }
             prev = tab;
         }
+    }
+
+    public Tab changeName(Long tabId, String name) {
+        checkDuplicatedName(name);
+        Tab target = findById(tabId);
+        target.changeName(name);
+        return target;
     }
 }

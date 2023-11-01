@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.domain.label.repository.LabelRepository;
 import com.example.planservice.domain.member.Member;
-import com.example.planservice.domain.member.repository.MemberRepository;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
@@ -28,19 +27,17 @@ import lombok.RequiredArgsConstructor;
 public class TaskService {
     private final TaskRepository taskRepository;
     private final TabRepository tabRepository;
-    private final MemberRepository memberRepository;
-    private final PlanMembershipVerificationService planMembershipVerificationService;
-    private final LabelRepository labelRepository;
+    private final PlanMembershipService planMembershipService;
     private final LabelOfTaskRepository labelOfTaskRepository;
+    private final LabelRepository labelRepository;
 
     @Transactional
-    public Long createTask(Long memberId, TaskCreateRequest request) {
+    public Long create(Long memberId, TaskCreateRequest request) {
         try {
-            Plan plan = planMembershipVerificationService.verifyAndReturnPlan(request.getPlanId(), memberId);
             Tab tab = tabRepository.findById(request.getTabId())
                 .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND_IN_PLAN));
-            Member manager = memberRepository.findById(request.getManagerId())
-                .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
+            planMembershipService.validateMemberIsInThePlan(memberId, tab.getPlan());
+            Member manager = planMembershipService.getMemberBelongingToPlan(request.getManagerId(), tab.getPlan());
 
             Task task = Task.builder()
                 .tab(tab)
@@ -48,15 +45,9 @@ public class TaskService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .build();
-
-            Task oldLastTask = tab.makeLastTask(task);
-            if (oldLastTask != null) {
-                oldLastTask.connect(task);
-            }
-
+            tab.changeLastTask(task);
             Task savedTask = taskRepository.save(task);
-
-            saveAllLabelOfTask(request.getLabels(), task, plan);
+            saveAllLabelOfTask(request.getLabels(), task, tab.getPlan());
             return savedTask.getId();
         } catch (ObjectOptimisticLockingFailureException e) {
             throw new ApiException(ErrorCode.REQUEST_CONFLICT);

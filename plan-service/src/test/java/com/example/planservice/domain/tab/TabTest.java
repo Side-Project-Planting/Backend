@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.planservice.domain.plan.Plan;
+import com.example.planservice.domain.task.Task;
 
 class TabTest {
     @Test
@@ -66,5 +67,24 @@ class TabTest {
 
         // then
         assertThat(tab.getName()).isEqualTo("이름변경");
+    }
+
+    @Test
+    @DisplayName("탭의 마지막 태스크를 변경한다")
+    void testChangeLastTask() {
+        // given
+        Task originalLastTask = Task.builder().build();
+        Tab tab = Tab.builder()
+            .lastTask(originalLastTask)
+            .build();
+        Task task = Task.builder().build();
+
+        // when
+        tab.changeLastTask(task);
+
+        // then
+        assertThat(tab.getLastTask()).isEqualTo(task);
+        assertThat(originalLastTask.getNext()).isEqualTo(task);
+        assertThat(task.getNext()).isNull();
     }
 }

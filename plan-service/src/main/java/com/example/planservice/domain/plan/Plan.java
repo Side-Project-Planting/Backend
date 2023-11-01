@@ -74,4 +74,8 @@ public class Plan extends BaseEntity {
     public void remove(Label label) {
         labels.remove(label);
     }
+
+    public void addLabel(Label label) {
+        labels.add(label);
+    }
 }
