@@ -18,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.LabelService;
-import com.example.planservice.application.dto.LabelDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.LabelCreateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

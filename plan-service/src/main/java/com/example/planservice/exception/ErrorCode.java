@@ -8,6 +8,7 @@ import lombok.Getter;
 public enum ErrorCode {
     PLAN_NOT_FOUND(HttpStatus.NOT_FOUND, "플랜이 존재하지 않습니다"),
     MEMBER_NOT_FOUND_IN_PLAN(HttpStatus.NOT_FOUND, "해당 플랜에 소속되지 않은 멤버입니다"),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "멤버가 존재하지 않습니다"),
     TAB_SIZE_INVALID(HttpStatus.BAD_REQUEST, "플랜에 속할 수 있는 탭의 개수가 잘못되었습니다"),
     TAB_NAME_DUPLICATE(HttpStatus.BAD_REQUEST, "탭 이름이 중복되었습니다"),
     TAB_NOT_FOUND_IN_PLAN(HttpStatus.NOT_FOUND, "현재 플랜에서 해당되는 탭을 찾을 수 없습니다"),
@@ -23,7 +24,7 @@ public enum ErrorCode {
     LABEL_NOT_FOUND(HttpStatus.NOT_FOUND, "라벨이 존재하지 않습니다");
 
     private final HttpStatus status;
-    private String message;
+    private final String message;
 
     ErrorCode(HttpStatus status, String message) {
         this.status = status;

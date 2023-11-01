@@ -1,5 +1,7 @@
 package com.example.planservice.domain.label;
 
+import java.util.Objects;
+
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.exception.ApiException;
@@ -18,8 +20,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.Objects;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

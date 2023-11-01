@@ -1,23 +1,20 @@
 package com.example.planservice.domain.task.repository;
 
-import com.example.planservice.domain.tab.Tab;
-import com.example.planservice.domain.tab.repository.TabRepository;
-import com.example.planservice.domain.task.Task;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.planservice.domain.tab.Tab;
+import com.example.planservice.domain.tab.repository.TabRepository;
+import com.example.planservice.domain.task.Task;
+
 @SpringBootTest
-@ActiveProfiles("test")
 @Transactional
 class TaskRepositoryTest {
     @Autowired

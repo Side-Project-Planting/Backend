@@ -27,6 +27,7 @@ public class LabelService {
         if (plan.existsDuplicatedLabelName(name)) {
             throw new ApiException(ErrorCode.LABEL_NAME_DUPLICATE);
         }
+
         Label label = Label.create(name, plan);
         Label savedEntity = labelRepository.save(label);
         return savedEntity.getId();

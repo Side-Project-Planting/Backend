@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface MemberOfPlanRepository extends JpaRepository<MemberOfPlan, Long> {
     Optional<MemberOfPlan> findByPlanIdAndMemberId(Long planId, Long memberId);
+
 }

@@ -11,7 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.TabChangeNameResponse;
@@ -24,6 +23,7 @@ import com.example.planservice.domain.memberofplan.repository.MemberOfPlanReposi
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
+import com.example.planservice.domain.tab.TabGroup;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.domain.task.Task;
 import com.example.planservice.domain.task.repository.TaskRepository;
@@ -33,9 +33,7 @@ import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 
 @SpringBootTest
-@ActiveProfiles("test")
 @Transactional
-@SuppressWarnings("squid:S5778")
 class TabServiceTest {
     @Autowired
     TabService tabService;
@@ -516,7 +514,6 @@ class TabServiceTest {
         List<Task> resultOpt = taskRepository.findAllByTabId(task.getId());
         assertThat(resultOpt).isEmpty();
     }
-
 
     private Tab createTab(Plan plan, String name, Tab next, boolean isFirst) {
         Tab tab = Tab.builder()
