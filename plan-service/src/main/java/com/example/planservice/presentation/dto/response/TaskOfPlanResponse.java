@@ -35,11 +35,13 @@ public class TaskOfPlanResponse {
         return builder()
             .id(task.getId())
             .title(task.getName())
-            .labels(task.getLabelOfTasks().stream().map(labelOfTask -> labelOfTask.getLabel().getId()).toList())
+            .labels(task.getLabelOfTasks() != null ?
+                task.getLabelOfTasks().stream().map(labelOfTask -> labelOfTask.getLabel().getId()).toList() :
+                null)
             .tabId(task.getTab().getId())
-            .assigneeId(task.getWriter().getId())
-            .startDate(task.getStartDate())
-            .endDate(task.getEndDate())
+            .assigneeId(task.getWriter() != null ? task.getWriter().getId() : null)
+            .startDate(task.getStartDate() != null ? task.getStartDate() : null)
+            .endDate(task.getEndDate() != null ? task.getEndDate() : null)
             .build();
     }
 }
