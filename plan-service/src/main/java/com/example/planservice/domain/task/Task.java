@@ -1,10 +1,13 @@
 package com.example.planservice.domain.task;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.Where;
 
 import com.example.planservice.domain.BaseEntity;
+import com.example.planservice.domain.Linkable;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.tab.Tab;
 import jakarta.persistence.Column;
@@ -15,6 +18,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
@@ -28,7 +32,7 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Where(clause = "is_deleted = false")
 @Getter
-public class Task extends BaseEntity {
+public class Task extends BaseEntity implements Linkable<Task> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "task_id")
@@ -45,6 +49,9 @@ public class Task extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id")
     private Member writer;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "task")
+    private List<LabelOfTask> labelOfTasks = new ArrayList<>();
 
     private String name;
 
@@ -96,7 +103,7 @@ public class Task extends BaseEntity {
     }
 
     public void delete() {
-        this.isDeleted = true;
+        isDeleted = true;
     }
 
 }
