@@ -47,8 +47,6 @@ public class TaskService {
                 .build();
             tab.changeLastTask(task);
             Task savedTask = taskRepository.save(task);
-            tab.getPlan().getTasks().add(task);
-            tab.getTasks().add(task);
             saveAllLabelOfTask(request.getLabels(), task, tab.getPlan());
             return savedTask.getId();
         } catch (ObjectOptimisticLockingFailureException e) {

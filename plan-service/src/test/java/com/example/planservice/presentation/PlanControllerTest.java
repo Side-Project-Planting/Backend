@@ -153,7 +153,7 @@ class PlanControllerTest {
         when(planService.inviteMember(planId, userId)).thenReturn(1L);
 
         // when & then
-        mockMvc.perform(put("/invite/{planId}", planId)
+        mockMvc.perform(put("/plans/invite/{planId}", planId)
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())

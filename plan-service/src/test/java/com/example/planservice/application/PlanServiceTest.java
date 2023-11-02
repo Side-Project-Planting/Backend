@@ -66,7 +66,7 @@ class PlanServiceTest {
     void testSetUp() {
         Member member = Member.builder()
             .name("tester")
-            .email("test@example.com")
+            .email("testEach@example.com")
             .build();
         Member savedMember = memberRepository.save(member);
         userId = savedMember.getId();
@@ -123,7 +123,6 @@ class PlanServiceTest {
     @DisplayName("플랜의 전체 정보를 가져온다")
     void getTotalPlanResponse() {
         // given
-        List<String> invitedEmails = List.of("test@example.com");
         Member member1 = Member.builder()
             .email("test1@example.com")
             .name("test1")
@@ -211,7 +210,7 @@ class PlanServiceTest {
         taskRepository.saveAll(List.of(task1, task2, task3));
 
         // when
-        PlanResponse planResponse = planService.getTotalPlanResponse(1L);
+        PlanResponse planResponse = planService.getTotalPlanResponse(plan.getId());
 
         // then
         assertThat(planResponse).isNotNull();
@@ -268,15 +267,12 @@ class PlanServiceTest {
     @DisplayName("존재하지 않는 멤버로 초대를 시도하면 실패한다")
     void inviteFailNotExistMember() {
         // given
-        Long notRegisteredPlanId = 10L;
-
         Plan plan = Plan.builder()
             .title("플랜 제목")
             .intro("플랜 소개")
             .isPublic(true)
             .build();
         Plan savedPlan = planRepository.save(plan);
-
         Long notRegisteredMemberId = 20L;
 
         // when & then
