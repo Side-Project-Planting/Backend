@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -39,4 +40,11 @@ public class PlanController {
     public ResponseEntity<PlanResponse> read(@PathVariable Long planId, @RequestAttribute Long userId) {
         return ResponseEntity.ok(planService.getTotalPlanResponse(planId));
     }
+
+    @PutMapping("/invite/{planId}")
+    public ResponseEntity<Long> invite(@PathVariable Long planId, @RequestAttribute Long userId) {
+        Long memberOfPlanId = planService.inviteMember(planId, userId);
+        return ResponseEntity.ok(memberOfPlanId);
+    }
+
 }
