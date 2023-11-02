@@ -36,6 +36,8 @@ public class TabService {
             List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
             TabGroup tabGroup = new TabGroup(plan.getId(), tabsOfPlan);
             tabGroup.addLast(createdTab);
+            plan.getTabs().add(createdTab);
+
             Tab savedTab = tabRepository.save(createdTab);
             return savedTab.getId();
         } catch (ObjectOptimisticLockingFailureException e) {
