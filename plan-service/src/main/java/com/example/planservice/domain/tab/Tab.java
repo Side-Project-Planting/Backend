@@ -47,7 +47,7 @@ public class Tab extends BaseEntity implements Linkable<Tab> {
 
     private String name;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "tab")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "tab")
     private List<Task> tasks = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)

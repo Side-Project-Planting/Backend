@@ -50,7 +50,7 @@ public class Plan extends BaseEntity {
     private List<MemberOfPlan> members = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Task> tasks;
+    private List<Task> tasks = new ArrayList<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "plan")
     private List<Tab> tabs = new ArrayList<>();
@@ -66,7 +66,6 @@ public class Plan extends BaseEntity {
     private int viewCnt;
 
     private boolean isDeleted;
-
 
     @Builder
     private Plan(Member owner, String title, String intro, boolean isPublic, int starCnt, int viewCnt,
