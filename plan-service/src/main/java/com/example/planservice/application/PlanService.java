@@ -43,8 +43,9 @@ public class PlanService {
 
     @Transactional
     public Long create(PlanCreateRequest request, Long userId) {
-        Member member = memberRepository.findById(userId).orElseThrow(() -> new ApiException(
-            ErrorCode.MEMBER_NOT_FOUND));
+        Member member = memberRepository.findById(userId)
+            .orElseThrow(() -> new ApiException(
+                ErrorCode.MEMBER_NOT_FOUND));
         Plan plan = Plan.builder()
             .title(request.getTitle())
             .intro(request.getIntro())
@@ -52,7 +53,10 @@ public class PlanService {
             .owner(member)
             .build();
 
-        MemberOfPlan memberOfPlan = MemberOfPlan.builder().member(member).plan(plan).build();
+        MemberOfPlan memberOfPlan = MemberOfPlan.builder()
+            .member(member)
+            .plan(plan)
+            .build();
         memberOfPlanRepository.save(memberOfPlan);
 
         sendInviteMail(request.getInvitedEmails(), request.getTitle());
@@ -62,12 +66,13 @@ public class PlanService {
         return savedPlan.getId();
     }
 
-    @Transactional
     public PlanResponse getTotalPlanResponse(Long planId) {
-        Plan plan = planRepository.findById(planId).orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         List<Tab> tabList = tabRepository.findAllByPlanId(planId);
 
-        List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner().getId());
+        List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner()
+            .getId());
         List<LabelOfPlanResponse> labels = getLabelResponses(plan.getLabels());
         List<TaskOfPlanResponse> tasks = getTaskResponses(plan.getTasks());
         List<Long> tabOrder = orderByNext(tabList);
@@ -87,10 +92,15 @@ public class PlanService {
 
     @Transactional
     public Long inviteMember(Long planId, Long memberId) {
-        Plan plan = planRepository.findById(planId).orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         Member member =
-            memberRepository.findById(memberId).orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
-        MemberOfPlan memberOfPlan = MemberOfPlan.builder().member(member).plan(plan).build();
+            memberRepository.findById(memberId)
+                .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+        MemberOfPlan memberOfPlan = MemberOfPlan.builder()
+            .member(member)
+            .plan(plan)
+            .build();
         memberOfPlanRepository.save(memberOfPlan);
         return memberOfPlan.getId();
     }
@@ -100,35 +110,49 @@ public class PlanService {
     }
 
     private void createDefaultTab(Plan plan) {
-        Tab firstTab = Tab.builder().name("ToDo").plan(plan).build();
-        Tab lastTab = Tab.builder().name("Done").plan(plan).build();
+        Tab firstTab = Tab.builder()
+            .name("ToDo")
+            .plan(plan)
+            .build();
+        Tab lastTab = Tab.builder()
+            .name("Done")
+            .plan(plan)
+            .build();
         firstTab.connect(lastTab);
         tabRepository.save(firstTab);
         tabRepository.save(lastTab);
     }
 
     private List<MemberOfPlanResponse> getMemberResponses(List<MemberOfPlan> members, Long ownerId) {
-        return members.parallelStream().map(member ->
-            new MemberOfPlanResponse().toPlanResponse(member.getMember(), ownerId)
-        ).toList();
+        return members.parallelStream()
+            .map(member ->
+                new MemberOfPlanResponse().toPlanResponse(member.getMember(), ownerId)
+            )
+            .toList();
     }
 
     private List<TabOfPlanResponse> getTabResponses(List<Tab> tabList) {
-        return tabList.parallelStream().map(tab -> {
-            List<Task> tasksOfTab = tab.getTasks();
-            List<Long> taskOrder = orderByNext(tasksOfTab);
-            return new TabOfPlanResponse().toPlanResponse(tab, taskOrder);
-        }).toList();
+        return tabList.parallelStream()
+            .map(tab -> {
+                List<Task> tasksOfTab = tab.getTasks();
+                List<Long> taskOrder = orderByNext(tasksOfTab);
+                return new TabOfPlanResponse().toPlanResponse(tab, taskOrder);
+            })
+            .toList();
     }
 
     private List<LabelOfPlanResponse> getLabelResponses(List<Label> labels) {
-        return labels.stream().map(label -> new LabelOfPlanResponse().toPlanResponse(label)
-        ).toList();
+        return labels.stream()
+            .map(label -> new LabelOfPlanResponse().toPlanResponse(label)
+            )
+            .toList();
     }
 
     private List<TaskOfPlanResponse> getTaskResponses(List<Task> tasks) {
-        return tasks.stream().map(task -> new TaskOfPlanResponse().toPlanResponse(task)
-        ).toList();
+        return tasks.stream()
+            .map(task -> new TaskOfPlanResponse().toPlanResponse(task)
+            )
+            .toList();
     }
 
     public <T extends Linkable<T>> List<Long> orderByNext(List<T> items) {
@@ -141,7 +165,8 @@ public class PlanService {
             }
         }
         if (!allNodes.isEmpty()) {
-            start = allNodes.iterator().next();
+            start = allNodes.iterator()
+                .next();
         }
 
         T current = start;

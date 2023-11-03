@@ -30,8 +30,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "tabs", uniqueConstraints = @UniqueConstraint(name = "UniquePlanAndTabName", columnNames = {"plan_id",
-    "name"}))
+@Table(name = "tabs",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "UniquePlanAndTabName", columnNames = {"plan_id", "name"})
+    })
 @Where(clause = "is_deleted = false")
 public class Tab extends BaseEntity implements Linkable<Tab> {
     public static final int TAB_MAX_SIZE = 5;
@@ -77,7 +79,7 @@ public class Tab extends BaseEntity implements Linkable<Tab> {
     }
 
     public static Tab create(Plan plan, String name) {
-        return builder()
+        return Tab.builder()
             .plan(plan)
             .name(name)
             .first(false)
@@ -85,7 +87,7 @@ public class Tab extends BaseEntity implements Linkable<Tab> {
     }
 
     public static Tab createTodoTab(Plan plan) {
-        return builder()
+        return Tab.builder()
             .plan(plan)
             .name("TODO")
             .first(true)
