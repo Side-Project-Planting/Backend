@@ -124,7 +124,7 @@ public class PlanService {
     }
 
     private List<MemberOfPlanResponse> getMemberResponses(List<MemberOfPlan> members, Long ownerId) {
-        return members.parallelStream()
+        return members.stream()
             .map(member ->
                 new MemberOfPlanResponse().toPlanResponse(member.getMember(), ownerId)
             )
@@ -132,7 +132,7 @@ public class PlanService {
     }
 
     private List<TabOfPlanResponse> getTabResponses(List<Tab> tabList) {
-        return tabList.parallelStream()
+        return tabList.stream()
             .map(tab -> {
                 List<Task> tasksOfTab = tab.getTasks();
                 List<Long> taskOrder = orderByNext(tasksOfTab);
