@@ -3,6 +3,9 @@ application-local.yml
 application-docker.yml
 /.env
 
+id_ed25519.txt
+known_hosts.txt
+
 .gradle
 !gradle/wrapper/gradle-wrapper.jar
 !**/**/build/
