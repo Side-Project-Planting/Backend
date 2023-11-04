@@ -75,8 +75,9 @@ public class Task extends BaseEntity {
 
     @Builder
     @SuppressWarnings("java:S107")
-    public Task(Tab tab, Member manager, Member writer, String name, String description, LocalDateTime startDate,
-                LocalDateTime endDate, boolean isDeleted, Task next, Task prev, int version) {
+    private Task(Tab tab, Member manager, Member writer, String name, String description, LocalDateTime startDate,
+                 LocalDateTime endDate, boolean isDeleted, Task next, Task prev, int version) {
+        validateDates(startDate, endDate);
         this.tab = tab;
         this.manager = manager;
         this.writer = writer;
@@ -88,6 +89,16 @@ public class Task extends BaseEntity {
         this.next = next;
         this.prev = prev;
         this.version = version;
+    }
+
+    private void validateDates(LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate == null || endDate == null) {
+            return;
+        }
+
+        if (startDate.isAfter(endDate)) {
+            throw new ApiException(ErrorCode.TASK_DATE_INVALID);
+        }
     }
 
     public static List<Task> createFirstAndLastDummy(Tab tab) {

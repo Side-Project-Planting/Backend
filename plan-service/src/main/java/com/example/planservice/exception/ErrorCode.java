@@ -31,6 +31,7 @@ public enum ErrorCode {
 
     // 태스크
     TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "태스크가 존재하지 않습니다"),
+    TASK_DATE_INVALID(HttpStatus.BAD_REQUEST, "태스크의 시작은 끝보다 빨라야 합니다"),
 
     // 라벨
     LABEL_NAME_DUPLICATE(HttpStatus.BAD_REQUEST, "라벨 이름이 중복되었습니다"),
