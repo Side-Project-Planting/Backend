@@ -3,7 +3,6 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,11 +16,8 @@ import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.domain.member.Member;
-import com.example.planservice.domain.member.repository.MemberRepository;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
-import com.example.planservice.domain.memberofplan.repository.MemberOfPlanRepository;
 import com.example.planservice.domain.plan.Plan;
-import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.domain.task.Task;
@@ -30,6 +26,7 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest
 @Transactional
@@ -51,6 +48,9 @@ class TabServiceTest {
 
     @Autowired
     TaskRepository taskRepository;
+
+    @Autowired
+    EntityManager em;
 
     @Test
     @DisplayName("탭을 생성한다")
@@ -520,9 +520,8 @@ class TabServiceTest {
             .name(name)
             .next(next)
             .first(isFirst)
-            .tasks(Collections.emptyList())
             .build();
-        tabRepository.save(tab);
+        em.persist(tab);
         return tab;
     }
 
@@ -533,14 +532,14 @@ class TabServiceTest {
             .plan(plan)
             .member(member)
             .build();
-        memberOfPlanRepository.save(memberOfPlan);
+        em.persist(memberOfPlan);
         return memberOfPlan;
     }
 
     @NotNull
     private Task createTask(Tab tab) {
         Task task = Task.builder().tab(tab).build();
-        taskRepository.save(task);
+        em.persist(task);
         return task;
     }
 
@@ -548,21 +547,21 @@ class TabServiceTest {
     private Member createMember() {
         Member member = Member.builder()
             .build();
-        memberRepository.save(member);
+        em.persist(member);
         return member;
     }
 
     @NotNull
     private Plan createPlan() {
         Plan plan = Plan.builder().build();
-        planRepository.save(plan);
+        em.persist(plan);
         return plan;
     }
 
     @NotNull
     private Plan createPlanWithOwner(Member owner) {
         Plan plan = Plan.builder().owner(owner).build();
-        planRepository.save(plan);
+        em.persist(plan);
         return plan;
     }
 
