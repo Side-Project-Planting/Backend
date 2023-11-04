@@ -19,6 +19,7 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
+import com.example.planservice.presentation.dto.request.TaskUpdateRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -51,6 +52,20 @@ public class TaskService {
         return savedTask.getId();
     }
 
+    @Transactional
+    public Long updateContents(Long memberId, TaskUpdateRequest request) {
+        Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), memberId);
+        Task task = taskRepository.findById(request.getTaskId())
+            .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
+        Member manager = planMembershipService.getMemberBelongingToPlan(request.getManagerId(), plan);
+
+        task.change(request.toEntity(manager));
+        List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(task.getId());
+        labelOfTaskRepository.deleteAllInBatch(labelOfTaskList);
+        saveAllLabelOfTask(request.getLabels(), task, plan);
+
+        return task.getId();
+    }
 
     @Transactional
     public List<Long> changeOrder(Long memberId, TaskChangeOrderRequest request) {

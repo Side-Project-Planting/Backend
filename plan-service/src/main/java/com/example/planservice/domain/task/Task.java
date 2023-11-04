@@ -172,4 +172,12 @@ public class Task extends BaseEntity {
             throw new ApiException(ErrorCode.TASK_NOT_FOUND);
         }
     }
+
+    public void change(Task entity) {
+        this.manager = entity.getManager();
+        this.name = entity.getName();
+        this.description = entity.getDescription();
+        this.startDate = entity.getStartDate();
+        this.endDate = entity.getEndDate();
+    }
 }

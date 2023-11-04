@@ -3,6 +3,7 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
+import com.example.planservice.presentation.dto.request.TaskUpdateRequest;
 
 @SpringBootTest
 @Transactional
@@ -461,7 +463,56 @@ class TaskServiceTest {
         assertThatThrownBy(() -> taskService.changeOrder(loginMember.getId(), request))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.AUTHORIZATION_FAIL.getMessage());
+    }
 
+    @Test
+    @DisplayName("태스크의 정보를 수정한다")
+    void testUpdateContents() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Member taskManager = createMemberWithPlan(plan);
+        Task task = createTaskWithTab(tab);
+        Label label1 = Label.builder()
+            .plan(plan)
+            .name("라벨1")
+            .build();
+        Label label2 = Label.builder()
+            .plan(plan)
+            .name("라벨2")
+            .build();
+        labelRepository.saveAll(List.of(label1, label2));
+
+        labelOfTaskRepository.save(LabelOfTask.builder().label(label1).task(task).build());
+
+        TaskUpdateRequest request = TaskUpdateRequest.builder()
+            .taskId(task.getId())
+            .planId(plan.getId())
+            .managerId(taskManager.getId())
+            .name("변경된 이름")
+            .description("이렇게 설명할게요")
+            .startDate(LocalDateTime.now().minusDays(10))
+            .endDate(LocalDateTime.now().plusDays(2))
+            .labels(List.of(label1.getId(), label2.getId()))
+            .build();
+
+        // when
+        Long updatedId = taskService.updateContents(loginMember.getId(), request);
+
+        // then
+        Task updatedTask = taskRepository.findById(updatedId).get();
+        assertThat(updatedTask).isEqualTo(task);
+        assertThat(updatedTask)
+            .extracting(Task::getTab, Task::getManager, Task::getName,
+                Task::getDescription, Task::getStartDate, Task::getEndDate)
+            .containsExactly(tab, taskManager, request.getName(),
+                request.getDescription(), request.getStartDate(), request.getEndDate());
+
+        List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(updatedId);
+        assertThat(labelOfTaskList).hasSize(2)
+            .extracting(LabelOfTask::getLabel)
+            .contains(label1, label2);
     }
 
     private Task createTaskWithTab(Tab tab) {
