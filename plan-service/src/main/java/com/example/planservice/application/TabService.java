@@ -41,10 +41,9 @@ public class TabService {
             tabGroup.addLast(createdTab);
             Tab savedTab = tabRepository.save(createdTab);
 
-            Task firstDummyTask = Task.createFirstDummy(createdTab);
-            Task lastDummyTask = Task.createLastDummy(createdTab);
-            createdTab.setFirstDummyTask(firstDummyTask);
-            createdTab.setLastDummyTask(lastDummyTask);
+            List<Task> dummies = Task.createFirstAndLastDummy(createdTab);
+            Task firstDummyTask = dummies.get(0);
+            Task lastDummyTask = dummies.get(1);
             taskRepository.saveAll(List.of(firstDummyTask, lastDummyTask));
 
             return savedTab.getId();

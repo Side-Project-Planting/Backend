@@ -1,6 +1,7 @@
 package com.example.planservice.domain.task;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.Where;
 
@@ -88,17 +89,30 @@ public class Task extends BaseEntity {
         this.version = version;
     }
 
-    public static Task createFirstDummy(Tab tab) {
-        return createDummy(tab, FIRST_DUMMY_NAME);
+    public static List<Task> createFirstAndLastDummy(Tab tab) {
+        Task firstDummy = createDummy(tab, FIRST_DUMMY_NAME);
+        Task lastDummy = createDummy(tab, LAST_DUMMY_NAME);
+
+        firstDummy.connect(lastDummy);
+
+        tab.setFirstDummyTask(firstDummy);
+        tab.setLastDummyTask(lastDummy);
+        return List.of(firstDummy, lastDummy);
     }
 
-    public static Task createLastDummy(Tab tab) {
-        return createDummy(tab, LAST_DUMMY_NAME);
-    }
-
-    public void connect(Task next) {
-        if (next == null) {
-            this.next = null;
+    public void connect(Task target) {
+        if (target == null) {
+            // TODO 언제 호출되나 확인하기
+            //  가능하다면 target에 NotNull 추가하기
+            return;
+        }
+        if (target.isConnected()) {
+            throw new IllegalArgumentException("target은 연결이 되어 있어서는 안됩니다.");
+        }
+        Task originalNext = this.next;
+        if (originalNext == null) {
+            this.next = target;
+            target.prev = this;
             return;
         }
 
