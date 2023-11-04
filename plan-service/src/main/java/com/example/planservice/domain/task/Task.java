@@ -115,9 +115,32 @@ public class Task extends BaseEntity {
             target.prev = this;
             return;
         }
+        originalNext.prev = target;
+        target.next = originalNext;
 
-        this.next = next;
-        next.prev = this;
+        target.prev = this;
+        this.next = target;
+    }
+
+    public void connectPrev(Task target) {
+        if (target.isConnected()) {
+            throw new IllegalArgumentException("target은 연결이 되어 있어서는 안됩니다.");
+        }
+        Task originalPrev = this.prev;
+        if (originalPrev == null) {
+            this.prev = target;
+            target.next = this;
+            return;
+        }
+        originalPrev.next = target;
+        target.prev = originalPrev;
+
+        target.next = this;
+        this.prev = target;
+    }
+
+    private boolean isConnected() {
+        return next != null || prev != null;
     }
 
     public void delete() {
@@ -130,4 +153,5 @@ public class Task extends BaseEntity {
             .name(name)
             .build();
     }
+
 }

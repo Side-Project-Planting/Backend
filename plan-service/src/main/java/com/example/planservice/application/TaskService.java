@@ -45,9 +45,11 @@ public class TaskService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .build();
-            tab.changeLastTask(task);
+
             Task savedTask = taskRepository.save(task);
             saveAllLabelOfTask(request.getLabels(), task, tab.getPlan());
+            Task last = tab.getLastDummyTask();
+            last.connectPrev(savedTask);
             return savedTask.getId();
         } catch (ObjectOptimisticLockingFailureException e) {
             throw new ApiException(ErrorCode.REQUEST_CONFLICT);

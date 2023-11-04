@@ -107,25 +107,9 @@ public class Tab extends BaseEntity {
         this.next = next;
     }
 
-    public void makeNotFirst() {
-        this.first = false;
-    }
-
     public void changeName(@NotNull String name) {
         // TODO Tab 이름에 대한 제약조건 이야기해보기
         this.name = name;
-    }
-
-    public void changeLastTask(Task task) {
-        if (lastDummyTask != null) {
-            lastDummyTask.connect(task);
-        }
-        this.lastDummyTask = task;
-    }
-
-    public void delete() {
-        this.isDeleted = true;
-        tasks.forEach(Task::delete);
     }
 
     public void setFirstDummyTask(Task firstDummyTask) {
@@ -142,5 +126,10 @@ public class Tab extends BaseEntity {
         }
         tasks.add(lastDummyTask);
         this.lastDummyTask = lastDummyTask;
+    }
+
+    public void delete() {
+        this.isDeleted = true;
+        tasks.forEach(Task::delete);
     }
 }

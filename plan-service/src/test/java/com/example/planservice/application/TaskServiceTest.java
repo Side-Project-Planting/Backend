@@ -3,6 +3,9 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,9 +30,6 @@ import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
-
-import java.util.Collections;
-import java.util.List;
 
 @SpringBootTest
 @Transactional
@@ -59,8 +59,8 @@ class TaskServiceTest {
     LabelOfTaskRepository labelOfTaskRepository;
 
     @Test
-    @DisplayName("탭의 첫 번째 태스크를 생성한다")
-    void createTaskOrderFirst() {
+    @DisplayName("태스크를 생성한다")
+    void createTaskOrder() {
         // given
         Plan plan = createPlan();
         Tab tab = createTab(plan);
@@ -91,40 +91,8 @@ class TaskServiceTest {
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
 
-        assertThat(tab.getLastDummyTask()).isEqualTo(task);
-    }
-
-    @Test
-    @DisplayName("탭의 N번째(첫 번째가 아닌) 태스크를 생성한다")
-    void createTaskOrderNotFirst() {
-        // given
-        Task originalFirstTab = createTask();
-
-        Plan plan = createPlan();
-        Tab tab = createTabWithLastTask(originalFirstTab, plan);
-        Member loginMember = createMemberWithPlan(plan);
-        Member taskManager = createMemberWithPlan(plan);
-
-        TaskCreateRequest request = TaskCreateRequest.builder()
-            .tabId(tab.getId())
-            .managerId(taskManager.getId())
-            .name("스프링공부하기")
-            .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
-            .startDate(null)
-            .endDate(null)
-            .labels(Collections.emptyList())
-            .build();
-
-        // when
-        Long createdId = taskService.create(loginMember.getId(), request);
-
-        // then
-        Task task = taskRepository.findById(createdId).get();
-
-        assertThat(task.getPrev()).isEqualTo(originalFirstTab);
-        assertThat(task.getNext()).isNull();
-        assertThat(originalFirstTab.getNext()).isEqualTo(task);
-        assertThat(tab.getLastDummyTask()).isEqualTo(task);
+        Task lastDummyTask = tab.getLastDummyTask();
+        assertThat(task).isEqualTo(lastDummyTask.getPrev());
     }
 
     @Test
@@ -308,6 +276,12 @@ class TaskServiceTest {
         }
         Tab tab = builder.build();
         tabRepository.save(tab);
+
+        List<Task> dummies = Task.createFirstAndLastDummy(tab);
+        Task firstDummy = dummies.get(0);
+        Task lastDummy = dummies.get(1);
+        taskRepository.save(firstDummy);
+        taskRepository.save(lastDummy);
         return tab;
     }
 
