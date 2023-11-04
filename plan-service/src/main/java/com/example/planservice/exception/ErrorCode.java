@@ -22,8 +22,8 @@ public enum ErrorCode {
     TAB_NOT_FOUND(HttpStatus.NOT_FOUND, "탭을 찾을 수 없습니다"),
     LABEL_NAME_DUPLICATE(HttpStatus.BAD_REQUEST, "라벨 이름이 중복되었습니다"),
     LABEL_NOT_FOUND(HttpStatus.NOT_FOUND, "라벨이 존재하지 않습니다"),
-    ALREADY_REGISTERED(HttpStatus.BAD_REQUEST, "이미 가입된 회원입니다");
-
+    ALREADY_REGISTERED(HttpStatus.BAD_REQUEST, "이미 가입된 회원입니다"),
+    TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "태스크가 존재하지 않습니다");
     private final HttpStatus status;
     private final String message;
 

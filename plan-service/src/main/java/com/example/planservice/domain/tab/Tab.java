@@ -2,6 +2,7 @@ package com.example.planservice.domain.tab;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.Where;
 import org.jetbrains.annotations.NotNull;
@@ -132,4 +133,15 @@ public class Tab extends BaseEntity {
         this.isDeleted = true;
         tasks.forEach(Task::delete);
     }
+
+    public List<Task> getSortedTasks() {
+        List<Task> result = new ArrayList<>();
+        Task temp = firstDummyTask;
+        while (!Objects.equals(lastDummyTask, temp.getNext())) {
+            temp = temp.getNext();
+            result.add(temp);
+        }
+        return result;
+    }
+
 }

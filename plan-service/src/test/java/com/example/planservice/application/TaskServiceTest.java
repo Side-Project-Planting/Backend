@@ -29,6 +29,7 @@ import com.example.planservice.domain.task.repository.LabelOfTaskRepository;
 import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
+import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
 
 @SpringBootTest
@@ -60,7 +61,7 @@ class TaskServiceTest {
 
     @Test
     @DisplayName("태스크를 생성한다")
-    void createTaskOrder() {
+    void testCreateTaskOrder() {
         // given
         Plan plan = createPlan();
         Tab tab = createTab(plan);
@@ -97,7 +98,7 @@ class TaskServiceTest {
 
     @Test
     @DisplayName("태스크는 플랜에 소속된 사람만 만들 수 있다")
-    void createFailNotExistMemberInPlan() {
+    void testCreateFailNotExistMemberInPlan() {
         // given
         Plan otherPlan = createPlan();
         Member memberInOtherPlan = createMemberWithPlan(otherPlan);
@@ -256,6 +257,223 @@ class TaskServiceTest {
             .hasMessageContaining(ErrorCode.TAB_NOT_FOUND_IN_PLAN.getMessage());
     }
 
+    @Test
+    @DisplayName("태스크의 순서를 변경한다")
+    void testChangeOrder() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Task task1 = createTaskWithTab(tab);
+        Task task2 = createTaskWithTab(tab);
+        Task task3 = createTaskWithTab(tab);
+
+        TaskChangeOrderRequest request = TaskChangeOrderRequest.builder()
+            .planId(plan.getId())
+            .targetTabId(tab.getId())
+            .newPrevId(task3.getId())
+            .targetId(task2.getId())
+            .build();
+
+        // when
+        List<Long> taskIds = taskService.changeOrder(loginMember.getId(), request);
+
+        // then
+        assertThat(taskIds).hasSize(3)
+            .containsExactly(task1.getId(), task3.getId(), task2.getId());
+    }
+
+    @Test
+    @DisplayName("newPrev가 null이면 태스크를 탭의 첫 번째 순서로 옮긴다")
+    void testChangeOrderIfNewPrevIsNull() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Task task1 = createTaskWithTab(tab);
+        Task task2 = createTaskWithTab(tab);
+
+        TaskChangeOrderRequest request = TaskChangeOrderRequest.builder()
+            .planId(plan.getId())
+            .targetTabId(tab.getId())
+            .newPrevId(null)
+            .targetId(task2.getId())
+            .build();
+
+        // when
+        List<Long> taskIds = taskService.changeOrder(loginMember.getId(), request);
+
+        // then
+        assertThat(taskIds).hasSize(2)
+            .containsExactly(task2.getId(), task1.getId());
+    }
+
+
+    @Test
+    @DisplayName("다른 탭에서 넘어온 태스크를 특정 탭에 추가한다")
+    void testChangeOrderTargetIsFromOtherTab() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Tab otherTab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Task task1 = createTaskWithTab(tab);
+        Task task2 = createTaskWithTab(tab);
+        Task target = createTaskWithTab(otherTab);
+
+        TaskChangeOrderRequest request = TaskChangeOrderRequest.builder()
+            .planId(plan.getId())
+            .targetTabId(tab.getId())
+            .newPrevId(task2.getId())
+            .targetId(target.getId())
+            .build();
+
+        // when
+        List<Long> taskIds = taskService.changeOrder(loginMember.getId(), request);
+
+        // then
+        assertThat(taskIds).hasSize(3)
+            .containsExactly(task1.getId(), task2.getId(), target.getId());
+    }
+
+    @Test
+    @DisplayName("태스크의 순서는 플랜에 소속된 멤버만 바꿀 수 있다")
+    void testChangeOrderFailNotAuthorized() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Plan otherPlan = createPlan();
+        Tab tab = createTab(plan);
+        Member unauthorizedMember = createMemberWithPlan(otherPlan);
+        Task task1 = createTaskWithTab(tab);
+        Task task2 = createTaskWithTab(tab);
+
+        TaskChangeOrderRequest request = TaskChangeOrderRequest.builder()
+            .planId(plan.getId())
+            .targetTabId(tab.getId())
+            .newPrevId(task2.getId())
+            .targetId(task1.getId())
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> taskService.changeOrder(unauthorizedMember.getId(), request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 탭으로 태스크를 옮길 수 없다")
+    void testChangeOrderFailTabNotFound() throws Exception {
+        // given
+        Long notRegisteredTabId = 1243124512L;
+        Plan plan = createPlan();
+        Plan otherPlan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Task task1 = createTaskWithTab(tab);
+
+        TaskChangeOrderRequest request = TaskChangeOrderRequest.builder()
+            .planId(plan.getId())
+            .targetTabId(notRegisteredTabId)
+            .newPrevId(null)
+            .targetId(task1.getId())
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> taskService.changeOrder(loginMember.getId(), request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 태스크를 옮길 수 없다")
+    void testChangeOrderFailTaskNotFound() throws Exception {
+        // given
+        Long notRegisteredTaskId = 1243124512L;
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+
+        TaskChangeOrderRequest request = TaskChangeOrderRequest.builder()
+            .planId(plan.getId())
+            .targetTabId(tab.getId())
+            .newPrevId(null)
+            .targetId(notRegisteredTaskId)
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> taskService.changeOrder(loginMember.getId(), request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TASK_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("더미태스크는 순서를 변경할 수 없다")
+    void testChangeOrderFailBecauseTargetIsDummy() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Task task1 = createTaskWithTab(tab);
+
+        List<Task> tasks = taskRepository.findAllByTabId(tab.getId());
+
+        List<Task> dummies = tasks.stream()
+            .filter(task -> task.equals(tab.getFirstDummyTask()) || task.equals(tab.getLastDummyTask()))
+            .toList();
+
+        for (Task dummy : dummies) {
+            TaskChangeOrderRequest request = TaskChangeOrderRequest.builder()
+                .planId(plan.getId())
+                .targetTabId(tab.getId())
+                .newPrevId(task1.getId())
+                .targetId(dummy.getId())
+                .build();
+
+            // when & then
+            assertThatThrownBy(() -> taskService.changeOrder(loginMember.getId(), request))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining(ErrorCode.TASK_NOT_FOUND.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("태스크를 옮길 때, 다른 플랜으로 옮길 수는 없다")
+    void changeOrderFailOtherPlan() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+
+        Plan otherPlan = createPlan();
+        createMemberOfPlan(otherPlan, loginMember);
+        Tab tabInOtherPlan = createTab(otherPlan);
+        Task taskInOtherTask = createTaskWithTab(tabInOtherPlan);
+
+        // when
+        TaskChangeOrderRequest request = TaskChangeOrderRequest.builder()
+            .planId(plan.getId())
+            .targetTabId(tab.getId())
+            .newPrevId(null)
+            .targetId(taskInOtherTask.getId())
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> taskService.changeOrder(loginMember.getId(), request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.AUTHORIZATION_FAIL.getMessage());
+
+    }
+
+    private Task createTaskWithTab(Tab tab) {
+        Task task = Task.builder()
+            .tab(tab)
+            .build();
+        Task lastDummy = tab.getLastDummyTask();
+        lastDummy.putInFront(task);
+
+        taskRepository.save(task);
+        return task;
+    }
 
     private Plan createPlan() {
         Plan plan = Plan.builder().build();
@@ -282,16 +500,6 @@ class TaskServiceTest {
         Task lastDummy = dummies.get(1);
         taskRepository.save(firstDummy);
         taskRepository.save(lastDummy);
-        return tab;
-    }
-
-    private Tab createTabWithLastTask(@NotNull Task lastTask, Plan plan) {
-        Tab.TabBuilder builder = Tab.builder();
-        if (plan != null) {
-            builder.plan(plan);
-        }
-        Tab tab = builder.lastDummyTask(lastTask).build();
-        tabRepository.save(tab);
         return tab;
     }
 

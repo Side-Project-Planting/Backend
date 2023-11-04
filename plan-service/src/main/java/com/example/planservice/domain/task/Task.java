@@ -4,10 +4,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.hibernate.annotations.Where;
+import org.jetbrains.annotations.NotNull;
 
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.tab.Tab;
+import com.example.planservice.exception.ApiException;
+import com.example.planservice.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,7 +25,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "tasks")
@@ -60,7 +62,6 @@ public class Task extends BaseEntity {
 
     private boolean isDeleted;
 
-    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "next_id")
     private Task next;
@@ -93,22 +94,14 @@ public class Task extends BaseEntity {
         Task firstDummy = createDummy(tab, FIRST_DUMMY_NAME);
         Task lastDummy = createDummy(tab, LAST_DUMMY_NAME);
 
-        firstDummy.connect(lastDummy);
+        firstDummy.putInBack(lastDummy);
 
         tab.setFirstDummyTask(firstDummy);
         tab.setLastDummyTask(lastDummy);
         return List.of(firstDummy, lastDummy);
     }
 
-    public void connect(Task target) {
-        if (target == null) {
-            // TODO 언제 호출되나 확인하기
-            //  가능하다면 target에 NotNull 추가하기
-            return;
-        }
-        if (target.isConnected()) {
-            throw new IllegalArgumentException("target은 연결이 되어 있어서는 안됩니다.");
-        }
+    public void putInBack(@NotNull Task target) {
         Task originalNext = this.next;
         if (originalNext == null) {
             this.next = target;
@@ -120,9 +113,10 @@ public class Task extends BaseEntity {
 
         target.prev = this;
         this.next = target;
+        tab.getTasks().add(target);
     }
 
-    public void connectPrev(Task target) {
+    public void putInFront(@NotNull Task target) {
         if (target.isConnected()) {
             throw new IllegalArgumentException("target은 연결이 되어 있어서는 안됩니다.");
         }
@@ -137,6 +131,7 @@ public class Task extends BaseEntity {
 
         target.next = this;
         this.prev = target;
+        tab.getTasks().add(target);
     }
 
     private boolean isConnected() {
@@ -154,4 +149,27 @@ public class Task extends BaseEntity {
             .build();
     }
 
+    public void disconnect() {
+        validateCanModify();
+
+        Task originalPrev = this.prev;
+        Task originalNext = this.next;
+
+        this.prev.next = originalNext;
+        this.next.prev = originalPrev;
+        this.prev = null;
+        this.next = null;
+        tab.getTasks().remove(this);
+    }
+
+    private void validateCanModify() {
+        Task firstDummyTask = tab.getFirstDummyTask();
+        if (this.equals(firstDummyTask)) {
+            throw new ApiException(ErrorCode.TASK_NOT_FOUND);
+        }
+        Task lastDummyTask = tab.getLastDummyTask();
+        if (this.equals(lastDummyTask)) {
+            throw new ApiException(ErrorCode.TASK_NOT_FOUND);
+        }
+    }
 }

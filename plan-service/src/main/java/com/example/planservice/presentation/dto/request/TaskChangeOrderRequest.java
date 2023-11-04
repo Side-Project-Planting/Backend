@@ -1,26 +1,30 @@
 package com.example.planservice.presentation.dto.request;
 
+import org.jetbrains.annotations.NotNull;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import org.jetbrains.annotations.NotNull;
-
 @NoArgsConstructor
 @Getter
-public class TabChangeOrderRequest {
+public class TaskChangeOrderRequest {
     @NotNull
     private Long planId;
 
     @NotNull
-    private Long targetId;
+    private Long targetTabId;
 
     @NotNull
+    private Long targetId;
+
     private Long newPrevId;
 
     @Builder
-    private TabChangeOrderRequest(@NotNull Long planId, @NotNull Long targetId, @NotNull Long newPrevId) {
+    public TaskChangeOrderRequest(@NotNull Long planId, @NotNull Long targetTabId, @NotNull Long targetId,
+                                  Long newPrevId) {
         this.planId = planId;
+        this.targetTabId = targetTabId;
         this.targetId = targetId;
         this.newPrevId = newPrevId;
     }
