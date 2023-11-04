@@ -75,7 +75,7 @@ class TabTest {
         // given
         Task originalLastTask = Task.builder().build();
         Tab tab = Tab.builder()
-            .lastTask(originalLastTask)
+            .lastDummyTask(originalLastTask)
             .build();
         Task task = Task.builder().build();
 
@@ -83,7 +83,7 @@ class TabTest {
         tab.changeLastTask(task);
 
         // then
-        assertThat(tab.getLastTask()).isEqualTo(task);
+        assertThat(tab.getLastDummyTask()).isEqualTo(task);
         assertThat(originalLastTask.getNext()).isEqualTo(task);
         assertThat(task.getNext()).isNull();
     }

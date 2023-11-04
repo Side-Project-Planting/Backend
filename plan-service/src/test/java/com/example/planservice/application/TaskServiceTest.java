@@ -91,7 +91,7 @@ class TaskServiceTest {
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
 
-        assertThat(tab.getLastTask()).isEqualTo(task);
+        assertThat(tab.getLastDummyTask()).isEqualTo(task);
     }
 
     @Test
@@ -124,7 +124,7 @@ class TaskServiceTest {
         assertThat(task.getPrev()).isEqualTo(originalFirstTab);
         assertThat(task.getNext()).isNull();
         assertThat(originalFirstTab.getNext()).isEqualTo(task);
-        assertThat(tab.getLastTask()).isEqualTo(task);
+        assertThat(tab.getLastDummyTask()).isEqualTo(task);
     }
 
     @Test
@@ -316,7 +316,7 @@ class TaskServiceTest {
         if (plan != null) {
             builder.plan(plan);
         }
-        Tab tab = builder.lastTask(lastTask).build();
+        Tab tab = builder.lastDummyTask(lastTask).build();
         tabRepository.save(tab);
         return tab;
     }

@@ -29,6 +29,9 @@ import lombok.Setter;
 @Where(clause = "is_deleted = false")
 @Getter
 public class Task extends BaseEntity {
+    public static final String FIRST_DUMMY_NAME = "first";
+    public static final String LAST_DUMMY_NAME = "last";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "task_id")
@@ -85,6 +88,14 @@ public class Task extends BaseEntity {
         this.version = version;
     }
 
+    public static Task createFirstDummy(Tab tab) {
+        return createDummy(tab, FIRST_DUMMY_NAME);
+    }
+
+    public static Task createLastDummy(Tab tab) {
+        return createDummy(tab, LAST_DUMMY_NAME);
+    }
+
     public void connect(Task next) {
         if (next == null) {
             this.next = null;
@@ -99,4 +110,10 @@ public class Task extends BaseEntity {
         this.isDeleted = true;
     }
 
+    private static Task createDummy(Tab tab, String name) {
+        return Task.builder()
+            .tab(tab)
+            .name(name)
+            .build();
+    }
 }
