@@ -49,13 +49,13 @@ public class TaskService {
 
             Task savedTask = taskRepository.save(task);
             saveAllLabelOfTask(request.getLabels(), task, tab.getPlan());
-            Task last = tab.getLastDummyTask();
-            last.putInFront(savedTask);
+            addEndOfTab(savedTask, tab);
             return savedTask.getId();
         } catch (ObjectOptimisticLockingFailureException e) {
             throw new ApiException(ErrorCode.REQUEST_CONFLICT);
         }
     }
+
 
     @Transactional
     public List<Long> changeOrder(Long memberId, TaskChangeOrderRequest request) {
@@ -63,24 +63,31 @@ public class TaskService {
             .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND_IN_PLAN));
         planMembershipService.validateMemberIsInThePlan(memberId, tab.getPlan());
 
-        Task target = taskRepository.findById(request.getTargetId())
-            .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
-        if (!Objects.equals(target.getTab().getPlan(), tab.getPlan())) {
-            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
-        }
+        Task target = getTargetTask(request.getTargetId(), tab);
         target.disconnect();
-
-        Task newPrev;
-        if (request.getNewPrevId() == null) {
-            newPrev = tab.getFirstDummyTask();
-        } else {
-            newPrev = taskRepository.findById(request.getNewPrevId())
-                .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
-        }
+        Task newPrev = getPrevTask(request.getNewPrevId(), tab);
         newPrev.putInBack(target);
         return tab.getSortedTasks().stream()
             .map(Task::getId)
             .toList();
+    }
+
+    private Task getTargetTask(Long targetId, Tab tab) {
+        Task target = taskRepository.findById(targetId)
+            .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
+        Tab tabLocatedInTarget = target.getTab();
+        if (!Objects.equals(tabLocatedInTarget.getPlan(), tab.getPlan())) {
+            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
+        }
+        return target;
+    }
+
+    private Task getPrevTask(Long prevId, Tab tab) {
+        if (prevId == null) {
+            return tab.getFirstDummyTask();
+        }
+        return taskRepository.findById(prevId)
+            .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
     }
 
     private void saveAllLabelOfTask(List<Long> labelIds, Task task, Plan plan) {
@@ -91,4 +98,8 @@ public class TaskService {
         labelOfTaskRepository.saveAll(labelsOfTask);
     }
 
+    private void addEndOfTab(Task savedTask, Tab tab) {
+        Task last = tab.getLastDummyTask();
+        last.putInFront(savedTask);
+    }
 }
