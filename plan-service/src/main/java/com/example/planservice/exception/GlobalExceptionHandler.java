@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,10 +25,11 @@ public class GlobalExceptionHandler {
             .body(new ErrorResponse(allErrors.get(0).getDefaultMessage()));
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ExceptionHandler({DataIntegrityViolationException.class, ObjectOptimisticLockingFailureException.class})
     public ResponseEntity<ErrorResponse> handleDatabaseConflict() {
         ErrorCode errorCode = ErrorCode.REQUEST_CONFLICT;
         return ResponseEntity.status(errorCode.getStatus())
             .body(new ErrorResponse(errorCode.getMessage()));
     }
+
 }
