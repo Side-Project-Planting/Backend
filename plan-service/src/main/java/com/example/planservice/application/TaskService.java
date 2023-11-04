@@ -3,7 +3,6 @@ package com.example.planservice.application;
 import java.util.List;
 import java.util.Objects;
 
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,26 +33,22 @@ public class TaskService {
 
     @Transactional
     public Long create(Long memberId, TaskCreateRequest request) {
-        try {
-            Tab tab = tabRepository.findById(request.getTabId())
-                .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND_IN_PLAN));
-            planMembershipService.validateMemberIsInThePlan(memberId, tab.getPlan());
-            Member manager = planMembershipService.getMemberBelongingToPlan(request.getManagerId(), tab.getPlan());
+        Tab tab = tabRepository.findById(request.getTabId())
+            .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND_IN_PLAN));
+        planMembershipService.validateMemberIsInThePlan(memberId, tab.getPlan());
+        Member manager = planMembershipService.getMemberBelongingToPlan(request.getManagerId(), tab.getPlan());
 
-            Task task = Task.builder()
-                .tab(tab)
-                .manager(manager)
-                .name(request.getName())
-                .description(request.getDescription())
-                .build();
+        Task task = Task.builder()
+            .tab(tab)
+            .manager(manager)
+            .name(request.getName())
+            .description(request.getDescription())
+            .build();
 
-            Task savedTask = taskRepository.save(task);
-            saveAllLabelOfTask(request.getLabels(), task, tab.getPlan());
-            addEndOfTab(savedTask, tab);
-            return savedTask.getId();
-        } catch (ObjectOptimisticLockingFailureException e) {
-            throw new ApiException(ErrorCode.REQUEST_CONFLICT);
-        }
+        Task savedTask = taskRepository.save(task);
+        saveAllLabelOfTask(request.getLabels(), task, tab.getPlan());
+        addEndOfTab(savedTask, tab);
+        return savedTask.getId();
     }
 
 
@@ -67,6 +62,7 @@ public class TaskService {
         target.disconnect();
         Task newPrev = getPrevTask(request.getNewPrevId(), tab);
         newPrev.putInBack(target);
+
         return tab.getSortedTasks().stream()
             .map(Task::getId)
             .toList();

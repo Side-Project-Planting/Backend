@@ -3,7 +3,6 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +74,7 @@ class MemberServiceTest {
         // when & then
         assertThatThrownBy(() -> memberService.register(request))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.ALREADY_REGISTERED.getMessage());
+            .hasMessageContaining(ErrorCode.MEMBER_ALREADY_REGISTERED.getMessage());
     }
 
 

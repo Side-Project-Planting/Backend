@@ -23,7 +23,7 @@ public class MemberService {
     public MemberRegisterResponse register(MemberRegisterRequest request) {
         Optional<Member> memberOpt = memberRepository.findByEmail(request.getEmail());
         if (memberOpt.isPresent()) {
-            throw new ApiException(ErrorCode.ALREADY_REGISTERED);
+            throw new ApiException(ErrorCode.MEMBER_ALREADY_REGISTERED);
         }
 
         Member member = request.toEntity();
