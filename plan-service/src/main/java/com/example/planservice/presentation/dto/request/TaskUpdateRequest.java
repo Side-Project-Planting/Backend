@@ -1,6 +1,7 @@
 package com.example.planservice.presentation.dto.request;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import com.example.planservice.application.dto.TaskUpdateServiceRequest;
@@ -39,7 +40,7 @@ public class TaskUpdateRequest {
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.labels = labels;
+        this.labels = (labels != null) ? labels : Collections.emptyList();
     }
 
     public TaskUpdateServiceRequest toServiceRequest(@NotNull Long memberId, @NotNull Long taskId) {

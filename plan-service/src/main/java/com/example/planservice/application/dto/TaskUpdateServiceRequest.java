@@ -1,7 +1,6 @@
 package com.example.planservice.application.dto;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 import com.example.planservice.domain.member.Member;
@@ -36,7 +35,7 @@ public class TaskUpdateServiceRequest {
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.labels = (labels != null) ? labels : Collections.emptyList();
+        this.labels = labels;
     }
 
     public Task toEntity(Member manager) {
