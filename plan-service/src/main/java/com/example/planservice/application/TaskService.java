@@ -90,6 +90,7 @@ public class TaskService {
         Tab tab = target.getTab();
         Plan plan = tab.getPlan();
         planMembershipService.validateMemberIsInThePlan(memberId, plan);
+        target.delete();
         taskRepository.delete(target);
     }
 

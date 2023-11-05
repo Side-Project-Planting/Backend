@@ -91,16 +91,6 @@ public class Task extends BaseEntity {
         this.version = version;
     }
 
-    private void validateDates(LocalDateTime startDate, LocalDateTime endDate) {
-        if (startDate == null || endDate == null) {
-            return;
-        }
-
-        if (startDate.isAfter(endDate)) {
-            throw new ApiException(ErrorCode.TASK_DATE_INVALID);
-        }
-    }
-
     public static List<Task> createFirstAndLastDummy(Tab tab) {
         Task firstDummy = createDummy(tab, FIRST_DUMMY_NAME);
         Task lastDummy = createDummy(tab, LAST_DUMMY_NAME);
@@ -145,21 +135,6 @@ public class Task extends BaseEntity {
         tab.getTasks().add(target);
     }
 
-    private boolean isConnected() {
-        return next != null || prev != null;
-    }
-
-    public void delete() {
-        this.isDeleted = true;
-    }
-
-    private static Task createDummy(Tab tab, String name) {
-        return Task.builder()
-            .tab(tab)
-            .name(name)
-            .build();
-    }
-
     public void disconnect() {
         validateCanModify();
 
@@ -201,4 +176,31 @@ public class Task extends BaseEntity {
     public void setPrev(Task prev) {
         this.prev = prev;
     }
+    public void delete() {
+        validateCanModify();
+        disconnect();
+        this.isDeleted = true;
+    }
+
+    private static Task createDummy(Tab tab, String name) {
+        return Task.builder()
+            .tab(tab)
+            .name(name)
+            .build();
+    }
+
+    private boolean isConnected() {
+        return next != null || prev != null;
+    }
+
+    private void validateDates(LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate == null || endDate == null) {
+            return;
+        }
+
+        if (startDate.isAfter(endDate)) {
+            throw new ApiException(ErrorCode.TASK_DATE_INVALID);
+        }
+    }
+
 }

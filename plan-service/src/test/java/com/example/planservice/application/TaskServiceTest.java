@@ -619,6 +619,28 @@ class TaskServiceTest {
         // then
         Optional<Task> resultOpt = taskRepository.findById(task.getId());
         assertThat(resultOpt).isEmpty();
+        assertThat(tab.getFirstDummyTask().getNext()).isEqualTo(tab.getLastDummyTask());
+        assertThat(tab.getLastDummyTask().getPrev()).isEqualTo(tab.getFirstDummyTask());
+        assertThat(task.getNext()).isNull();
+        assertThat(task.getPrev()).isNull();
+    }
+
+    @Test
+    @DisplayName("더미 태스크는 삭제할 수 없다")
+    void testDeleteTaskFailDummyCantDelete() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Member loginMember = createMemberWithPlan(plan);
+        Tab tab = createTab(plan);
+
+        List<Task> dummies = List.of(tab.getFirstDummyTask(), tab.getLastDummyTask());
+        assertThat(dummies).hasSize(2);
+        for (Task dummy : dummies) {
+            // when & then
+            assertThatThrownBy(() -> taskService.delete(loginMember.getId(), dummy.getId()))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining(ErrorCode.TASK_NOT_FOUND.getMessage());
+        }
     }
 
     @Test
