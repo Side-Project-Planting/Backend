@@ -37,7 +37,7 @@ public class TaskService {
         Tab tab = tabRepository.findById(request.getTabId())
             .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND_IN_PLAN));
         planMembershipService.validateMemberIsInThePlan(memberId, tab.getPlan());
-        Member manager = planMembershipService.getMemberBelongingToPlan(request.getManagerId(), tab.getPlan());
+        Member manager = getMember(request.getManagerId(), tab.getPlan());
 
         Task task = Task.builder()
             .tab(tab)
@@ -57,7 +57,7 @@ public class TaskService {
         Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), request.getMemberId());
         Task task = taskRepository.findById(request.getTaskId())
             .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
-        Member manager = planMembershipService.getMemberBelongingToPlan(request.getManagerId(), plan);
+        Member manager = getMember(request.getManagerId(), plan);
 
         task.change(request.toEntity(manager));
         List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(task.getId());
@@ -113,4 +113,12 @@ public class TaskService {
         Task last = tab.getLastDummyTask();
         last.putInFront(savedTask);
     }
+
+    private Member getMember(Long memberId, Plan plan) {
+        if (memberId == null) {
+            return null;
+        }
+        return planMembershipService.getMemberBelongingToPlan(memberId, plan);
+    }
+
 }
