@@ -23,13 +23,14 @@ public class MemberOfPlanResponse {
         this.isAdmin = isAdmin;
     }
 
-    public MemberOfPlanResponse toPlanResponse(Member member, Long planAdminId) {
+    public static MemberOfPlanResponse toPlanResponse(Member member, Long planAdminId) {
         return builder()
             .id(member.getId())
             .name(member.getName())
             .mail(member.getEmail())
             .imgSrc(member.getProfileUri())
-            .isAdmin(member.getId().equals(planAdminId))
+            .isAdmin(member.getId()
+                .equals(planAdminId))
             .build();
     }
 }

@@ -31,15 +31,21 @@ public class TaskOfPlanResponse {
         this.endDate = endDate;
     }
 
-    public TaskOfPlanResponse toPlanResponse(Task task) {
+    public static TaskOfPlanResponse toPlanResponse(Task task) {
         return builder()
             .id(task.getId())
             .title(task.getName())
             .labels(task.getLabelOfTasks() != null ?
-                task.getLabelOfTasks().stream().map(labelOfTask -> labelOfTask.getLabel().getId()).toList() :
+                task.getLabelOfTasks()
+                    .stream()
+                    .map(labelOfTask -> labelOfTask.getLabel()
+                        .getId())
+                    .toList() :
                 null)
-            .tabId(task.getTab().getId())
-            .assigneeId(task.getWriter() != null ? task.getWriter().getId() : null)
+            .tabId(task.getTab()
+                .getId())
+            .assigneeId(task.getWriter() != null ? task.getWriter()
+                .getId() : null)
             .startDate(task.getStartDate() != null ? task.getStartDate() : null)
             .endDate(task.getEndDate() != null ? task.getEndDate() : null)
             .build();

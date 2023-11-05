@@ -21,7 +21,7 @@ public class TabOfPlanResponse {
         this.taskOrder = taskOrder;
     }
 
-    public TabOfPlanResponse toPlanResponse(Tab tab, List<Long> taskOrder) {
+    public static TabOfPlanResponse toPlanResponse(Tab tab, List<Long> taskOrder) {
         return builder()
             .id(tab.getId())
             .title(tab.getName())
