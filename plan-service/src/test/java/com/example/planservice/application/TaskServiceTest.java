@@ -99,6 +99,42 @@ class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("담당자가 입력되지 않아도 태스크를 생성할 수 있다")
+    void testCreateTaskOrderSuccessNoManager() {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+
+        TaskCreateRequest request = TaskCreateRequest.builder()
+            .tabId(tab.getId())
+            .managerId(null)
+            .name("스프링공부하기")
+            .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
+            .startDate(null)
+            .endDate(null)
+            .labels(Collections.emptyList())
+            .build();
+
+        // when
+        Long createdId = taskService.create(loginMember.getId(), request);
+
+        // then
+        Task task = taskRepository.findById(createdId).get();
+
+        assertThat(task.getManager()).isNull();
+        assertThat(task.getId()).isEqualTo(createdId);
+        assertThat(task.getTab().getId()).isEqualTo(request.getTabId());
+        assertThat(task.getName()).isEqualTo(request.getName());
+        assertThat(task.getDescription()).isEqualTo(request.getDescription());
+        assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
+        assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
+
+        Task lastDummyTask = tab.getLastDummyTask();
+        assertThat(task).isEqualTo(lastDummyTask.getPrev());
+    }
+
+    @Test
     @DisplayName("태스크는 플랜에 소속된 사람만 만들 수 있다")
     void testCreateFailNotExistMemberInPlan() {
         // given
@@ -509,6 +545,56 @@ class TaskServiceTest {
             .extracting(Task::getTab, Task::getManager, Task::getName,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
             .containsExactly(tab, taskManager, request.getName(),
+                request.getDescription(), request.getStartDate(), request.getEndDate());
+
+        List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(updatedId);
+        assertThat(labelOfTaskList).hasSize(2)
+            .extracting(LabelOfTask::getLabel)
+            .contains(label1, label2);
+    }
+
+    @Test
+    @DisplayName("태스크의 manager가 없어도 정보를 수정할 수 있다")
+    void testUpdateContentsSuccessNoManager() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member loginMember = createMemberWithPlan(plan);
+        Task task = createTaskWithTab(tab);
+        Label label1 = Label.builder()
+            .plan(plan)
+            .name("라벨1")
+            .build();
+        Label label2 = Label.builder()
+            .plan(plan)
+            .name("라벨2")
+            .build();
+        labelRepository.saveAll(List.of(label1, label2));
+
+        labelOfTaskRepository.save(LabelOfTask.builder().label(label1).task(task).build());
+
+        TaskUpdateServiceRequest request = TaskUpdateServiceRequest.builder()
+            .taskId(task.getId())
+            .memberId(loginMember.getId())
+            .planId(plan.getId())
+            .managerId(null)
+            .name("변경된 이름")
+            .description("이렇게 설명할게요")
+            .startDate(LocalDateTime.now().minusDays(10))
+            .endDate(LocalDateTime.now().plusDays(2))
+            .labels(List.of(label1.getId(), label2.getId()))
+            .build();
+
+        // when
+        Long updatedId = taskService.updateContents(request);
+
+        // then
+        Task updatedTask = taskRepository.findById(updatedId).get();
+        assertThat(updatedTask).isEqualTo(task);
+        assertThat(updatedTask)
+            .extracting(Task::getTab, Task::getManager, Task::getName,
+                Task::getDescription, Task::getStartDate, Task::getEndDate)
+            .containsExactly(tab, null, request.getName(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());
 
         List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(updatedId);
