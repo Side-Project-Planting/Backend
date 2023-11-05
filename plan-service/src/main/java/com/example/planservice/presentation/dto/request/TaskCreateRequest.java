@@ -4,20 +4,33 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.planservice.domain.task.Task;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+
 @NoArgsConstructor
 @Getter
 public class TaskCreateRequest {
+    @NotNull
     private Long planId;
+
+    @NotNull
     private Long tabId;
+
     private Long managerId;
+
+    @NotBlank
     private String name;
+
     private String description;
+
     private LocalDateTime startDate;
+
     private LocalDateTime endDate;
+
     private List<Long> labels;
 
     @Builder

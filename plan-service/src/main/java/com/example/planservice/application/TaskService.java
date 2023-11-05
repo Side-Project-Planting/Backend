@@ -6,6 +6,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.planservice.application.dto.TaskUpdateServiceRequest;
 import com.example.planservice.domain.label.repository.LabelRepository;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.plan.Plan;
@@ -19,7 +20,6 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
-import com.example.planservice.presentation.dto.request.TaskUpdateRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -53,8 +53,8 @@ public class TaskService {
     }
 
     @Transactional
-    public Long updateContents(Long memberId, TaskUpdateRequest request) {
-        Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), memberId);
+    public Long updateContents(TaskUpdateServiceRequest request) {
+        Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), request.getMemberId());
         Task task = taskRepository.findById(request.getTaskId())
             .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
         Member manager = planMembershipService.getMemberBelongingToPlan(request.getManagerId(), plan);

@@ -1,7 +1,7 @@
 package com.example.planservice.presentation.dto.request;
 
-import org.jetbrains.annotations.NotNull;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,8 +21,7 @@ public class TaskChangeOrderRequest {
     private Long newPrevId;
 
     @Builder
-    public TaskChangeOrderRequest(@NotNull Long planId, @NotNull Long targetTabId, @NotNull Long targetId,
-                                  Long newPrevId) {
+    public TaskChangeOrderRequest(Long planId, Long targetTabId, Long targetId, Long newPrevId) {
         this.planId = planId;
         this.targetTabId = targetTabId;
         this.targetId = targetId;

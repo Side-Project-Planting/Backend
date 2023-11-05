@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.planservice.application.dto.TaskUpdateServiceRequest;
 import com.example.planservice.domain.label.Label;
 import com.example.planservice.domain.label.repository.LabelRepository;
 import com.example.planservice.domain.member.Member;
@@ -32,7 +33,6 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
-import com.example.planservice.presentation.dto.request.TaskUpdateRequest;
 
 @SpringBootTest
 @Transactional
@@ -423,6 +423,7 @@ class TaskServiceTest {
             .filter(task -> task.equals(tab.getFirstDummyTask()) || task.equals(tab.getLastDummyTask()))
             .toList();
 
+        assertThat(dummies).hasSize(2);
         for (Task dummy : dummies) {
             TaskChangeOrderRequest request = TaskChangeOrderRequest.builder()
                 .planId(plan.getId())
@@ -486,8 +487,9 @@ class TaskServiceTest {
 
         labelOfTaskRepository.save(LabelOfTask.builder().label(label1).task(task).build());
 
-        TaskUpdateRequest request = TaskUpdateRequest.builder()
+        TaskUpdateServiceRequest request = TaskUpdateServiceRequest.builder()
             .taskId(task.getId())
+            .memberId(loginMember.getId())
             .planId(plan.getId())
             .managerId(taskManager.getId())
             .name("변경된 이름")
@@ -498,7 +500,7 @@ class TaskServiceTest {
             .build();
 
         // when
-        Long updatedId = taskService.updateContents(loginMember.getId(), request);
+        Long updatedId = taskService.updateContents(request);
 
         // then
         Task updatedTask = taskRepository.findById(updatedId).get();

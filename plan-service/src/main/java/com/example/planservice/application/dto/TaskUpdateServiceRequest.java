@@ -1,38 +1,34 @@
-package com.example.planservice.presentation.dto.request;
+package com.example.planservice.application.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.planservice.application.dto.TaskUpdateServiceRequest;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import com.example.planservice.domain.member.Member;
+import com.example.planservice.domain.task.Task;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Getter
-public class TaskUpdateRequest {
-    @NotNull
+public class TaskUpdateServiceRequest {
+    private Long taskId;
+    private Long memberId;
     private Long planId;
-
     private Long managerId;
-
-    @NotBlank
     private String name;
-
     private String description;
-
     private LocalDateTime startDate;
-
     private LocalDateTime endDate;
-
     private List<Long> labels;
 
     @Builder
     @SuppressWarnings("java:S107")
-    private TaskUpdateRequest(Long planId, Long managerId, String name, String description, LocalDateTime startDate,
-                              LocalDateTime endDate, List<Long> labels) {
+    private TaskUpdateServiceRequest(Long taskId, Long memberId, Long planId, Long managerId, String name,
+                                     String description, LocalDateTime startDate, LocalDateTime endDate,
+                                     List<Long> labels) {
+        this.taskId = taskId;
+        this.memberId = memberId;
         this.planId = planId;
         this.managerId = managerId;
         this.name = name;
@@ -42,18 +38,14 @@ public class TaskUpdateRequest {
         this.labels = labels;
     }
 
-    public TaskUpdateServiceRequest toServiceRequest(@NotNull Long memberId, @NotNull Long taskId) {
-        return TaskUpdateServiceRequest.builder()
-            .taskId(taskId)
-            .memberId(memberId)
-            .planId(planId)
-            .managerId(managerId)
+    public Task toEntity(Member manager) {
+        return Task.builder()
+            .manager(manager)
             .name(name)
             .description(description)
             .startDate(startDate)
             .endDate(endDate)
-            .labels(labels)
-            .taskId(taskId)
             .build();
     }
+
 }
