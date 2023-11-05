@@ -617,7 +617,10 @@ class TaskServiceTest {
         taskService.delete(loginMember.getId(), task.getId());
 
         // then
-        Optional<Task> resultOpt = taskRepository.findById(task.getId());
+        Optional<Task> resultOpt = taskRepository.findAll()
+            .stream()
+            .filter(each -> task.getId() == each.getId())
+            .findAny();
         assertThat(resultOpt).isEmpty();
         assertThat(tab.getFirstDummyTask().getNext()).isEqualTo(tab.getLastDummyTask());
         assertThat(tab.getLastDummyTask().getPrev()).isEqualTo(tab.getFirstDummyTask());
@@ -641,7 +644,10 @@ class TaskServiceTest {
         taskService.delete(loginMember.getId(), task.getId());
 
         // then
-        Optional<Task> resultOpt = taskRepository.findById(task.getId());
+        Optional<Task> resultOpt = taskRepository.findAll()
+            .stream()
+            .filter(each -> task.getId() == each.getId())
+            .findAny();
         assertThat(resultOpt).isEmpty();
         assertThat(tab.getFirstDummyTask().getNext()).isEqualTo(tab.getLastDummyTask());
         assertThat(tab.getLastDummyTask().getPrev()).isEqualTo(tab.getFirstDummyTask());

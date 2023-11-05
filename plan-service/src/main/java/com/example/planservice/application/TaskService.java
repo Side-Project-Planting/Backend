@@ -91,7 +91,6 @@ public class TaskService {
         Plan plan = tab.getPlan();
         planMembershipService.validateMemberIsInThePlan(memberId, plan);
         target.delete();
-        taskRepository.delete(target);
         List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(target.getId());
         labelOfTaskRepository.deleteAllInBatch(labelOfTaskList);
     }
