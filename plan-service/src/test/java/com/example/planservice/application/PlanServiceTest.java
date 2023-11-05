@@ -2,7 +2,6 @@ package com.example.planservice.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,8 +70,10 @@ class PlanServiceTest {
         Member savedMember = memberRepository.save(member);
         userId = savedMember.getId();
 
-        Mockito.doNothing().when(emailService).sendEmail(ArgumentMatchers.anyString(),
-            ArgumentMatchers.anyString());
+        Mockito.doNothing()
+            .when(emailService)
+            .sendEmail(ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString());
     }
 
     @Test
@@ -94,7 +95,8 @@ class PlanServiceTest {
         // then
         assertThat(savedId).isNotNull();
 
-        Plan savedPlan = planRepository.findById(savedId).get();
+        Plan savedPlan = planRepository.findById(savedId)
+            .get();
         assertThat(savedPlan.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedPlan.getIntro()).isEqualTo(request.getIntro());
     }
@@ -185,24 +187,42 @@ class PlanServiceTest {
             .plan(plan)
             .build();
 
-        MemberOfPlan memberOfPlan1 = MemberOfPlan.builder().member(member1).plan(plan).build();
-        MemberOfPlan memberOfPlan2 = MemberOfPlan.builder().member(member2).plan(plan).build();
-        plan.getTabs().add(tab1);
-        plan.getTabs().add(tab2);
+        MemberOfPlan memberOfPlan1 = MemberOfPlan.builder()
+            .member(member1)
+            .plan(plan)
+            .build();
+        MemberOfPlan memberOfPlan2 = MemberOfPlan.builder()
+            .member(member2)
+            .plan(plan)
+            .build();
+        plan.getTabs()
+            .add(tab1);
+        plan.getTabs()
+            .add(tab2);
 
-        plan.getMembers().add(memberOfPlan1);
-        plan.getMembers().add(memberOfPlan2);
+        plan.getMembers()
+            .add(memberOfPlan1);
+        plan.getMembers()
+            .add(memberOfPlan2);
 
-        plan.getTasks().add(task1);
-        plan.getTasks().add(task2);
-        plan.getTasks().add(task3);
+        plan.getTasks()
+            .add(task1);
+        plan.getTasks()
+            .add(task2);
+        plan.getTasks()
+            .add(task3);
 
-        plan.getLabels().add(label1);
-        plan.getLabels().add(label2);
+        plan.getLabels()
+            .add(label1);
+        plan.getLabels()
+            .add(label2);
 
-        tab1.getTasks().add(task1);
-        tab1.getTasks().add(task2);
-        tab2.getTasks().add(task3);
+        tab1.getTasks()
+            .add(task1);
+        tab1.getTasks()
+            .add(task2);
+        tab2.getTasks()
+            .add(task3);
         memberRepository.saveAll(List.of(member1, member2));
         planRepository.save(plan);
         memberOfPlanRepository.saveAll(List.of(memberOfPlan1, memberOfPlan2));
@@ -217,15 +237,33 @@ class PlanServiceTest {
         assertThat(planResponse.getTitle()).isEqualTo("testPlan");
         assertThat(planResponse.getDescription()).isEqualTo("hi");
         assertThat(planResponse.getTabOrder()).isEqualTo(List.of(tab1.getId(), tab2.getId()));
-        assertThat(planResponse.getMembers().get(0).getMail()).isEqualTo("test1@example.com");
-        assertThat(planResponse.getMembers().get(1).getMail()).isEqualTo("test2@example.com");
-        assertThat(planResponse.getTabs().get(0).getTitle()).isEqualTo("testTab1");
-        assertThat(planResponse.getTabs().get(1).getTitle()).isEqualTo("testTab2");
-        assertThat(planResponse.getTasks().get(0).getTitle()).isEqualTo("testTask1");
-        assertThat(planResponse.getTasks().get(1).getTitle()).isEqualTo("testTask2");
-        assertThat(planResponse.getTasks().get(2).getTitle()).isEqualTo("testTask3");
-        assertThat(planResponse.getLabels().get(0).getValue()).isEqualTo("testLabel1");
-        assertThat(planResponse.getLabels().get(1).getValue()).isEqualTo("testLabel2");
+        assertThat(planResponse.getMembers()
+            .get(0)
+            .getMail()).isEqualTo("test1@example.com");
+        assertThat(planResponse.getMembers()
+            .get(1)
+            .getMail()).isEqualTo("test2@example.com");
+        assertThat(planResponse.getTabs()
+            .get(0)
+            .getTitle()).isEqualTo("testTab1");
+        assertThat(planResponse.getTabs()
+            .get(1)
+            .getTitle()).isEqualTo("testTab2");
+        assertThat(planResponse.getTasks()
+            .get(0)
+            .getTitle()).isEqualTo("testTask1");
+        assertThat(planResponse.getTasks()
+            .get(1)
+            .getTitle()).isEqualTo("testTask2");
+        assertThat(planResponse.getTasks()
+            .get(2)
+            .getTitle()).isEqualTo("testTask3");
+        assertThat(planResponse.getLabels()
+            .get(0)
+            .getValue()).isEqualTo("testLabel1");
+        assertThat(planResponse.getLabels()
+            .get(1)
+            .getValue()).isEqualTo("testLabel2");
         assertThat(planResponse.isPublic()).isFalse();
     }
 
@@ -236,7 +274,9 @@ class PlanServiceTest {
         Long nonExistentPlanId = 9999L;
 
         // when / then
-        assertThrows(ApiException.class, () -> planService.getTotalPlanResponse(nonExistentPlanId), "PLAN_NOT_FOUND");
+        assertThatThrownBy(() -> planService.getTotalPlanResponse(nonExistentPlanId))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -248,16 +288,16 @@ class PlanServiceTest {
             .intro("플랜 소개")
             .isPublic(true)
             .build();
-        Plan savedPlan = planRepository.save(plan);
+        planRepository.save(plan);
 
         Member member = Member.builder()
             .name("tester")
             .email("test@example.com")
             .build();
-        Member savedMember = memberRepository.save(member);
+        memberRepository.save(member);
 
         // when
-        Long memberOfPlanId = planService.inviteMember(savedPlan.getId(), savedMember.getId());
+        Long memberOfPlanId = planService.inviteMember(plan.getId(), member.getId());
 
         // then
         assertThat(memberOfPlanId).isNotNull();
