@@ -33,7 +33,11 @@ class TaskControllerTest {
     @DisplayName("태스크를 생성한다")
     void createTask() throws Exception {
         // given
-        TaskCreateRequest request = TaskCreateRequest.builder().build();
+        TaskCreateRequest request = TaskCreateRequest.builder()
+            .planId(1L)
+            .tabId(1L)
+            .name("이름")
+            .build();
         Long createdId = 1L;
         Long userId = 2L;
 
@@ -63,4 +67,75 @@ class TaskControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @DisplayName("태스크 생성 시 planId는 필수다")
+    void testCreateTaskPlanIdParameterIsNecessary() throws Exception {
+        // given
+        TaskCreateRequest request = TaskCreateRequest.builder()
+            .tabId(1L)
+            .name("이름")
+            .build();
+        Long createdId = 1L;
+        Long userId = 2L;
+
+        // stub
+        Mockito.when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
+            .thenReturn(createdId);
+
+        // when & then
+        mockMvc.perform(post("/tasks")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("태스크 생성 시 tabId는 필수다")
+    void testCreateTaskTabIdParameterIsNecessary() throws Exception {
+        // given
+        TaskCreateRequest request = TaskCreateRequest.builder()
+            .planId(1L)
+            .name("이름")
+            .build();
+        Long createdId = 1L;
+        Long userId = 2L;
+
+        // stub
+        Mockito.when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
+            .thenReturn(createdId);
+
+        // when & then
+        mockMvc.perform(post("/tasks")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("태스크 생성 시 name은 필수다")
+    void testCreateTaskNameParameterIsNecessary() throws Exception {
+        // given
+        TaskCreateRequest request = TaskCreateRequest.builder()
+            .planId(1L)
+            .tabId(1L)
+            .name("")
+            .build();
+        Long createdId = 1L;
+        Long userId = 2L;
+
+        // stub
+        Mockito.when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
+            .thenReturn(createdId);
+
+        // when & then
+        mockMvc.perform(post("/tasks")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+    }
+
 }
