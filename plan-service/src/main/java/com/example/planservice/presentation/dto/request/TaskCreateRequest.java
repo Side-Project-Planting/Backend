@@ -1,9 +1,9 @@
 package com.example.planservice.presentation.dto.request;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
-import com.example.planservice.domain.task.Task;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -44,10 +44,7 @@ public class TaskCreateRequest {
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.labels = labels;
+        this.labels = (labels != null) ? labels : Collections.emptyList();
     }
 
-    public Task toEntity() {
-        return Task.builder().build();
-    }
 }

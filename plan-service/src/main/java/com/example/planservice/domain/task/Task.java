@@ -185,6 +185,8 @@ public class Task extends BaseEntity {
     }
 
     public void change(Task entity) {
+        validateCanModify();
+
         this.manager = entity.getManager();
         this.name = entity.getName();
         this.description = entity.getDescription();
