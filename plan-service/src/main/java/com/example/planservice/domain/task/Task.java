@@ -165,21 +165,21 @@ public class Task extends BaseEntity {
 
         Task originalPrev = this.prev;
         Task originalNext = this.next;
+        originalNext.setPrev(originalPrev);
+        originalPrev.setNext(originalNext);
 
-        this.prev.next = originalNext;
-        this.next.prev = originalPrev;
         this.prev = null;
         this.next = null;
         tab.getTasks().remove(this);
     }
 
-    private void validateCanModify() {
+    public void validateCanModify() {
         Task firstDummyTask = tab.getFirstDummyTask();
-        if (this.equals(firstDummyTask)) {
+        if (this.getId().equals(firstDummyTask.getId())) {
             throw new ApiException(ErrorCode.TASK_NOT_FOUND);
         }
         Task lastDummyTask = tab.getLastDummyTask();
-        if (this.equals(lastDummyTask)) {
+        if (this.getId().equals(lastDummyTask.getId())) {
             throw new ApiException(ErrorCode.TASK_NOT_FOUND);
         }
     }
@@ -190,5 +190,13 @@ public class Task extends BaseEntity {
         this.description = entity.getDescription();
         this.startDate = entity.getStartDate();
         this.endDate = entity.getEndDate();
+    }
+
+    public void setNext(Task next) {
+        this.next = next;
+    }
+
+    public void setPrev(Task prev) {
+        this.prev = prev;
     }
 }
