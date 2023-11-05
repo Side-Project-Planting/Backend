@@ -626,6 +626,32 @@ class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("태스크 삭제 시 태스크와 라벨 사이의 관계를 함께 지운다")
+    void testDeleteTaskThatAllLabelOfTaskWasDeleted() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Member loginMember = createMemberWithPlan(plan);
+        Tab tab = createTab(plan);
+        Task task = createTaskWithTab(tab);
+        Label label = createLabelUsingTest(plan);
+        LabelOfTask labelOfTask = LabelOfTask.create(label, task);
+        labelOfTaskRepository.save(labelOfTask);
+
+        // when
+        taskService.delete(loginMember.getId(), task.getId());
+
+        // then
+        Optional<Task> resultOpt = taskRepository.findById(task.getId());
+        assertThat(resultOpt).isEmpty();
+        assertThat(tab.getFirstDummyTask().getNext()).isEqualTo(tab.getLastDummyTask());
+        assertThat(tab.getLastDummyTask().getPrev()).isEqualTo(tab.getFirstDummyTask());
+        assertThat(task.getNext()).isNull();
+        assertThat(task.getPrev()).isNull();
+
+        assertThat(labelOfTaskRepository.findAll()).isEmpty();
+    }
+
+    @Test
     @DisplayName("더미 태스크는 삭제할 수 없다")
     void testDeleteTaskFailDummyCantDelete() throws Exception {
         // given
