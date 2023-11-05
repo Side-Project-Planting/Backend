@@ -83,6 +83,16 @@ public class TaskService {
             .toList();
     }
 
+    @Transactional
+    public void delete(Long memberId, Long taskId) {
+        Task target = taskRepository.findById(taskId)
+            .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
+        Tab tab = target.getTab();
+        Plan plan = tab.getPlan();
+        planMembershipService.validateMemberIsInThePlan(memberId, plan);
+        taskRepository.delete(target);
+    }
+
     private Task getTargetTask(Long targetId, Tab tab) {
         Task target = taskRepository.findById(targetId)
             .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));

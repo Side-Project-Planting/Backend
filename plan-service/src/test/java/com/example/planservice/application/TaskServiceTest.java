@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -601,6 +602,52 @@ class TaskServiceTest {
         assertThat(labelOfTaskList).hasSize(2)
             .extracting(LabelOfTask::getLabel)
             .contains(label1, label2);
+    }
+
+    @Test
+    @DisplayName("태스크를 삭제한다")
+    void testDeleteTask() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Member loginMember = createMemberWithPlan(plan);
+        Tab tab = createTab(plan);
+        Task task = createTaskWithTab(tab);
+
+        // when
+        taskService.delete(loginMember.getId(), task.getId());
+
+        // then
+        Optional<Task> resultOpt = taskRepository.findById(task.getId());
+        assertThat(resultOpt).isEmpty();
+    }
+
+    @Test
+    @DisplayName("플랜에 소속된 사용자만 태스크를 삭제할 수 있다")
+    void testDeleteTaskFailUnauthorized() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Task task = createTaskWithTab(tab);
+        Long notRegisteredMemberId = 1231231L;
+
+        // when & then
+        assertThatThrownBy(() -> taskService.delete(notRegisteredMemberId, task.getId()))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 태스크는 삭제할 수 없다")
+    void testDeleteTaskFailTaskNotFound() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Member loginMember = createMemberWithPlan(plan);
+        Long notRegisteredTaskId = 1231231L;
+
+        // when & then
+        assertThatThrownBy(() -> taskService.delete(loginMember.getId(), notRegisteredTaskId))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TASK_NOT_FOUND.getMessage());
     }
 
     private Task createTaskWithTab(Tab tab) {
