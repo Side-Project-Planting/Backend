@@ -3,6 +3,7 @@ package com.example.planservice.presentation;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -45,4 +46,11 @@ public class TaskController {
         taskService.changeOrder(userId, request);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<Void> delete(@PathVariable Long taskId, @RequestAttribute Long userId) {
+        taskService.delete(userId, taskId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

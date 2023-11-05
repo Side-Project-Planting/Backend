@@ -2,6 +2,7 @@ package com.example.planservice.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -136,6 +137,29 @@ class TaskControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("태스크를 삭제한다")
+    void testDeleteTask() throws Exception {
+        // given
+        Long userId = 2L;
+        Long deletedTaskId = 1L;
+
+        // when & then
+        mockMvc.perform(delete("/tasks/" + deletedTaskId)
+                .header("X-User-Id", userId))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("로그인하지 않은 사용자는 태스크를 삭제할 수 없다")
+    void testCreateTaskFailNotLogin() throws Exception {
+        Long deletedTaskId = 1L;
+
+        // when & then
+        mockMvc.perform(delete("/tasks/" + deletedTaskId))
+            .andExpect(status().isUnauthorized());
     }
 
 }
