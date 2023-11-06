@@ -41,6 +41,6 @@ public class LabelService {
         label.validateBelongsToPlan(plan);
 
         labelRepository.delete(label);
-        plan.remove(label);
+        plan.removeLabel(label);
     }
 }

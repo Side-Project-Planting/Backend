@@ -1,12 +1,14 @@
 package com.example.planservice.domain.task;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.Where;
 import org.jetbrains.annotations.NotNull;
 
 import com.example.planservice.domain.BaseEntity;
+import com.example.planservice.domain.Linkable;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.exception.ApiException;
@@ -19,6 +21,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
@@ -31,7 +34,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Where(clause = "is_deleted = false")
 @Getter
-public class Task extends BaseEntity {
+public class Task extends BaseEntity implements Linkable<Task> {
     public static final String FIRST_DUMMY_NAME = "first";
     public static final String LAST_DUMMY_NAME = "last";
 
@@ -51,6 +54,9 @@ public class Task extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id")
     private Member writer;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "task")
+    private List<LabelOfTask> labelOfTasks = new ArrayList<>();
 
     private String name;
 
@@ -176,6 +182,7 @@ public class Task extends BaseEntity {
     public void setPrev(Task prev) {
         this.prev = prev;
     }
+
     public void delete() {
         validateCanModify();
         disconnect();
