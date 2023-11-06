@@ -108,11 +108,23 @@ class MemberControllerTest {
             .thenReturn(response);
 
         // when & then
-        mockMvc.perform(get("/members/" + targetMemberId))
+        mockMvc.perform(get("/members/" + targetMemberId)
+                .header("X-User-Id", 1L))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(response.getId()))
             .andExpect(jsonPath("$.name").value(response.getName()))
             .andExpect(jsonPath("$.email").value(response.getEmail()))
             .andExpect(jsonPath("$.profileUri").value(response.getProfileUri()));
+    }
+
+    @Test
+    @DisplayName("로그인한 유저만 Member를 조회할 수 있다")
+    void testFindMemberFailNotLogin() throws Exception {
+        // given
+        Long targetMemberId = 1L;
+
+        // when & then
+        mockMvc.perform(get("/members/" + targetMemberId))
+            .andExpect(status().isUnauthorized());
     }
 }

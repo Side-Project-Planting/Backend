@@ -20,8 +20,8 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
     private static List<WhiteListEntry> getWhiteList() {
         return List.of(
-            new WhiteListEntry(HttpMethod.POST, "/members"),
-            new WhiteListEntry(HttpMethod.GET, "/members/{id}"));
+            new WhiteListEntry(HttpMethod.POST, "/members")
+        );
     }
 
     @Override
