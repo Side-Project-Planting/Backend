@@ -2,6 +2,7 @@ package com.example.planservice.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.example.planservice.application.MemberService;
 import com.example.planservice.application.dto.MemberRegisterResponse;
 import com.example.planservice.presentation.dto.request.MemberRegisterRequest;
+import com.example.planservice.presentation.dto.response.MemberFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = MemberController.class)
@@ -87,5 +89,30 @@ class MemberControllerTest {
             .andExpect(status().isCreated())
             .andExpect(header().string("Location", "/members/" + response.getId()))
             .andExpect(jsonPath("$.id").value(response.getId()));
+    }
+
+    @Test
+    @DisplayName("Member를 조회한다")
+    void testFindMember() throws Exception {
+        // given
+        Long targetMemberId = 1L;
+        MemberFindResponse response = MemberFindResponse.builder()
+            .id(targetMemberId)
+            .name("김태훈")
+            .email("ds@naver.com")
+            .profileUri("https://sda.com")
+            .build();
+
+        // stub
+        when(memberService.find(targetMemberId))
+            .thenReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/members/" + targetMemberId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(response.getId()))
+            .andExpect(jsonPath("$.name").value(response.getName()))
+            .andExpect(jsonPath("$.email").value(response.getEmail()))
+            .andExpect(jsonPath("$.profileUri").value(response.getProfileUri()));
     }
 }
