@@ -23,7 +23,7 @@ public class MemberOfPlanResponse {
         this.isAdmin = isAdmin;
     }
 
-    public static MemberOfPlanResponse toPlanResponse(Member member, Long planAdminId) {
+    public static MemberOfPlanResponse to(Member member, Long planAdminId) {
         return builder()
             .id(member.getId())
             .name(member.getName())

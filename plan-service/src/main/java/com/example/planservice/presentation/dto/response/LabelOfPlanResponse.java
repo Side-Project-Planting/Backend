@@ -17,7 +17,7 @@ public class LabelOfPlanResponse {
         this.value = value;
     }
 
-    public static LabelOfPlanResponse toPlanResponse(Label label) {
+    public static LabelOfPlanResponse to(Label label) {
         return builder()
             .id(label.getId())
             .value(label.getName())

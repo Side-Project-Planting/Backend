@@ -125,9 +125,7 @@ public class PlanService {
 
     private List<MemberOfPlanResponse> getMemberResponses(List<MemberOfPlan> members, Long ownerId) {
         return members.stream()
-            .map(member ->
-                MemberOfPlanResponse.toPlanResponse(member.getMember(), ownerId)
-            )
+            .map(member -> MemberOfPlanResponse.to(member.getMember(), ownerId))
             .toList();
     }
 
@@ -136,22 +134,20 @@ public class PlanService {
             .map(tab -> {
                 List<Task> tasksOfTab = tab.getTasks();
                 List<Long> taskOrder = orderByNext(tasksOfTab);
-                return TabOfPlanResponse.toPlanResponse(tab, taskOrder);
+                return TabOfPlanResponse.to(tab, taskOrder);
             })
             .toList();
     }
 
     private List<LabelOfPlanResponse> getLabelResponses(List<Label> labels) {
         return labels.stream()
-            .map(LabelOfPlanResponse::toPlanResponse
-            )
+            .map(LabelOfPlanResponse::to)
             .toList();
     }
 
     private List<TaskOfPlanResponse> getTaskResponses(List<Task> tasks) {
         return tasks.stream()
-            .map(TaskOfPlanResponse::toPlanResponse
-            )
+            .map(TaskOfPlanResponse::to)
             .toList();
     }
 
