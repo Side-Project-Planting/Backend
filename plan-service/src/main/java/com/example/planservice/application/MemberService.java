@@ -1,5 +1,7 @@
 package com.example.planservice.application;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,9 +11,8 @@ import com.example.planservice.domain.member.repository.MemberRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.MemberRegisterRequest;
+import com.example.planservice.presentation.dto.response.MemberFindResponse;
 import lombok.RequiredArgsConstructor;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,5 +30,14 @@ public class MemberService {
         Member member = request.toEntity();
         memberRepository.save(member);
         return MemberRegisterResponse.of(member);
+    }
+
+    public MemberFindResponse find(Long id) {
+        Member member = memberRepository.findById(id)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+        if (!member.isNormalUser()) {
+            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+        return MemberFindResponse.from(member);
     }
 }

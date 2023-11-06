@@ -3,7 +3,6 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.MemberRegisterResponse;
 import com.example.planservice.domain.member.Member;
+import com.example.planservice.domain.member.Role;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.MemberRegisterRequest;
+import com.example.planservice.presentation.dto.response.MemberFindResponse;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest
@@ -78,5 +79,54 @@ class MemberServiceTest {
             .hasMessageContaining(ErrorCode.ALREADY_REGISTERED.getMessage());
     }
 
+    @Test
+    @DisplayName("멤버를 조회한다")
+    void testFindMember() throws Exception {
+        // given
+        Member member = Member.builder()
+            .email("a@naver.com")
+            .profileUri("https://imageurl")
+            .name("태훈")
+            .role(Role.USER)
+            .build();
+        em.persist(member);
 
+        // when
+        MemberFindResponse response = memberService.find(member.getId());
+
+        // then
+        assertThat(response.getId()).isEqualTo(member.getId());
+        assertThat(response.getEmail()).isEqualTo(member.getEmail());
+        assertThat(response.getProfileUri()).isEqualTo(member.getProfileUri());
+        assertThat(response.getName()).isEqualTo(member.getName());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 멤버는 조회할 수 없다")
+    void testFindMemberFailMemberNotFound() throws Exception {
+        Long notRegisteredMemberId = 1232145L;
+
+        // when & then
+        assertThatThrownBy(() -> memberService.find(notRegisteredMemberId))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("사이트의 어드민은 조회할 수 없다")
+    void testFindMemberFailMemberIsAdmin() throws Exception {
+        // given
+        Member member = Member.builder()
+            .email("a@naver.com")
+            .profileUri("https://imageurl")
+            .name("태훈")
+            .role(Role.ADMIN)
+            .build();
+        em.persist(member);
+
+        // when & then
+        assertThatThrownBy(() -> memberService.find(member.getId()))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+    }
 }
