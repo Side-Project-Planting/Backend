@@ -3,6 +3,7 @@ package com.example.planservice.interceptor;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -11,13 +12,22 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+@AllArgsConstructor
 public class AuthenticationInterceptor implements HandlerInterceptor {
-    private static final List<WhiteListEntry> whiteList = List.of(new WhiteListEntry(HttpMethod.POST, "/members"));
+    private static final List<WhiteListEntry> whiteList = getWhiteList();
+
+    private final PathMatcher pathMatcher;
+
+    private static List<WhiteListEntry> getWhiteList() {
+        return List.of(
+            new WhiteListEntry(HttpMethod.POST, "/members")
+        );
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         boolean isInWhiteList = whiteList.stream()
-            .anyMatch(each -> each.match(request));
+            .anyMatch(each -> each.match(request, pathMatcher));
         if (isInWhiteList) {
             return true;
         }
@@ -42,12 +52,12 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     @AllArgsConstructor
     static class WhiteListEntry {
         HttpMethod httpMethod;
-        String uri;
+        String uriPattern;
 
-        public boolean match(HttpServletRequest request) {
+        public boolean match(HttpServletRequest request, PathMatcher pathMatcher) {
             String requestUri = request.getRequestURI();
             String method = request.getMethod();
-            return httpMethod.toString().equals(method) && uri.equals(requestUri);
+            return httpMethod.toString().equals(method) && pathMatcher.match(uriPattern, requestUri);
         }
     }
 }

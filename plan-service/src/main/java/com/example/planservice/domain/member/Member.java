@@ -61,4 +61,8 @@ public class Member extends BaseEntity {
         this.role = Role.USER;
         this.isDeleted = false;
     }
+
+    public boolean isNormalUser() {
+        return role == Role.USER;
+    }
 }
