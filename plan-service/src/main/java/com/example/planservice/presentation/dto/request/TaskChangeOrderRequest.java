@@ -21,7 +21,7 @@ public class TaskChangeOrderRequest {
     private Long newPrevId;
 
     @Builder
-    public TaskChangeOrderRequest(Long planId, Long targetTabId, Long targetId, Long newPrevId) {
+    private TaskChangeOrderRequest(Long planId, Long targetTabId, Long targetId, Long newPrevId) {
         this.planId = planId;
         this.targetTabId = targetTabId;
         this.targetId = targetId;
