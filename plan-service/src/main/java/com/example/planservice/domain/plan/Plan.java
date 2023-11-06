@@ -9,6 +9,10 @@ import org.hibernate.annotations.Where;
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.label.Label;
 import com.example.planservice.domain.member.Member;
+import com.example.planservice.domain.memberofplan.MemberOfPlan;
+import com.example.planservice.domain.tab.Tab;
+import com.example.planservice.domain.task.Task;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -39,6 +43,18 @@ public class Plan extends BaseEntity {
     @JoinColumn(name = "owner_id")
     private Member owner;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "plan")
+    private List<Label> labels = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "plan")
+    private List<MemberOfPlan> members = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> tasks = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "plan")
+    private List<Tab> tabs = new ArrayList<>();
+
     private String title;
 
     private String intro;
@@ -50,9 +66,6 @@ public class Plan extends BaseEntity {
     private int viewCnt;
 
     private boolean isDeleted;
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "plan")
-    private List<Label> labels = new ArrayList<>();
 
     @Builder
     private Plan(Member owner, String title, String intro, boolean isPublic, int starCnt, int viewCnt,
@@ -71,7 +84,7 @@ public class Plan extends BaseEntity {
             .anyMatch(label -> Objects.equals(label.getName(), name));
     }
 
-    public void remove(Label label) {
+    public void removeLabel(Label label) {
         labels.remove(label);
     }
 

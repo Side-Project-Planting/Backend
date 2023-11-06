@@ -1,11 +1,13 @@
 package com.example.planservice.domain.tab;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.Where;
 import org.jetbrains.annotations.NotNull;
 
 import com.example.planservice.domain.BaseEntity;
+import com.example.planservice.domain.Linkable;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.task.Task;
 import jakarta.persistence.Column;
@@ -33,7 +35,7 @@ import lombok.NoArgsConstructor;
         @UniqueConstraint(name = "UniquePlanAndTabName", columnNames = {"plan_id", "name"})
     })
 @Where(clause = "is_deleted = false")
-public class Tab extends BaseEntity {
+public class Tab extends BaseEntity implements Linkable<Tab> {
     public static final int TAB_MAX_SIZE = 5;
 
     @Id
@@ -47,6 +49,9 @@ public class Tab extends BaseEntity {
 
     private String name;
 
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "tab")
+    private List<Task> tasks = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "next_id")
     private Tab next;
@@ -56,9 +61,6 @@ public class Tab extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_task_id")
     private Task lastTask;
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "tab")
-    private List<Task> tasks;
 
     @Version
     private int version;
@@ -100,7 +102,7 @@ public class Tab extends BaseEntity {
     }
 
     public void makeNotFirst() {
-        this.first = false;
+        first = false;
     }
 
     public void changeName(@NotNull String name) {
@@ -112,11 +114,11 @@ public class Tab extends BaseEntity {
         if (lastTask != null) {
             lastTask.connect(task);
         }
-        this.lastTask = task;
+        lastTask = task;
     }
 
     public void delete() {
-        this.isDeleted = true;
+        isDeleted = true;
         tasks.forEach(Task::delete);
     }
 }
