@@ -27,6 +27,7 @@ import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import jakarta.persistence.EntityManager;
+import com.example.planservice.presentation.dto.response.TabFindResponse;
 
 @SpringBootTest
 @Transactional
@@ -514,6 +515,96 @@ class TabServiceTest {
         assertThat(resultOpt).isEmpty();
     }
 
+    @Test
+    @DisplayName("탭을 조회한다")
+    void testFindTab() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab2 = createTab(plan, "탭2", null, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
+
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+
+        // when
+        TabFindResponse response = tabService.find(tab1.getId(), member.getId());
+
+        // then
+        assertThat(response.getId()).isEqualTo(tab1.getId());
+        assertThat(response.getName()).isEqualTo(tab1.getName());
+        assertThat(response.getNextId()).isEqualTo(tab2.getId());
+    }
+
+    @Test
+    @DisplayName("특정 플랜의 마지막 탭을 조회한다")
+    void testFindTabAboutLastTab() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab2 = createTab(plan, "탭2", null, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
+
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+
+        // when
+        TabFindResponse response = tabService.find(tab2.getId(), member.getId());
+
+        // then
+        assertThat(response.getId()).isEqualTo(tab2.getId());
+        assertThat(response.getName()).isEqualTo(tab2.getName());
+        assertThat(response.getNextId()).isNull();
+    }
+
+    @Test
+    @DisplayName("플랜에 가입된 사람만 private 플랜에 속한 탭을 조회 가능하다")
+    void testFindPrivateTab() throws Exception {
+        // given
+        Plan plan = createPrivatePlan();
+        Tab tab2 = createTab(plan, "탭2", null, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
+
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+
+        // when
+        TabFindResponse response = tabService.find(tab2.getId(), member.getId());
+
+        // then
+        assertThat(response.getId()).isEqualTo(tab2.getId());
+        assertThat(response.getName()).isEqualTo(tab2.getName());
+        assertThat(response.getNextId()).isNull();
+    }
+
+    @Test
+    @DisplayName("플랜에 가입되지 않은 사람은 private 플랜에 속한 탭을 조회할 수 없다")
+    void testFindTabFailNotAuthorized() throws Exception {
+        // given
+        Plan plan = createPrivatePlan();
+        Tab tab2 = createTab(plan, "탭2", null, false);
+        Tab tab1 = createTab(plan, "탭1", tab2, true);
+
+        Member member = createMember();
+
+        // when & then
+        assertThatThrownBy(() -> tabService.find(tab2.getId(), member.getId()))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 탭을 조회할 수 없다")
+    void testFindTabFailNotFound() throws Exception {
+        // given
+        Long notRegisteredTabId = 123151L;
+
+        Member member = createMember();
+
+        // when & then
+        assertThatThrownBy(() -> tabService.find(notRegisteredTabId, member.getId()))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_NOT_FOUND.getMessage());
+    }
+
     private Tab createTab(Plan plan, String name, Tab next, boolean isFirst) {
         Tab tab = Tab.builder()
             .plan(plan)
@@ -553,7 +644,17 @@ class TabServiceTest {
 
     @NotNull
     private Plan createPlan() {
-        Plan plan = Plan.builder().build();
+        Plan plan = Plan.builder()
+            .isPublic(true)
+            .build();
+        em.persist(plan);
+        return plan;
+    }
+
+    private Plan createPrivatePlan() {
+        Plan plan = Plan.builder()
+            .isPublic(false)
+            .build();
         em.persist(plan);
         return plan;
     }

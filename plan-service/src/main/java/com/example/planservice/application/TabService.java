@@ -19,7 +19,7 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
-import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
+import com.example.planservice.presentation.dto.response.TabFindResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -99,8 +99,14 @@ public class TabService {
         return tabId;
     }
 
-    public TabRetrieveResponse retrieve(Long id, Long userId) {
-        return null;
+    public TabFindResponse find(Long tabId, Long memberId) {
+        Tab tab = tabRepository.findById(tabId)
+            .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND));
+        Plan plan = tab.getPlan();
+        if (!plan.isPublic()) {
+            planMembershipService.validateMemberIsInThePlan(memberId, plan);
+        }
+        return TabFindResponse.from(tab);
     }
 
 }
