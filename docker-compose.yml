@@ -62,4 +62,4 @@ services:
     ports:
       - ${MYSQL_PORT}:${MYSQL_PORT}
     volumes:
-      - ./initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
