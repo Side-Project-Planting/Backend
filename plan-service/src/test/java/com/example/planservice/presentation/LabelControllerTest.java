@@ -3,10 +3,8 @@ package com.example.planservice.presentation;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.LabelService;
 import com.example.planservice.presentation.dto.request.LabelCreateRequest;
+import com.example.planservice.presentation.dto.response.LabelFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = LabelController.class)
@@ -168,4 +167,42 @@ class LabelControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("라벨을 조회한다")
+    void testFindLabel() throws Exception {
+        // given
+        Long targetLabelId = 1L;
+        Long userId = 2L;
+
+        LabelFindResponse response = LabelFindResponse.builder()
+            .id(targetLabelId)
+            .planId(3L)
+            .name("반환된 라벨명")
+            .build();
+
+        // stub
+        when(labelService.find(targetLabelId, userId))
+            .thenReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/labels/" + targetLabelId)
+                .header("X-User-Id", userId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(response.getId()))
+            .andExpect(jsonPath("$.name").value(response.getName()))
+            .andExpect(jsonPath("$.planId").value(response.getPlanId()));
+    }
+
+    @Test
+    @DisplayName("로그인한 사용자만 탭을 조회할 수 있다")
+    void testFindTabFailNotLogin() throws Exception {
+        // given
+        Long targetLabelId = 1L;
+
+        // when & then
+        mockMvc.perform(get("/labels/" + targetLabelId))
+            .andExpect(status().isUnauthorized());
+    }
+
 }
