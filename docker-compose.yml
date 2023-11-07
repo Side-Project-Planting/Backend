@@ -59,6 +59,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
     ports:
       - ${MYSQL_PORT}:${MYSQL_PORT}
+    volumes:
+      - ./initdb.sql:/docker-entrypoint-initdb.d/initdb.sql

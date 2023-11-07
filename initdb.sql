@@ -1,0 +1,2 @@
+CREATE DATABASE plandb;
+CREATE DATABASE authdb;
