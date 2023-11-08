@@ -30,6 +30,7 @@ import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
+import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.PlanResponse;
 
 @SpringBootTest
@@ -59,14 +60,15 @@ class PlanServiceTest {
     @Autowired
     TaskRepository taskRepository;
     private Long userId;
+    private Member tester;
 
     @BeforeEach
     void testSetUp() {
-        Member member = Member.builder()
+        tester = Member.builder()
             .name("tester")
             .email("testEach@example.com")
             .build();
-        Member savedMember = memberRepository.save(member);
+        Member savedMember = memberRepository.save(tester);
         userId = savedMember.getId();
 
         Mockito.doNothing()
@@ -188,6 +190,7 @@ class PlanServiceTest {
             .member(member1)
             .plan(plan)
             .build();
+
         MemberOfPlan memberOfPlan2 = MemberOfPlan.builder()
             .member(member2)
             .plan(plan)
@@ -337,6 +340,97 @@ class PlanServiceTest {
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
 
+
+    }
+
+
+    @Test
+    @DisplayName("플랜을 삭제한다")
+    void delete() {
+        // given
+        Plan plan = Plan.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .build();
+        Plan savedPlan = planRepository.save(plan);
+
+        // when
+        planService.delete(savedPlan.getId(), userId);
+
+        // then
+        assertThat(planRepository.findById(savedPlan.getId())
+            .isPresent()).isFalse();
+    }
+
+    @Test
+    @DisplayName("플랜을 수정한다")
+    void update() {
+        // given
+        Member nextOwner = Member.builder()
+            .name("nextOwner")
+            .email("test@test.com")
+            .build();
+        Plan plan = Plan.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .owner(tester)
+            .isPublic(true)
+            .build();
+        memberRepository.save(nextOwner);
+        Plan savedPlan = planRepository.save(plan);
+
+
+        PlanUpdateRequest planUpdateRequest = PlanUpdateRequest.builder()
+            .title("수정된 플랜 제목")
+            .intro("수정된 플랜 소개")
+            .ownerId(nextOwner.getId())
+            .isPublic(false)
+            .build();
+
+        // when
+        planService.update(savedPlan.getId(), planUpdateRequest, userId);
+
+        // then
+        Plan updatedPlan = planRepository.findById(plan.getId())
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+
+        assertThat(updatedPlan.getTitle()).isEqualTo("수정된 플랜 제목");
+        assertThat(updatedPlan.getIntro()).isEqualTo("수정된 플랜 소개");
+        assertThat(updatedPlan.getOwner()).isEqualTo(nextOwner);
+        assertThat(updatedPlan.isPublic()).isFalse();
+    }
+
+    @Test
+    @DisplayName("플랜에서 나간다")
+    void exit() {
+        // given
+        Member exitMember = Member.builder()
+            .name("nextOwner")
+            .email("test@test.com")
+            .build();
+
+        Plan plan = Plan.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .owner(tester)
+            .isPublic(true)
+            .build();
+
+        MemberOfPlan memberOfPlan = MemberOfPlan.builder()
+            .member(exitMember)
+            .plan(plan)
+            .build();
+        memberRepository.save(exitMember);
+        planRepository.save(plan);
+        memberOfPlanRepository.save(memberOfPlan);
+
+        // when
+        planService.exit(plan.getId(), userId);
+
+        // then
+        assertThat(memberOfPlanRepository.findById(memberOfPlan.getId())
+            .isPresent()).isFalse();
 
     }
 }

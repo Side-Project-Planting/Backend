@@ -21,6 +21,7 @@ import com.example.planservice.application.PlanService;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
+import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -174,6 +175,105 @@ class PlanControllerTest {
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("플랜에서 나간다")
+    void exitPlan() throws Exception {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+
+        // stub
+        when(planService.exit(planId, userId)).thenReturn(1L);
+
+        // when & then
+        mockMvc.perform(put("/plans/exit/{planId}", planId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 플랜 ID로 플랜에서 나가면 실패한다")
+    void exitPlanFailInvalidId() throws Exception {
+        // given
+        Long userId = 1L;
+        Long invalidPlanId = 9999L;
+
+        // stub
+        when(planService.exit(invalidPlanId, userId)).thenThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(put("/plans/exit/{planId}", invalidPlanId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("플랜 정보를 수정한다")
+    void updatePlan() throws Exception {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+
+        PlanUpdateRequest request = PlanUpdateRequest.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .build();
+
+        // stub
+        when(planService.update(planId, request, userId)).thenReturn(1L);
+
+        // when & then
+        mockMvc.perform(put("/plans/update/{planId}", planId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 플랜 ID로 플랜 정보를 수정하면 실패한다")
+    void updatePlanFailInvalidId() throws Exception {
+        // given
+        Long userId = 1L;
+        Long invalidPlanId = 9999L;
+
+        PlanUpdateRequest request = PlanUpdateRequest.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .build();
+
+        // stub
+        when(planService.update(invalidPlanId, request, userId)).thenThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(put("/plans/update/{planId}", invalidPlanId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("플랜을 삭제한다")
+    void deletePlan() throws Exception {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+
+        // stub
+        when(planService.delete(planId, userId)).thenReturn(1L);
+
+        // when & then
+        mockMvc.perform(delete("/plans/{planId}", planId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
     }
 
 }
