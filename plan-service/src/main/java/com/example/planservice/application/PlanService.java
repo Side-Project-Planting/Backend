@@ -22,6 +22,8 @@ import com.example.planservice.domain.task.Task;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
+import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
+import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.LabelOfPlanResponse;
 import com.example.planservice.presentation.dto.response.MemberOfPlanResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
@@ -36,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class PlanService {
 
     private final EmailService emailService;
+    private final TabService tabService;
     private final PlanRepository planRepository;
     private final MemberRepository memberRepository;
     private final TabRepository tabRepository;
@@ -105,22 +108,75 @@ public class PlanService {
         return memberOfPlan.getId();
     }
 
+    @Transactional
+    public Long exit(Long planId, Long memberId) {
+        MemberOfPlan memberOfPlan = memberOfPlanRepository.findByPlanIdAndMemberId(memberId, planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+        memberOfPlanRepository.delete(memberOfPlan);
+        return memberOfPlan.getId();
+    }
+
+    @Transactional
+    public Long kick(Long planId, Long kickingMemberId, Long userId) {
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        validateOwner(plan.getOwner()
+            .getId(), userId);
+        MemberOfPlan memberOfPlan = memberOfPlanRepository.findByPlanIdAndMemberId(kickingMemberId, planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+        memberOfPlanRepository.delete(memberOfPlan);
+        return memberOfPlan.getId();
+    }
+
+    @Transactional
+    public Long delete(Long planId, Long userId) {
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        validateOwner(plan.getOwner()
+            .getId(), userId);
+        plan.softDelete();
+        return plan.getId();
+    }
+
+    @Transactional
+    public Long update(Long planId, PlanUpdateRequest request, Long userId) {
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        validateOwner(plan.getOwner()
+            .getId(), userId);
+        Member nextOwner = memberRepository.findById(request.getOwnerId())
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+        plan.update(request.getTitle(), request.getIntro(), nextOwner, request.isPublic());
+        return plan.getId();
+    }
+
+    private void validateOwner(Long ownerId, Long userId) {
+        if (!ownerId
+            .equals(userId)) {
+            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
+        }
+    }
+
     private void sendInviteMail(List<String> invitedEmails, String title) {
         invitedEmails.forEach(email -> emailService.sendEmail(email, title));
     }
 
     private void createDefaultTab(Plan plan) {
-        Tab firstTab = Tab.builder()
-            .name("ToDo")
-            .plan(plan)
+        TabCreateRequest todoCreateRequest = TabCreateRequest.builder()
+            .name("To Do")
+            .planId(plan.getId())
             .build();
-        Tab lastTab = Tab.builder()
+        TabCreateRequest inprogressCreateRequest = TabCreateRequest.builder()
+            .name("In Progress")
+            .planId(plan.getId())
+            .build();
+        TabCreateRequest doneCreateRequest = TabCreateRequest.builder()
             .name("Done")
-            .plan(plan)
+            .planId(plan.getId())
             .build();
-        firstTab.connect(lastTab);
-        tabRepository.save(firstTab);
-        tabRepository.save(lastTab);
+        tabService.create(plan.getId(), todoCreateRequest);
+        tabService.create(plan.getId(), inprogressCreateRequest);
+        tabService.create(plan.getId(), doneCreateRequest);
     }
 
     private List<MemberOfPlanResponse> getMemberResponses(List<MemberOfPlan> members, Long ownerId) {

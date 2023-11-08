@@ -91,4 +91,15 @@ public class Plan extends BaseEntity {
     public void addLabel(Label label) {
         labels.add(label);
     }
+
+    public void softDelete() {
+        this.isDeleted = true;
+    }
+
+    public void update(String title, String intro, Member owner, boolean isPublic) {
+        this.title = title;
+        this.intro = intro;
+        this.owner = owner;
+        this.isPublic = isPublic;
+    }
 }
