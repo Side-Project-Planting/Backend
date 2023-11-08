@@ -5,11 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.Where;
+import org.jetbrains.annotations.NotNull;
 
 import com.example.planservice.domain.BaseEntity;
 import com.example.planservice.domain.Linkable;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.tab.Tab;
+import com.example.planservice.exception.ApiException;
+import com.example.planservice.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,7 +28,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "tasks")
@@ -33,6 +35,9 @@ import lombok.Setter;
 @Where(clause = "is_deleted = false")
 @Getter
 public class Task extends BaseEntity implements Linkable<Task> {
+    public static final String FIRST_DUMMY_NAME = "first";
+    public static final String LAST_DUMMY_NAME = "last";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "task_id")
@@ -63,7 +68,6 @@ public class Task extends BaseEntity implements Linkable<Task> {
 
     private boolean isDeleted;
 
-    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "next_id")
     private Task next;
@@ -77,8 +81,9 @@ public class Task extends BaseEntity implements Linkable<Task> {
 
     @Builder
     @SuppressWarnings("java:S107")
-    public Task(Tab tab, Member manager, Member writer, String name, String description, LocalDateTime startDate,
-                LocalDateTime endDate, boolean isDeleted, Task next, Task prev, int version) {
+    private Task(Tab tab, Member manager, Member writer, String name, String description, LocalDateTime startDate,
+                 LocalDateTime endDate, boolean isDeleted, Task next, Task prev, int version) {
+        validateDates(startDate, endDate);
         this.tab = tab;
         this.manager = manager;
         this.writer = writer;
@@ -92,18 +97,117 @@ public class Task extends BaseEntity implements Linkable<Task> {
         this.version = version;
     }
 
-    public void connect(Task next) {
-        if (next == null) {
-            this.next = null;
+    public static List<Task> createFirstAndLastDummy(Tab tab) {
+        Task firstDummy = createDummy(tab, FIRST_DUMMY_NAME);
+        Task lastDummy = createDummy(tab, LAST_DUMMY_NAME);
+
+        firstDummy.putInBack(lastDummy);
+
+        tab.setFirstDummyTask(firstDummy);
+        tab.setLastDummyTask(lastDummy);
+        return List.of(firstDummy, lastDummy);
+    }
+
+    public void putInBack(@NotNull Task target) {
+        Task originalNext = this.next;
+        if (originalNext == null) {
+            this.next = target;
+            target.prev = this;
             return;
         }
+        originalNext.prev = target;
+        target.next = originalNext;
 
+        target.prev = this;
+        this.next = target;
+        tab.getTasks().add(target);
+    }
+
+    public void putInFront(@NotNull Task target) {
+        if (target.isConnected()) {
+            throw new IllegalArgumentException("target은 연결이 되어 있어서는 안됩니다.");
+        }
+        Task originalPrev = this.prev;
+        if (originalPrev == null) {
+            this.prev = target;
+            target.next = this;
+            return;
+        }
+        originalPrev.next = target;
+        target.prev = originalPrev;
+
+        target.next = this;
+        this.prev = target;
+        tab.getTasks().add(target);
+    }
+
+    public void disconnect() {
+        validateCanModify();
+
+        Task originalPrev = this.prev;
+        Task originalNext = this.next;
+        originalNext.setPrev(originalPrev);
+        originalPrev.setNext(originalNext);
+
+        this.prev = null;
+        this.next = null;
+        tab.getTasks().remove(this);
+    }
+
+    public void validateCanModify() {
+        Task firstDummyTask = tab.getFirstDummyTask();
+        if (this.getId().equals(firstDummyTask.getId())) {
+            throw new ApiException(ErrorCode.TASK_NOT_FOUND);
+        }
+        Task lastDummyTask = tab.getLastDummyTask();
+        if (this.getId().equals(lastDummyTask.getId())) {
+            throw new ApiException(ErrorCode.TASK_NOT_FOUND);
+        }
+    }
+
+    public void change(Task entity) {
+        validateCanModify();
+
+        this.manager = entity.getManager();
+        this.name = entity.getName();
+        this.description = entity.getDescription();
+        this.startDate = entity.getStartDate();
+        this.endDate = entity.getEndDate();
+    }
+
+    public void setNext(Task next) {
         this.next = next;
-        next.prev = this;
+    }
+
+    public void setPrev(Task prev) {
+        this.prev = prev;
     }
 
     public void delete() {
-        isDeleted = true;
+        validateCanModify();
+        disconnect();
+        this.isDeleted = true;
+    }
+
+    private static Task createDummy(Tab tab, String name) {
+        return Task.builder()
+            .tab(tab)
+            .name(name)
+            .build();
+    }
+
+    private boolean isConnected() {
+        return next != null || prev != null;
+    }
+
+    private void validateDates(LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate == null || endDate == null) {
+            return;
+        }
+
+        if (startDate.isAfter(endDate)) {
+            throw new ApiException(ErrorCode.TASK_DATE_INVALID);
+        }
     }
 
 }

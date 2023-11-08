@@ -20,6 +20,7 @@ public class PlanResponse {
     private boolean isPublic;
 
     @Builder
+    @SuppressWarnings("java:S107")
     private PlanResponse(String title, String description, List<MemberOfPlanResponse> members, List<Long> tabOrder,
                          List<TabOfPlanResponse> tabs, List<TaskOfPlanResponse> tasks, List<LabelOfPlanResponse> labels,
                          boolean isPublic) {

@@ -3,18 +3,23 @@ package com.example.planservice.presentation;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.planservice.application.TaskService;
+import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
+import com.example.planservice.presentation.dto.request.TaskUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Controller
+@RestController
 @RequestMapping("/tasks")
 @RequiredArgsConstructor
 public class TaskController {
@@ -25,6 +30,27 @@ public class TaskController {
                                        @RequestAttribute Long userId) {
         Long createdId = taskService.create(userId, request);
         return ResponseEntity.created(URI.create("/tasks/" + createdId)).build();
+    }
+
+    @PutMapping("/{taskId}")
+    public ResponseEntity<Void> updateContents(@RequestBody @Valid TaskUpdateRequest request,
+                                               @PathVariable Long taskId,
+                                               @RequestAttribute Long userId) {
+        taskService.updateContents(request.toServiceRequest(userId, taskId));
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/change-order")
+    public ResponseEntity<Void> changeOrder(@RequestBody @Valid TaskChangeOrderRequest request,
+                                            @RequestAttribute Long userId) {
+        taskService.changeOrder(userId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<Void> delete(@PathVariable Long taskId, @RequestAttribute Long userId) {
+        taskService.delete(userId, taskId);
+        return ResponseEntity.noContent().build();
     }
 
 }

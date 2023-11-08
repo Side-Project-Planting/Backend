@@ -33,11 +33,11 @@ class TabGroupTest {
     void create() {
         // given
         Plan plan = createPlan();
-        Tab tab5 = createTab(plan, "탭5", null);
-        Tab tab4 = createTab(plan, "탭4", tab5);
-        Tab tab3 = createTab(plan, "탭3", tab4);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", tab1);
+        Tab tab3 = createTab(plan, "탭3", tab2);
+        Tab tab4 = createTab(plan, "탭4", tab3);
+        Tab tab5 = createTab(plan, "탭5", tab4);
 
         // when
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4, tab5));
@@ -56,12 +56,12 @@ class TabGroupTest {
     void createFailSizeOver() {
         // given
         Plan plan = createPlan();
-        Tab tab6 = createTab(plan, "탭6", null);
-        Tab tab5 = createTab(plan, "탭5", tab6);
-        Tab tab4 = createTab(plan, "탭4", tab5);
-        Tab tab3 = createTab(plan, "탭3", tab4);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", tab1);
+        Tab tab3 = createTab(plan, "탭3", tab2);
+        Tab tab4 = createTab(plan, "탭4", tab3);
+        Tab tab5 = createTab(plan, "탭5", tab4);
+        Tab tab6 = createTab(plan, "탭6", tab5);
 
         // when & then
         assertThatThrownBy(() -> new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4, tab5, tab6)))
@@ -87,10 +87,10 @@ class TabGroupTest {
     void createFailNotSamePlan() {
         // given
         Plan plan = createPlan();
-        Tab tab4 = createTab(plan, "탭4", null);
-        Tab tab3 = createTab(plan, "탭3", tab4);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", tab1);
+        Tab tab3 = createTab(plan, "탭3", tab2);
+        Tab tab4 = createTab(plan, "탭4", tab3);
 
         Plan otherPlan = createPlan();
 
@@ -120,9 +120,9 @@ class TabGroupTest {
     void changeOrder() {
         // given
         Plan plan = createPlan();
-        Tab tab3 = createTab(plan, "탭3", null);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", tab1);
+        Tab tab3 = createTab(plan, "탭3", tab2);
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3));
 
         // when
@@ -137,11 +137,12 @@ class TabGroupTest {
     @DisplayName("탭이 가득차 있을 때 탭의 순서를 변경한다")
     void changeOrderFullTabInPlan() {
         Plan plan = createPlan();
-        Tab tab5 = createTab(plan, "탭5", null);
-        Tab tab4 = createTab(plan, "탭4", tab5);
-        Tab tab3 = createTab(plan, "탭3", tab4);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", tab1);
+        Tab tab3 = createTab(plan, "탭3", tab2);
+        Tab tab4 = createTab(plan, "탭4", tab3);
+        Tab tab5 = createTab(plan, "탭5", tab4);
+
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4, tab5));
 
         // when
@@ -157,9 +158,9 @@ class TabGroupTest {
     void changeOrderFailAboutFirstTab() {
         // given
         Plan plan = createPlan();
-        Tab tab3 = createTab(plan, "탭3", null);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", tab1);
+        Tab tab3 = createTab(plan, "탭3", tab2);
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3));
 
         // when
@@ -173,9 +174,9 @@ class TabGroupTest {
     void changeOrderFailCantSameTargetAndNewPrev() {
         // given
         Plan plan = createPlan();
-        Tab tab3 = createTab(plan, "탭3", null);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", tab1);
+        Tab tab3 = createTab(plan, "탭3", tab2);
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3));
 
         // when & then
@@ -216,10 +217,10 @@ class TabGroupTest {
     void addLast() {
         // given
         Plan plan = createPlan();
-        Tab tab4 = createTab(plan, "탭4", null);
-        Tab tab3 = createTab(plan, "탭3", tab4);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", tab1);
+        Tab tab3 = createTab(plan, "탭3", tab2);
+        Tab tab4 = createTab(plan, "탭4", tab3);
 
         Tab addedTab = Tab.builder().build();
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4));
@@ -237,11 +238,11 @@ class TabGroupTest {
     void addLastFailTabSizeLimit() {
         // given
         Plan plan = createPlan();
-        Tab tab5 = createTab(plan, "탭5", null);
-        Tab tab4 = createTab(plan, "탭4", tab5);
-        Tab tab3 = createTab(plan, "탭3", tab4);
-        Tab tab2 = createTab(plan, "탭2", tab3);
-        Tab tab1 = createTab(plan, "탭1", tab2);
+        Tab tab1 = createTab(plan, "탭1", null);
+        Tab tab2 = createTab(plan, "탭2", tab1);
+        Tab tab3 = createTab(plan, "탭3", tab2);
+        Tab tab4 = createTab(plan, "탭4", tab3);
+        Tab tab5 = createTab(plan, "탭5", tab4);
 
         Tab addedTab = Tab.builder().build();
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4, tab5));
@@ -273,9 +274,9 @@ class TabGroupTest {
     void checkConnectingIfTabDelete() {
         // given
         Plan plan = createPlan();
-        Tab third = createTab(plan, "세번째", null);
-        Tab second = createTab(plan, "두번째", third);
-        Tab first = createTab(plan, "TODO", second);
+        Tab first = createTab(plan, "TODO", null);
+        Tab second = createTab(plan, "두번째", first);
+        Tab third = createTab(plan, "세번째", second);
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(first, second, third));
 
         // when
@@ -307,17 +308,22 @@ class TabGroupTest {
         return plan;
     }
 
-    private Tab createTab(Plan plan, String name, Tab next) {
-        Tab tab = Tab.builder()
+    private Tab createTab(Plan plan, String name, Tab prev) {
+        Tab.TabBuilder tabBuilder = Tab.builder()
             .plan(plan)
-            .name(name)
-            .next(next)
-            .first(true)
-            .build();
-        tabRepository.save(tab);
-        if (next != null) {
-            next.makeNotFirst();
+            .name(name);
+
+        Tab tab;
+        if (prev == null) {
+            tab = tabBuilder.first(true)
+                .build();
+        } else {
+            tab = tabBuilder.build();
+            prev.connect(tab);
         }
+
+        tabRepository.save(tab);
         return tab;
     }
+
 }

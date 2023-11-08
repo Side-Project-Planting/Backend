@@ -3,7 +3,6 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -146,7 +145,6 @@ class PlanServiceTest {
         Tab tab2 = Tab.builder()
             .plan(plan)
             .name("testTab2")
-            .tasks(new ArrayList<>())
             .first(false)
             .build();
 
@@ -154,7 +152,6 @@ class PlanServiceTest {
             .plan(plan)
             .name("testTab1")
             .next(tab2)
-            .tasks(new ArrayList<>())
             .first(true)
             .build();
 

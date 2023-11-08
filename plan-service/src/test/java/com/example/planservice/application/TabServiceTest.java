@@ -3,7 +3,6 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,11 +16,8 @@ import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.domain.member.Member;
-import com.example.planservice.domain.member.repository.MemberRepository;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
-import com.example.planservice.domain.memberofplan.repository.MemberOfPlanRepository;
 import com.example.planservice.domain.plan.Plan;
-import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.domain.task.Task;
@@ -30,6 +26,7 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest
 @Transactional
@@ -41,16 +38,10 @@ class TabServiceTest {
     TabRepository tabRepository;
 
     @Autowired
-    PlanRepository planRepository;
-
-    @Autowired
-    MemberOfPlanRepository memberOfPlanRepository;
-
-    @Autowired
-    MemberRepository memberRepository;
-
-    @Autowired
     TaskRepository taskRepository;
+
+    @Autowired
+    EntityManager em;
 
     @Test
     @DisplayName("탭을 생성한다")
@@ -70,12 +61,20 @@ class TabServiceTest {
         assertThat(savedId).isNotNull();
 
         Tab savedTab = tabRepository.findById(savedId).get();
-        assertThat(savedTab.getName()).isEqualTo(request.getName());
-        assertThat(savedTab.getPlan().getId()).isEqualTo(request.getPlanId());
+        assertThat(savedTab)
+            .extracting(Tab::getName, Tab::getPlan)
+            .containsExactly(request.getName(), plan);
+
+        Task firstDummyTask = savedTab.getFirstDummyTask();
+        Task lastDummyTask = savedTab.getLastDummyTask();
+        assertThat(firstDummyTask.getName()).isEqualTo("first");
+        assertThat(lastDummyTask.getName()).isEqualTo("last");
+        assertThat(savedTab.getTasks()).hasSize(2)
+            .contains(firstDummyTask, lastDummyTask);
     }
 
     @Test
-    @DisplayName("두 번째 탭부터는 isFirst 속성이 false이다")
+    @DisplayName("플랜을 기준으로 두 번째 탭부터는 생성시 isFirst 속성이 false이다")
     void checkSecondTabIsNotFirst() {
         // given
         Plan plan = createPlan();
@@ -96,7 +95,7 @@ class TabServiceTest {
 
 
     @Test
-    @DisplayName("탭은 존재하는 플랜에 대해서만 생성할 수 있다")
+    @DisplayName("존재하지 않는 플랜에 탭을 생성할 수 없다")
     void createFailNotExistPlan() {
         // given
         Long userId = 1L;
@@ -110,7 +109,7 @@ class TabServiceTest {
     }
 
     @Test
-    @DisplayName("탭을 생성하는 사람은 해당 플랜에 소속되어 있어야 한다")
+    @DisplayName("플랜에 소속되지 않은 사용자는 탭을 생성할 수 없다")
     void createFailNotMemberOfPlan() {
         // given
         Plan plan = createPlan();
@@ -124,31 +123,9 @@ class TabServiceTest {
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
     }
 
-    @Test
-    @DisplayName("하나의 플랜에 탭은 최대 5개까지 생성 가능하다")
-    void createFailTabLimitOver() {
-        // given
-        Plan plan = createPlan();
-        Member member = createMember();
-        createMemberOfPlan(plan, member);
-
-        Tab tab1 = Tab.builder().first(true).plan(plan).build();
-        Tab tab2 = Tab.builder().plan(plan).build();
-        Tab tab3 = Tab.builder().plan(plan).build();
-        Tab tab4 = Tab.builder().plan(plan).build();
-        Tab tab5 = Tab.builder().plan(plan).build();
-        tabRepository.saveAll(List.of(tab1, tab2, tab3, tab4, tab5));
-
-        TabCreateRequest request = createTabCreateRequest(plan.getId(), "이름");
-
-        // when & then
-        assertThatThrownBy(() -> tabService.create(member.getId(), request))
-            .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.TAB_SIZE_INVALID.getMessage());
-    }
 
     @Test
-    @DisplayName("탭이 4개인 경우 생성에 성공한다")
+    @DisplayName("하나의 플랜에 탭은 최대 5개까지 생성이 가능하다")
     void createSuccessTabSizeNotOver() {
         // given
         Plan plan = createPlan();
@@ -172,6 +149,29 @@ class TabServiceTest {
         Tab savedTab = tabRepository.findById(savedId).get();
         assertThat(savedTab.getName()).isEqualTo(request.getName());
         assertThat(savedTab.getPlan().getId()).isEqualTo(request.getPlanId());
+    }
+
+    @Test
+    @DisplayName("하나의 플랜에 탭의 개수를 초과하면 예외를 반환한다")
+    void createFailTabLimitOver() {
+        // given
+        Plan plan = createPlan();
+        Member member = createMember();
+        createMemberOfPlan(plan, member);
+
+        Tab tab1 = Tab.builder().first(true).plan(plan).build();
+        Tab tab2 = Tab.builder().plan(plan).build();
+        Tab tab3 = Tab.builder().plan(plan).build();
+        Tab tab4 = Tab.builder().plan(plan).build();
+        Tab tab5 = Tab.builder().plan(plan).build();
+        tabRepository.saveAll(List.of(tab1, tab2, tab3, tab4, tab5));
+
+        TabCreateRequest request = createTabCreateRequest(plan.getId(), "이름");
+
+        // when & then
+        assertThatThrownBy(() -> tabService.create(member.getId(), request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TAB_SIZE_INVALID.getMessage());
     }
 
     @Test
@@ -520,9 +520,8 @@ class TabServiceTest {
             .name(name)
             .next(next)
             .first(isFirst)
-            .tasks(Collections.emptyList())
             .build();
-        tabRepository.save(tab);
+        em.persist(tab);
         return tab;
     }
 
@@ -533,14 +532,14 @@ class TabServiceTest {
             .plan(plan)
             .member(member)
             .build();
-        memberOfPlanRepository.save(memberOfPlan);
+        em.persist(memberOfPlan);
         return memberOfPlan;
     }
 
     @NotNull
     private Task createTask(Tab tab) {
         Task task = Task.builder().tab(tab).build();
-        taskRepository.save(task);
+        em.persist(task);
         return task;
     }
 
@@ -548,21 +547,21 @@ class TabServiceTest {
     private Member createMember() {
         Member member = Member.builder()
             .build();
-        memberRepository.save(member);
+        em.persist(member);
         return member;
     }
 
     @NotNull
     private Plan createPlan() {
         Plan plan = Plan.builder().build();
-        planRepository.save(plan);
+        em.persist(plan);
         return plan;
     }
 
     @NotNull
     private Plan createPlanWithOwner(Member owner) {
         Plan plan = Plan.builder().owner(owner).build();
-        planRepository.save(plan);
+        em.persist(plan);
         return plan;
     }
 

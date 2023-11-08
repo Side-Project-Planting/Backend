@@ -13,6 +13,8 @@ import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.TabGroup;
 import com.example.planservice.domain.tab.repository.TabRepository;
+import com.example.planservice.domain.task.Task;
+import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
@@ -26,19 +28,26 @@ import lombok.RequiredArgsConstructor;
 public class TabService {
     private final PlanMembershipService planMembershipService;
     private final TabRepository tabRepository;
+    private final TaskRepository taskRepository;
 
     @Transactional
     public Long create(Long memberId, TabCreateRequest request) {
         try {
             Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), memberId);
-
             Tab createdTab = Tab.create(plan, request.getName());
+
             List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
             TabGroup tabGroup = new TabGroup(plan.getId(), tabsOfPlan);
             tabGroup.addLast(createdTab);
             plan.getTabs().add(createdTab);
 
             Tab savedTab = tabRepository.save(createdTab);
+
+            List<Task> dummies = Task.createFirstAndLastDummy(createdTab);
+            Task firstDummyTask = dummies.get(0);
+            Task lastDummyTask = dummies.get(1);
+            taskRepository.saveAll(List.of(firstDummyTask, lastDummyTask));
+
             return savedTab.getId();
         } catch (ObjectOptimisticLockingFailureException e) {
             throw new ApiException(ErrorCode.REQUEST_CONFLICT);

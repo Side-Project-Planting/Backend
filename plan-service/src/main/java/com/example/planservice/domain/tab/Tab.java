@@ -2,6 +2,7 @@ package com.example.planservice.domain.tab;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.Where;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +20,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
@@ -58,9 +60,13 @@ public class Tab extends BaseEntity implements Linkable<Tab> {
 
     private boolean first;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "first_task_id")
+    private Task firstDummyTask;
+
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_task_id")
-    private Task lastTask;
+    private Task lastDummyTask;
 
     @Version
     private int version;
@@ -68,13 +74,15 @@ public class Tab extends BaseEntity implements Linkable<Tab> {
     private boolean isDeleted;
 
     @Builder
-    private Tab(Plan plan, String name, Tab next, boolean first, Task lastTask, List<Task> tasks, boolean isDeleted) {
+    private Tab(Plan plan, String name, Tab next, boolean first, Task firstDummyTask, Task lastDummyTask,
+                boolean isDeleted) {
         this.plan = plan;
         this.name = name;
         this.next = next;
         this.first = first;
-        this.lastTask = lastTask;
-        this.tasks = tasks;
+        this.firstDummyTask = firstDummyTask;
+        this.lastDummyTask = lastDummyTask;
+        this.tasks = new ArrayList<>();
         this.isDeleted = isDeleted;
     }
 
@@ -101,24 +109,40 @@ public class Tab extends BaseEntity implements Linkable<Tab> {
         this.next = next;
     }
 
-    public void makeNotFirst() {
-        first = false;
-    }
-
     public void changeName(@NotNull String name) {
         // TODO Tab 이름에 대한 제약조건 이야기해보기
         this.name = name;
     }
 
-    public void changeLastTask(Task task) {
-        if (lastTask != null) {
-            lastTask.connect(task);
+    public void setFirstDummyTask(Task firstDummyTask) {
+        if (this.firstDummyTask != null) {
+            throw new IllegalArgumentException("한 번 초기화된 firstDummyTask는 변경할 수 없습니다");
         }
-        lastTask = task;
+        tasks.add(firstDummyTask);
+        this.firstDummyTask = firstDummyTask;
+    }
+
+    public void setLastDummyTask(Task lastDummyTask) {
+        if (this.lastDummyTask != null) {
+            throw new IllegalArgumentException("한 번 초기화된 LastDummyTask는 변경할 수 없습니다");
+        }
+        tasks.add(lastDummyTask);
+        this.lastDummyTask = lastDummyTask;
     }
 
     public void delete() {
-        isDeleted = true;
+        this.isDeleted = true;
         tasks.forEach(Task::delete);
     }
+
+    public List<Task> getSortedTasks() {
+        List<Task> result = new ArrayList<>();
+        Task temp = firstDummyTask;
+        while (!Objects.equals(lastDummyTask, temp.getNext())) {
+            temp = temp.getNext();
+            result.add(temp);
+        }
+        return result;
+    }
+
 }

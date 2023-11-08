@@ -4,21 +4,18 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import com.example.planservice.application.dto.TaskUpdateServiceRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
 @NoArgsConstructor
 @Getter
-public class TaskCreateRequest {
+public class TaskUpdateRequest {
     @NotNull
     private Long planId;
-
-    @NotNull
-    private Long tabId;
 
     private Long managerId;
 
@@ -35,10 +32,9 @@ public class TaskCreateRequest {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private TaskCreateRequest(Long planId, Long tabId, Long managerId, String name, String description,
-                              LocalDateTime startDate, LocalDateTime endDate, List<Long> labels) {
+    private TaskUpdateRequest(Long planId, Long managerId, String name, String description, LocalDateTime startDate,
+                              LocalDateTime endDate, List<Long> labels) {
         this.planId = planId;
-        this.tabId = tabId;
         this.managerId = managerId;
         this.name = name;
         this.description = description;
@@ -47,4 +43,18 @@ public class TaskCreateRequest {
         this.labels = (labels != null) ? labels : Collections.emptyList();
     }
 
+    public TaskUpdateServiceRequest toServiceRequest(@NotNull Long memberId, @NotNull Long taskId) {
+        return TaskUpdateServiceRequest.builder()
+            .taskId(taskId)
+            .memberId(memberId)
+            .planId(planId)
+            .managerId(managerId)
+            .name(name)
+            .description(description)
+            .startDate(startDate)
+            .endDate(endDate)
+            .labels(labels)
+            .taskId(taskId)
+            .build();
+    }
 }

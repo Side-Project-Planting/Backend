@@ -37,7 +37,11 @@ public class PlanMembershipService {
     }
 
     public MemberOfPlan validateMemberIsInThePlan(Long memberId, Plan plan) {
-        return memberOfPlanRepository.findByPlanIdAndMemberId(plan.getId(), memberId)
+        return validateMemberIsInThePlan(memberId, plan.getId());
+    }
+
+    public MemberOfPlan validateMemberIsInThePlan(Long memberId, Long planId) {
+        return memberOfPlanRepository.findByPlanIdAndMemberId(planId, memberId)
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
     }
 
@@ -45,4 +49,5 @@ public class PlanMembershipService {
         MemberOfPlan memberOfPlan = validateMemberIsInThePlan(memberId, plan);
         return memberOfPlan.getMember();
     }
+
 }

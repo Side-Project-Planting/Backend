@@ -76,7 +76,7 @@ class MemberServiceTest {
         // when & then
         assertThatThrownBy(() -> memberService.register(request))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.ALREADY_REGISTERED.getMessage());
+            .hasMessageContaining(ErrorCode.MEMBER_ALREADY_REGISTERED.getMessage());
     }
 
     @Test
