@@ -8,7 +8,6 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.planservice.domain.Linkable;
 import com.example.planservice.domain.label.Label;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.member.repository.MemberRepository;
@@ -78,7 +77,7 @@ public class PlanService {
             .getId());
         List<LabelOfPlanResponse> labels = getLabelResponses(plan.getLabels());
         List<TaskOfPlanResponse> tasks = getTaskResponses(plan.getTasks());
-        List<Long> tabOrder = orderByNext(tabList);
+        List<Long> tabOrder = getSortedTabID(tabList);
         List<TabOfPlanResponse> tabs = getTabResponses(tabList);
 
         return PlanResponse.builder()
@@ -181,7 +180,7 @@ public class PlanService {
 
     private List<MemberOfPlanResponse> getMemberResponses(List<MemberOfPlan> members, Long ownerId) {
         return members.stream()
-            .map(member -> MemberOfPlanResponse.to(member.getMember(), ownerId))
+            .map(member -> MemberOfPlanResponse.from(member.getMember(), ownerId))
             .toList();
     }
 
@@ -189,29 +188,29 @@ public class PlanService {
         return tabList.stream()
             .map(tab -> {
                 List<Task> tasksOfTab = tab.getTasks();
-                List<Long> taskOrder = orderByNext(tasksOfTab);
-                return TabOfPlanResponse.to(tab, taskOrder);
+                List<Long> taskOrder = getSortedTaskID(tasksOfTab);
+                return TabOfPlanResponse.from(tab, taskOrder);
             })
             .toList();
     }
 
     private List<LabelOfPlanResponse> getLabelResponses(List<Label> labels) {
         return labels.stream()
-            .map(LabelOfPlanResponse::to)
+            .map(LabelOfPlanResponse::from)
             .toList();
     }
 
     private List<TaskOfPlanResponse> getTaskResponses(List<Task> tasks) {
         return tasks.stream()
-            .map(TaskOfPlanResponse::to)
+            .map(TaskOfPlanResponse::from)
             .toList();
     }
 
-    public <T extends Linkable<T>> List<Long> orderByNext(List<T> items) {
+    public List<Long> getSortedTaskID(List<Task> items) {
         List<Long> orderedItems = new ArrayList<>();
-        Set<T> allNodes = new HashSet<>(items);
-        T start = null;
-        for (T item : items) {
+        Set<Task> allNodes = new HashSet<>(items);
+        Task start = null;
+        for (Task item : items) {
             if (item.getNext() != null) {
                 allNodes.remove(item.getNext());
             }
@@ -221,7 +220,7 @@ public class PlanService {
                 .next();
         }
 
-        T current = start;
+        Task current = start;
         while (current != null) {
             orderedItems.add(current.getId());
             current = current.getNext();
@@ -229,4 +228,28 @@ public class PlanService {
 
         return orderedItems;
     }
+
+    public List<Long> getSortedTabID(List<Tab> items) {
+        List<Long> orderedItems = new ArrayList<>();
+        Set<Tab> allNodes = new HashSet<>(items);
+        Tab start = null;
+        for (Tab item : items) {
+            if (item.getNext() != null) {
+                allNodes.remove(item.getNext());
+            }
+        }
+        if (!allNodes.isEmpty()) {
+            start = allNodes.iterator()
+                .next();
+        }
+
+        Tab current = start;
+        while (current != null) {
+            orderedItems.add(current.getId());
+            current = current.getNext();
+        }
+
+        return orderedItems;
+    }
+
 }
