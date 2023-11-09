@@ -150,6 +150,15 @@ public class PlanService {
         return plan.getId();
     }
 
+    public List<PlanTitleIdResponse> getAllPlanByMemberId(Long userId) {
+        List<MemberOfPlan> memberOfPlans = memberOfPlanRepository.findAllByMemberId(userId)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+
+        return memberOfPlans.stream()
+            .map(memberOfPlan -> PlanTitleIdResponse.from(memberOfPlan.getPlan()))
+            .toList();
+    }
+
     private void validateOwner(Long ownerId, Long userId) {
         if (!ownerId
             .equals(userId)) {

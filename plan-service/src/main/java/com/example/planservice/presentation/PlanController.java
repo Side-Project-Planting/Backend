@@ -110,4 +110,13 @@ public class PlanController {
             .build();
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<PlanTitleIdResponse>> readPlanTitleIdList(@RequestAttribute Long userId) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .build();
+        }
+        return ResponseEntity.ok(planService.getAllPlanByMemberId(userId));
+    }
+
 }
