@@ -23,12 +23,10 @@ import com.example.planservice.application.TabService;
 import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
-import com.example.planservice.exception.ApiException;
-import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
-import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
+import com.example.planservice.presentation.dto.response.TabFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = {TabController.class})
@@ -44,7 +42,7 @@ class TabControllerTest {
 
     @Test
     @DisplayName("Tab을 생성한다")
-    void createTab() throws Exception {
+    void testCreateTab() throws Exception {
         // given
         Long userId = 1L;
         Long planId = 10L;
@@ -64,13 +62,12 @@ class TabControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(header().string("Location", "/tabs/" + createdTabId))
-            .andExpect(redirectedUrlPattern("/tabs/*")); // TODO 리다이렉트를 왜 적었지?? 심신미약이었나봄,,
+            .andExpect(header().string("Location", "/tabs/" + createdTabId));
     }
 
     @Test
     @DisplayName("로그인하지 않은 사용자는 Tab을 생성할 수 없다")
-    void createtabFailNotLogin() throws Exception {
+    void testCreateTabFailNotLogin() throws Exception {
         // given
         Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
@@ -83,30 +80,6 @@ class TabControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isUnauthorized());
-    }
-
-    // TODO 해당 테스트가 필요할까요? TAB_SIZE_LIMIT Api Exception이 터지면 400번 응답이 나오는지 테스트하는 로직인데
-    //  ErrorCode와 관련해서 테스트가 들어가는게 맞다는 생각이 듭니다.
-    @Test
-    @DisplayName("하나의 플랜에 Tab은 최대 5개까지만 생성이 가능하다")
-    void createTabFailSizeOver() throws Exception {
-        // given
-        Long userId = 1L;
-        Long planId = 10L;
-        TabCreateRequest request = TabCreateRequest.builder()
-            .name("탭이름")
-            .planId(planId)
-            .build();
-
-        when(tabService.create(anyLong(), any(TabCreateRequest.class)))
-            .thenThrow(new ApiException(ErrorCode.TAB_SIZE_INVALID));
-
-        // when & then
-        mockMvc.perform(post("/tabs")
-                .header("X-User-Id", userId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isBadRequest());
     }
 
     @ParameterizedTest
@@ -166,32 +139,38 @@ class TabControllerTest {
 
     @Test
     @DisplayName("탭을 조회한다")
-    void retrieveTab() throws Exception {
+    void testFindTab() throws Exception {
         // given
-        Long userId = 1L;
-        Long tabId = 10L;
-        TabRetrieveResponse response = TabRetrieveResponse.builder()
-            .tabId(tabId)
+        Long targetTabId = 1L;
+        Long userId = 2L;
+        TabFindResponse response = TabFindResponse.builder()
+            .id(targetTabId)
+            .name("탭명")
+            .nextId(null)
             .build();
 
-        when(tabService.retrieve(tabId, userId))
+        // stub
+        when(tabService.find(targetTabId, userId))
             .thenReturn(response);
 
-        mockMvc.perform(get("/tabs/" + tabId)
+        // when & then
+        mockMvc.perform(get("/tabs/" + targetTabId)
                 .header("X-User-Id", userId))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.tabId").value(tabId));
+            .andExpect(jsonPath("$.id").value(response.getId()))
+            .andExpect(jsonPath("$.name").value(response.getName()))
+            .andExpect(jsonPath("$.nextId").value(response.getNextId()));
     }
 
     @Test
-    @DisplayName("로그인하지 않은 사용자는 Tab을 가져올 수 없다")
-    void retrieveTabFailNotLogin() throws Exception {
+    @DisplayName("로그인한 사용자만 탭을 조회할 수 있다")
+    void testFindTabFailNotLogin() throws Exception {
         // given
-        Long tabId = 10L;
+        Long targetTabId = 1L;
+        Long userId = 2L;
 
         // when & then
-        mockMvc.perform(get("/tabs/" + tabId)
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/tabs/" + targetTabId))
             .andExpect(status().isUnauthorized());
     }
 

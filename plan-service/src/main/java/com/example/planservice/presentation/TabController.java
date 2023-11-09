@@ -22,7 +22,7 @@ import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.ChangeOrderResponse;
-import com.example.planservice.presentation.dto.response.TabRetrieveResponse;
+import com.example.planservice.presentation.dto.response.TabFindResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -54,9 +54,9 @@ public class TabController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TabRetrieveResponse> retrieve(@PathVariable(name = "id") Long tabId,
-                                                        @RequestAttribute Long userId) {
-        return ResponseEntity.ok().body(tabService.retrieve(tabId, userId));
+    public ResponseEntity<TabFindResponse> find(@PathVariable(name = "id") Long tabId,
+                                                @RequestAttribute Long userId) {
+        return ResponseEntity.ok().body(tabService.find(tabId, userId));
     }
 
     @DeleteMapping("/{id}")
