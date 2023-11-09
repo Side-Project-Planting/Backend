@@ -74,8 +74,12 @@ public class PlanService {
         List<Tab> tabList = tabRepository.findAllByPlanId(planId);
         List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner()
             .getId());
+        List<Task> allTask = tabList.stream()
+            .map(Tab::getTasks)
+            .flatMap(List::stream)
+            .toList();
         List<LabelOfPlanResponse> labels = getLabelResponses(plan.getLabels());
-        List<TaskOfPlanResponse> tasks = getTaskResponses(plan.getTasks());
+        List<TaskOfPlanResponse> tasks = getTaskResponses(allTask);
         List<Long> tabOrder = getSortedTabID(tabList);
         List<TabOfPlanResponse> tabs = getTabResponses(tabList);
 
@@ -166,8 +170,8 @@ public class PlanService {
     }
 
     private void createDefaultTab(Plan plan) {
-        Tab todoTab = Tab.create(plan, "Todo");
-        Tab inprogressTab = Tab.create(plan, "In progress");
+        Tab todoTab = Tab.create(plan, "To Do");
+        Tab inprogressTab = Tab.create(plan, "In Progress");
         Tab doneTab = Tab.create(plan, "Done");
 
         todoTab.connect(inprogressTab);

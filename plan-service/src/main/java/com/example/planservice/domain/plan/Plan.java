@@ -11,8 +11,6 @@ import com.example.planservice.domain.label.Label;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
 import com.example.planservice.domain.tab.Tab;
-import com.example.planservice.domain.task.Task;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -48,9 +46,6 @@ public class Plan extends BaseEntity {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "plan")
     private List<MemberOfPlan> members = new ArrayList<>();
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Task> tasks = new ArrayList<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "plan")
     private List<Tab> tabs = new ArrayList<>();

@@ -96,11 +96,38 @@ class PlanServiceTest {
 
         // then
         assertThat(savedId).isNotNull();
-
         Plan savedPlan = planRepository.findById(savedId)
             .get();
+
         assertThat(savedPlan.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedPlan.getIntro()).isEqualTo(request.getIntro());
+    }
+
+    @Test
+    @DisplayName("플랜 생성시 기본 탭이 생성 되었다")
+    void createPlanWithDefaultTab() {
+        // given
+        List<String> invitedEmails = List.of("test@example.com");
+
+        PlanCreateRequest request = PlanCreateRequest.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .invitedEmails(invitedEmails)
+            .build();
+
+        // when
+        Long savedId = planService.create(request, userId);
+
+        // then
+        List<Tab> tabs = tabRepository.findAllByPlanId(savedId);
+        assertThat(tabs.size()).isEqualTo(3);
+        assertThat(tabs.get(0)
+            .getName()).isEqualTo("To Do");
+        assertThat(tabs.get(1)
+            .getName()).isEqualTo("In Progress");
+        assertThat(tabs.get(2)
+            .getName()).isEqualTo("Done");
     }
 
     @Test
@@ -206,13 +233,6 @@ class PlanServiceTest {
             .add(memberOfPlan1);
         plan.getMembers()
             .add(memberOfPlan2);
-
-        plan.getTasks()
-            .add(task1);
-        plan.getTasks()
-            .add(task2);
-        plan.getTasks()
-            .add(task3);
 
         plan.getLabels()
             .add(label1);
