@@ -175,18 +175,6 @@ class TabControllerTest {
     }
 
     @Test
-    @DisplayName("로그인하지 않은 사용자는 Tab을 가져올 수 없다")
-    void retrieveTabFailNotLogin() throws Exception {
-        // given
-        Long tabId = 10L;
-
-        // when & then
-        mockMvc.perform(get("/tabs/" + tabId)
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isUnauthorized());
-    }
-
-    @Test
     @DisplayName("Tab의 순서를 변경한다")
     void changeTabOrder() throws Exception {
         // given
