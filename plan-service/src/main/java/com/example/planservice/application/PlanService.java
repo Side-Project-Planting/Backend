@@ -108,25 +108,21 @@ public class PlanService {
     }
 
     @Transactional
-    public Long exit(Long planId, Long memberId) {
+    public void exit(Long planId, Long memberId) {
         memberOfPlanRepository.deleteByPlanIdAndMemberId(planId, memberId);
-        return memberId;
     }
 
     @Transactional
-    public Long kick(Long planId, Long kickingMemberId, Long userId) {
+    public void kick(Long planId, Long kickingMemberId, Long userId) {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         validateOwner(plan.getOwner()
             .getId(), userId);
-        MemberOfPlan memberOfPlan = memberOfPlanRepository.findByPlanIdAndMemberId(kickingMemberId, planId)
-            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
-        memberOfPlanRepository.delete(memberOfPlan);
-        return memberOfPlan.getId();
+        memberOfPlanRepository.deleteByPlanIdAndMemberId(kickingMemberId, planId);
     }
 
     @Transactional
-    public Long delete(Long planId, Long userId) {
+    public void delete(Long planId, Long userId) {
         MemberOfPlan memberOfPlan = memberOfPlanRepository.findByPlanIdAndMemberId(planId, userId)
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
         validateOwner(memberOfPlan.getPlan()
@@ -135,11 +131,11 @@ public class PlanService {
 
         Plan plan = memberOfPlan.getPlan();
         plan.softDelete();
-        return plan.getId();
+        memberOfPlanRepository.delete(memberOfPlan);
     }
 
     @Transactional
-    public Long update(Long planId, PlanUpdateRequest request, Long userId) {
+    public void update(Long planId, PlanUpdateRequest request, Long userId) {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         validateOwner(plan.getOwner()
@@ -147,7 +143,6 @@ public class PlanService {
         Member nextOwner = memberRepository.findById(request.getOwnerId())
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
         plan.update(request.getTitle(), request.getIntro(), nextOwner, request.isPublic());
-        return plan.getId();
     }
 
     public List<PlanTitleIdResponse> getAllPlanByMemberId(Long userId) {
@@ -265,6 +260,5 @@ public class PlanService {
 
         return orderedItems;
     }
-
 
 }

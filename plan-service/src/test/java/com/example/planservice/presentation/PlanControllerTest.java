@@ -2,6 +2,7 @@ package com.example.planservice.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -24,6 +26,7 @@ import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.PlanResponse;
+import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(PlanController.class)
@@ -183,7 +186,8 @@ class PlanControllerTest {
         Long planId = 1L;
 
         // stub
-        when(planService.exit(planId, userId)).thenReturn(1L);
+        doNothing().when(planService)
+            .exit(planId, userId);
 
         // when & then
         mockMvc.perform(put("/plans/exit/{planId}", planId)
@@ -200,7 +204,9 @@ class PlanControllerTest {
         Long invalidPlanId = 9999L;
 
         // stub
-        when(planService.exit(invalidPlanId, userId)).thenThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        Mockito.doThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND))
+            .when(planService)
+            .exit(invalidPlanId, userId);
 
         // when & then
         mockMvc.perform(put("/plans/exit/{planId}", invalidPlanId)
@@ -223,7 +229,8 @@ class PlanControllerTest {
             .build();
 
         // stub
-        when(planService.update(planId, request, userId)).thenReturn(1L);
+        doNothing().when(planService)
+            .update(anyLong(), any(PlanUpdateRequest.class), anyLong());
 
         // when & then
         mockMvc.perform(put("/plans/update/{planId}", planId)
@@ -241,7 +248,8 @@ class PlanControllerTest {
         Long planId = 1L;
 
         // stub
-        when(planService.delete(planId, userId)).thenReturn(1L);
+        doNothing().when(planService)
+            .delete(planId, userId);
 
         // when & then
         mockMvc.perform(delete("/plans/{planId}", planId)
@@ -258,12 +266,42 @@ class PlanControllerTest {
         Long invalidPlanId = 9999L;
 
         // stub
-        when(planService.delete(invalidPlanId, userId)).thenThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        Mockito.doThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND))
+            .when(planService)
+            .delete(invalidPlanId, userId);
 
         // when & then
         mockMvc.perform(delete("/plans/{planId}", invalidPlanId)
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("멤버가 속한 플랜들을 조회한다")
+    void readAllByMember() throws Exception {
+        // given
+        Long userId = 1L;
+        PlanTitleIdResponse response1 = PlanTitleIdResponse.builder()
+            .id(1L)
+            .title("플랜 제목")
+            .build();
+        PlanTitleIdResponse response2 = PlanTitleIdResponse.builder()
+            .id(2L)
+            .title("플랜 제목")
+            .build();
+        // stub
+        when(planService.getAllPlanByMemberId(userId)).thenReturn(List.of(response1, response2));
+
+        // when & then
+        mockMvc.perform(get("/plans/all")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(response1.getId()))
+            .andExpect(jsonPath("$[0].title").value(response1.getTitle()))
+            .andExpect(jsonPath("$[1].id").value(response2.getId()))
+            .andExpect(jsonPath("$[1].title").value(response2.getTitle()));
+
     }
 }

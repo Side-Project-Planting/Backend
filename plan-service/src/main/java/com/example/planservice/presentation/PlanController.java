@@ -109,7 +109,7 @@ public class PlanController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<PlanTitleIdResponse>> readPlanTitleIdList(@RequestAttribute Long userId) {
+    public ResponseEntity<List<PlanTitleIdResponse>> readAllByMember(@RequestAttribute Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .build();
