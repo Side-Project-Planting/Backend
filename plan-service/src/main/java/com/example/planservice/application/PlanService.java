@@ -22,10 +22,10 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
-import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.LabelOfPlanResponse;
 import com.example.planservice.presentation.dto.response.MemberOfPlanResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
+import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import com.example.planservice.presentation.dto.response.TabOfPlanResponse;
 import com.example.planservice.presentation.dto.response.TaskOfPlanResponse;
 import lombok.RequiredArgsConstructor;
@@ -60,11 +60,11 @@ public class PlanService {
             .plan(plan)
             .build();
         memberOfPlanRepository.save(memberOfPlan);
+        sendInviteMail(request.getInvitedEmails(), request.getTitle(), member.getId());
+        Plan savedPlan = planRepository.save(plan);
 
-        sendInviteMail(request.getInvitedEmails(), request.getTitle());
         createDefaultTab(plan);
 
-        Plan savedPlan = planRepository.save(plan);
         return savedPlan.getId();
     }
 
@@ -72,7 +72,6 @@ public class PlanService {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         List<Tab> tabList = tabRepository.findAllByPlanId(planId);
-
         List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner()
             .getId());
         List<LabelOfPlanResponse> labels = getLabelResponses(plan.getLabels());
@@ -81,6 +80,7 @@ public class PlanService {
         List<TabOfPlanResponse> tabs = getTabResponses(tabList);
 
         return PlanResponse.builder()
+            .id(plan.getId())
             .title(plan.getTitle())
             .description(plan.getIntro())
             .members(members)
@@ -109,10 +109,8 @@ public class PlanService {
 
     @Transactional
     public Long exit(Long planId, Long memberId) {
-        MemberOfPlan memberOfPlan = memberOfPlanRepository.findByPlanIdAndMemberId(memberId, planId)
-            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
-        memberOfPlanRepository.delete(memberOfPlan);
-        return memberOfPlan.getId();
+        memberOfPlanRepository.deleteByPlanIdAndMemberId(planId, memberId);
+        return memberId;
     }
 
     @Transactional
@@ -129,10 +127,13 @@ public class PlanService {
 
     @Transactional
     public Long delete(Long planId, Long userId) {
-        Plan plan = planRepository.findById(planId)
-            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        validateOwner(plan.getOwner()
+        MemberOfPlan memberOfPlan = memberOfPlanRepository.findByPlanIdAndMemberId(planId, userId)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
+        validateOwner(memberOfPlan.getPlan()
+            .getOwner()
             .getId(), userId);
+
+        Plan plan = memberOfPlan.getPlan();
         plan.softDelete();
         return plan.getId();
     }
@@ -156,26 +157,30 @@ public class PlanService {
         }
     }
 
-    private void sendInviteMail(List<String> invitedEmails, String title) {
-        invitedEmails.forEach(email -> emailService.sendEmail(email, title));
+    private void sendInviteMail(List<String> invitedEmails, String title, Long userId) {
+        invitedEmails.forEach(email -> emailService.sendInviteEmail(email, title, userId));
     }
 
     private void createDefaultTab(Plan plan) {
-        TabCreateRequest todoCreateRequest = TabCreateRequest.builder()
-            .name("To Do")
-            .planId(plan.getId())
-            .build();
-        TabCreateRequest inprogressCreateRequest = TabCreateRequest.builder()
-            .name("In Progress")
-            .planId(plan.getId())
-            .build();
-        TabCreateRequest doneCreateRequest = TabCreateRequest.builder()
-            .name("Done")
-            .planId(plan.getId())
-            .build();
-        tabService.create(plan.getId(), todoCreateRequest);
-        tabService.create(plan.getId(), inprogressCreateRequest);
-        tabService.create(plan.getId(), doneCreateRequest);
+        Tab todoTab = Tab.create(plan, "Todo");
+        Tab inprogressTab = Tab.create(plan, "In progress");
+        Tab doneTab = Tab.create(plan, "Done");
+
+        todoTab.connect(inprogressTab);
+        inprogressTab.connect(doneTab);
+
+        plan.getTabs()
+            .add(todoTab);
+        plan.getTabs()
+            .add(inprogressTab);
+        plan.getTabs()
+            .add(doneTab);
+
+        tabRepository.saveAll(List.of(todoTab, inprogressTab, doneTab));
+
+        tabService.createDummyTask(todoTab);
+        tabService.createDummyTask(inprogressTab);
+        tabService.createDummyTask(doneTab);
     }
 
     private List<MemberOfPlanResponse> getMemberResponses(List<MemberOfPlan> members, Long ownerId) {
@@ -251,5 +256,6 @@ public class PlanService {
 
         return orderedItems;
     }
+
 
 }

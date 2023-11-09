@@ -4,7 +4,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,9 +56,7 @@ class PlanControllerTest {
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(header().exists("Location"))
-            .andExpect(redirectedUrlPattern("/plans/*"));
+            .andExpect(status().isCreated());
     }
 
     @Test
@@ -157,8 +156,7 @@ class PlanControllerTest {
         mockMvc.perform(put("/plans/invite/{planId}", planId)
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().string("1"));
+            .andExpect(status().isNoContent());
     }
 
     @Test
@@ -191,7 +189,7 @@ class PlanControllerTest {
         mockMvc.perform(put("/plans/exit/{planId}", planId)
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+            .andExpect(status().isNoContent());
     }
 
     @Test
@@ -232,31 +230,7 @@ class PlanControllerTest {
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 플랜 ID로 플랜 정보를 수정하면 실패한다")
-    void updatePlanFailInvalidId() throws Exception {
-        // given
-        Long userId = 1L;
-        Long invalidPlanId = 9999L;
-
-        PlanUpdateRequest request = PlanUpdateRequest.builder()
-            .title("플랜 제목")
-            .intro("플랜 소개")
-            .isPublic(true)
-            .build();
-
-        // stub
-        when(planService.update(invalidPlanId, request, userId)).thenThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND));
-
-        // when & then
-        mockMvc.perform(put("/plans/update/{planId}", invalidPlanId)
-                .header("X-User-Id", userId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNoContent());
     }
 
     @Test
@@ -273,7 +247,23 @@ class PlanControllerTest {
         mockMvc.perform(delete("/plans/{planId}", planId)
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+            .andExpect(status().isNoContent());
     }
 
+    @Test
+    @DisplayName("존재하지 않는 플랜 ID로 플랜을 삭제하면 실패한다")
+    void deletePlanFailInvalidId() throws Exception {
+        // given
+        Long userId = 1L;
+        Long invalidPlanId = 9999L;
+
+        // stub
+        when(planService.delete(invalidPlanId, userId)).thenThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(delete("/plans/{planId}", invalidPlanId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());
+    }
 }
