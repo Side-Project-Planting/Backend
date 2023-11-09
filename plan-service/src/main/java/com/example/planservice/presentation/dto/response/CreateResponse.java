@@ -13,4 +13,10 @@ public class CreateResponse {
     private CreateResponse(Long id) {
         this.id = id;
     }
+
+    public static CreateResponse of(Long id) {
+        return CreateResponse.builder()
+            .id(id)
+            .build();
+    }
 }

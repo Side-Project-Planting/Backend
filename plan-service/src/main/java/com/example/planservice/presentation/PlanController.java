@@ -39,9 +39,7 @@ public class PlanController {
         }
         Long createdId = planService.create(request, userId);
         return ResponseEntity.created(URI.create("/plans/"))
-            .body(CreateResponse.builder()
-                .id(createdId)
-                .build());
+            .body(CreateResponse.of(createdId));
     }
 
     @GetMapping("/{planId}")
