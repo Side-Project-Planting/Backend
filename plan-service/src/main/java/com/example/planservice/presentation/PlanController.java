@@ -1,6 +1,7 @@
 package com.example.planservice.presentation;
 
 import java.net.URI;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.planservice.application.PlanService;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
+import com.example.planservice.presentation.dto.response.CreateResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
+import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -28,14 +31,17 @@ public class PlanController {
     private final PlanService planService;
 
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody @Valid PlanCreateRequest request, @RequestAttribute Long userId) {
+    public ResponseEntity<CreateResponse> create(@RequestBody @Valid PlanCreateRequest request,
+                                                 @RequestAttribute Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .build();
         }
         Long createdId = planService.create(request, userId);
-        return ResponseEntity.created(URI.create("/plans/" + createdId))
-            .build();
+        return ResponseEntity.created(URI.create("/plans/"))
+            .body(CreateResponse.builder()
+                .id(createdId)
+                .build());
     }
 
     @GetMapping("/{planId}")
@@ -53,8 +59,9 @@ public class PlanController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .build();
         }
-        Long memberOfPlanId = planService.inviteMember(planId, userId);
-        return ResponseEntity.ok(memberOfPlanId);
+        planService.inviteMember(planId, userId);
+        return ResponseEntity.noContent()
+            .build();
     }
 
     @PutMapping("/exit/{planId}")
@@ -64,7 +71,7 @@ public class PlanController {
                 .build();
         }
         planService.exit(planId, userId);
-        return ResponseEntity.ok()
+        return ResponseEntity.noContent()
             .build();
     }
 
@@ -76,19 +83,19 @@ public class PlanController {
                 .build();
         }
         planService.kick(planId, memberId, userId);
-        return ResponseEntity.ok()
+        return ResponseEntity.noContent()
             .build();
     }
 
     @PutMapping("/update/{planId}")
-    public ResponseEntity<Void> update(@PathVariable Long planId, @RequestBody @Valid PlanUpdateRequest request,
+    public ResponseEntity<Long> update(@PathVariable Long planId, @RequestBody @Valid PlanUpdateRequest request,
                                        @RequestAttribute Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .build();
         }
         planService.update(planId, request, userId);
-        return ResponseEntity.ok()
+        return ResponseEntity.noContent()
             .build();
     }
 
@@ -99,7 +106,7 @@ public class PlanController {
                 .build();
         }
         planService.delete(planId, userId);
-        return ResponseEntity.ok()
+        return ResponseEntity.noContent()
             .build();
     }
 
