@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.planservice.application.LabelService;
 import com.example.planservice.application.dto.LabelDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.LabelCreateRequest;
+import com.example.planservice.presentation.dto.response.LabelFindResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -44,4 +46,11 @@ public class LabelController {
         labelService.delete(request);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<LabelFindResponse> find(@PathVariable(name = "id") Long labelId,
+                                                  @RequestAttribute Long userId) {
+        return ResponseEntity.ok().body(labelService.find(labelId, userId));
+    }
+
 }

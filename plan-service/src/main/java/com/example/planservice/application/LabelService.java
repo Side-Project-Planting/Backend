@@ -10,6 +10,7 @@ import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.LabelCreateRequest;
+import com.example.planservice.presentation.dto.response.LabelFindResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -42,5 +43,15 @@ public class LabelService {
 
         labelRepository.delete(label);
         plan.removeLabel(label);
+    }
+
+    public LabelFindResponse find(Long labelId, Long memberId) {
+        Label label = labelRepository.findById(labelId)
+            .orElseThrow(() -> new ApiException(ErrorCode.LABEL_NOT_FOUND));
+        Plan plan = label.getPlan();
+        if (!plan.isPublic()) {
+            planMembershipService.validateMemberIsInThePlan(memberId, plan);
+        }
+        return LabelFindResponse.from(label);
     }
 }
