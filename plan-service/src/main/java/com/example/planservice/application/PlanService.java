@@ -21,6 +21,7 @@ import com.example.planservice.domain.task.Task;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
+import com.example.planservice.presentation.dto.request.PlanKickRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.LabelOfPlanResponse;
 import com.example.planservice.presentation.dto.response.MemberOfPlanResponse;
@@ -117,12 +118,22 @@ public class PlanService {
     }
 
     @Transactional
-    public void kick(Long planId, Long kickingMemberId, Long userId) {
+    public void kick(Long planId, PlanKickRequest request, Long userId) {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         validateOwner(plan.getOwner()
             .getId(), userId);
-        memberOfPlanRepository.deleteByPlanIdAndMemberId(kickingMemberId, planId);
+        List<Long> kickingMemberIds = request.getKickingEmails()
+            .stream()
+            .map(email -> {
+                Member member = memberRepository.findByEmail(email)
+                    .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+                return member.getId();
+            })
+            .toList();
+
+        memberOfPlanRepository.deleteAllByPlanIdAndMemberIds(planId, kickingMemberIds);
+
     }
 
     @Transactional

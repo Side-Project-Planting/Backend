@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.planservice.application.PlanService;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
+import com.example.planservice.presentation.dto.request.PlanKickRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.CreateResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
@@ -73,14 +74,14 @@ public class PlanController {
             .build();
     }
 
-    @PutMapping("/kick/{planId}/{memberId}")
-    public ResponseEntity<Void> kick(@PathVariable Long planId, @PathVariable Long memberId,
+    @PutMapping("/kick/{planId}")
+    public ResponseEntity<Void> kick(@PathVariable Long planId, @RequestBody @Valid PlanKickRequest request,
                                      @RequestAttribute Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .build();
         }
-        planService.kick(planId, memberId, userId);
+        planService.kick(planId, request, userId);
         return ResponseEntity.noContent()
             .build();
     }
