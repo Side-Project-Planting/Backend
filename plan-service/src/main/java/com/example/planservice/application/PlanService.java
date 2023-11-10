@@ -123,17 +123,7 @@ public class PlanService {
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         validateOwner(plan.getOwner()
             .getId(), userId);
-        List<Long> kickingMemberIds = request.getKickingEmails()
-            .stream()
-            .map(email -> {
-                Member member = memberRepository.findByEmail(email)
-                    .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
-                return member.getId();
-            })
-            .toList();
-
-        memberOfPlanRepository.deleteAllByPlanIdAndMemberIds(planId, kickingMemberIds);
-
+        memberOfPlanRepository.deleteAllByPlanIdAndMemberIds(planId, request.getKickingMemberIds());
     }
 
     @Transactional
@@ -146,6 +136,7 @@ public class PlanService {
 
         Plan plan = memberOfPlan.getPlan();
         plan.softDelete();
+        planRepository.save(plan);
         memberOfPlanRepository.delete(memberOfPlan);
     }
 
@@ -170,8 +161,7 @@ public class PlanService {
     }
 
     private void validateOwner(Long ownerId, Long userId) {
-        if (!ownerId
-            .equals(userId)) {
+        if (!ownerId.equals(userId)) {
             throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
         }
     }

@@ -1,5 +1,6 @@
 package com.example.planservice.presentation.dto.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,9 +8,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PlanUpdateRequest {
+    @NotNull
     private String title;
     private String intro;
+
+    @NotNull
     private boolean isPublic;
+
+    @NotNull
     private Long ownerId;
 
     @Builder
