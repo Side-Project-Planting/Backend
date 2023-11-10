@@ -112,13 +112,13 @@ public class Task extends BaseEntity implements Linkable<Task> {
         Task originalNext = this.next;
         if (originalNext == null) {
             this.next = target;
-            target.prev = this;
+            target.setPrev(this);
             return;
         }
-        originalNext.prev = target;
-        target.next = originalNext;
+        originalNext.setPrev(target);
+        target.setNext(originalNext);
 
-        target.prev = this;
+        target.setPrev(this);
         this.next = target;
         tab.getTasks().add(target);
     }
@@ -130,13 +130,13 @@ public class Task extends BaseEntity implements Linkable<Task> {
         Task originalPrev = this.prev;
         if (originalPrev == null) {
             this.prev = target;
-            target.next = this;
+            target.setNext(this);
             return;
         }
-        originalPrev.next = target;
-        target.prev = originalPrev;
+        originalPrev.setNext(target);
+        target.setPrev(originalPrev);
 
-        target.next = this;
+        target.setNext(this);
         this.prev = target;
         tab.getTasks().add(target);
     }
