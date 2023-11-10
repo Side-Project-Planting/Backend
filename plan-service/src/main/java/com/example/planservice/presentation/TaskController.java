@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,6 +17,7 @@ import com.example.planservice.application.TaskService;
 import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
 import com.example.planservice.presentation.dto.request.TaskUpdateRequest;
+import com.example.planservice.presentation.dto.response.TaskFindResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -51,6 +53,12 @@ public class TaskController {
     public ResponseEntity<Void> delete(@PathVariable Long taskId, @RequestAttribute Long userId) {
         taskService.delete(userId, taskId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{taskId}")
+    public ResponseEntity<TaskFindResponse> find(@PathVariable Long taskId,
+                                                 @RequestAttribute Long userId) {
+        return ResponseEntity.ok(taskService.find(taskId, userId));
     }
 
 }
