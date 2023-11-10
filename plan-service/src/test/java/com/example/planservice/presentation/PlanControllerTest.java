@@ -71,7 +71,7 @@ class PlanControllerTest {
         invitedEmails.add("B@gmail.com");
 
         PlanCreateRequest request = PlanCreateRequest.builder()
-            .title("플랜 제목")
+            .title("플랜 `제목")
             .intro("플랜 소개")
             .isPublic(true)
             .invitedEmails(invitedEmails)
@@ -226,6 +226,7 @@ class PlanControllerTest {
             .title("플랜 제목")
             .intro("플랜 소개")
             .isPublic(true)
+            .ownerId(userId)
             .build();
 
         // stub
