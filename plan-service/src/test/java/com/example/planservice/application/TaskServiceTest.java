@@ -34,6 +34,8 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
+import com.example.planservice.presentation.dto.response.TaskFindResponse;
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest
 @Transactional
@@ -61,6 +63,9 @@ class TaskServiceTest {
 
     @Autowired
     LabelOfTaskRepository labelOfTaskRepository;
+
+    @Autowired
+    EntityManager em;
 
     @Test
     @DisplayName("태스크를 생성한다")
@@ -704,6 +709,63 @@ class TaskServiceTest {
             .hasMessageContaining(ErrorCode.TASK_NOT_FOUND.getMessage());
     }
 
+    @Test
+    @DisplayName("Public Plan에 속한 태스크를 찾는다")
+    void testFindTask() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Task task = createTaskWithTab(tab);
+        Task nextTask = createTaskWithTab(tab);
+        Member member = createMemberWithPlan(plan);
+        Label label1 = createLabelUsingTest(plan);
+        labelOfTaskRepository.save(LabelOfTask.builder().task(task).label(label1).build());
+        em.flush();
+        em.clear();
+
+        // when
+        TaskFindResponse response = taskService.find(task.getId(), member.getId());
+
+        // then
+        assertThat(response.getPlanId()).isEqualTo(plan.getId());
+        assertThat(response.getPrevId()).isNull();
+        assertThat(response.getNextId()).isEqualTo(nextTask.getId());
+        assertThat(response.getTabId()).isEqualTo(tab.getId());
+        assertThat(response.getLabels()).hasSize(1)
+            .contains(label1.getId());
+    }
+
+    @Test
+    @DisplayName("Private Plan에 속한 태스크는 가입된 사람만 볼 수 있다")
+    void testFindTaskFailNotRegistered() throws Exception {
+        // given
+        Plan plan = createPrivatePlan();
+        Tab tab = createTab(plan);
+        Task task = createTaskWithTab(tab);
+
+        Plan otherPlan = createPlan();
+        Member member = createMemberWithPlan(otherPlan);
+
+        // when & then
+        assertThatThrownBy(() -> taskService.find(task.getId(), member.getId()))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN.getMessage());
+    }
+
+    @Test
+    @DisplayName("존재하는 태스크만 조회가 가능하다")
+    void testFindTaskFailNotFound() throws Exception {
+        // given
+        Long notRegisteredTaskId = 1241123L;
+        Plan plan = createPlan();
+        Member member = createMemberWithPlan(plan);
+
+        // when & then
+        assertThatThrownBy(() -> taskService.find(notRegisteredTaskId, member.getId()))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TASK_NOT_FOUND.getMessage());
+    }
+
     private Task createTaskWithTab(Tab tab) {
         Task task = Task.builder()
             .tab(tab)
@@ -716,7 +778,17 @@ class TaskServiceTest {
     }
 
     private Plan createPlan() {
-        Plan plan = Plan.builder().build();
+        Plan plan = Plan.builder()
+            .isPublic(true)
+            .build();
+        planRepository.save(plan);
+        return plan;
+    }
+
+    private Plan createPrivatePlan() {
+        Plan plan = Plan.builder()
+            .isPublic(false)
+            .build();
         planRepository.save(plan);
         return plan;
     }
