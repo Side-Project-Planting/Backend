@@ -2,6 +2,7 @@ package com.example.auth.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -24,7 +25,10 @@ import com.example.auth.application.dto.response.AccessTokenResponse;
 import com.example.auth.application.dto.response.GetAuthorizedUriResponse;
 import com.example.auth.application.dto.response.OAuthLoginResponse;
 import com.example.auth.application.dto.response.OAuthUserResponse;
+import com.example.auth.application.dto.response.RegisterResponse;
 import com.example.auth.client.MemberServiceClient;
+import com.example.auth.client.dto.MemberRegisterRequest;
+import com.example.auth.client.dto.MemberRegisterResponse;
 import com.example.auth.domain.AuthInfoRepository;
 import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
@@ -245,47 +249,67 @@ class AuthServiceTest {
             .hasMessageContaining(ErrorCode.USER_INFO_FETCH_FAIL.getMessage());
     }
 
-    //    TODO 주석
-//    @Test
-//    @DisplayName("OAuthInfo를 등록한다")
-//    void registerOAuthInfo() {
-//        // given
-//        String authToken = "인가_토큰";
-//        final OAuthInfo info = OAuthInfo.builder().authorizedToken(authToken).build();
-//        authInfoRepository.save(info);
-//
-//        final RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", info.getId(), authToken);
-//        final long registeredId = 2L;
-//
-//        MemberRegisterResponse responseAboutMemberService = MemberRegisterResponse.builder()
-//            .id(registeredId)
-//            .build();
-//
-//        // stub
-//        when(memberServiceClient.register(any(MemberRegisterRequest.class)))
-//            .thenReturn(responseAboutMemberService);
-//
-//        // when
-//        final RegisterResponse response = authService.register(request);
-//
-//        //when & then
-//        assertThat(response.getId()).isNotNull();
-//        assertThat(info.isRegistered()).isTrue();
-//    }
-//
-//    @Test
-//    @DisplayName("회원가입 시 userId를 사용해 OAuthInfo를 조회할 수 없으면 예외를 반환한다")
-//    void registerFailNotFoundUser() {
-//        // given
-//        Long notFoundedId = 12451L;
-//        final RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", notFoundedId, "인가_코드");
-//
-//        // when & then
-//        assertThatThrownBy(() -> authService.register(request))
-//            .isInstanceOf(ApiException.class)
-//            .hasMessageContaining(ErrorCode.AUTH_INFO_NOT_FOUND.getMessage());
-//    }
-//
+    @Test
+    @DisplayName("Member를 등록한다")
+    void testMemberRegister() {
+        // given
+        String authToken = "인가_토큰";
+        OAuthInfo info = OAuthInfo.builder().authorizedToken(authToken).build();
+        authInfoRepository.save(info);
+
+        RegisterRequest request = createRegisterRequest("https://profile", "김태태", info.getId(), authToken);
+
+        long registeredId = 2L;
+        MemberRegisterResponse memberServiceResponse = MemberRegisterResponse.builder()
+            .id(registeredId)
+            .build();
+
+        // stub
+        when(memberServiceClient.register(any(MemberRegisterRequest.class)))
+            .thenReturn(memberServiceResponse);
+
+        // when
+        RegisterResponse response = authService.register(request);
+
+        //then
+        assertThat(response.getId()).isNotNull();
+        assertThat(response.getAccessToken()).isNotBlank();
+        assertThat(response.getRefreshToken()).isNotBlank();
+
+        Member member = memberRepository.findById(response.getId()).get();
+        assertThat(member.getRefreshToken()).isEqualTo(response.getRefreshToken());
+    }
+
+    @Test
+    @DisplayName("회원가입 시 userId를 사용해 OAuthInfo를 조회할 수 없으면 예외를 반환한다")
+    void registerFailNotFoundUser() {
+        // given
+        Long notRegisteredId = 12451L;
+        RegisterRequest request = createRegisterRequest("https://profileUrl",
+            "김태태", notRegisteredId, "인가_코드");
+
+        // when & then
+        assertThatThrownBy(() -> authService.register(request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.AUTH_INFO_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("회원가입 시 발급해줬던 AuthorizedToken을 입력해야 한다")
+    void registerFailInvalidAuthorizedToken() {
+        // given
+        OAuthInfo info = OAuthInfo.builder().authorizedToken("인가_토큰").build();
+        authInfoRepository.save(info);
+
+        RegisterRequest request = createRegisterRequest("https://profileUrl",
+            "김태태", info.getId(), "잘못된_인가_코드");
+
+        // when & then
+        assertThatThrownBy(() -> authService.register(request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TOKEN_UNAUTHORIZED.getMessage());
+    }
+
     @Test
     @DisplayName("refresh token으로 access token을 재발급한다")
     void refreshToken() {

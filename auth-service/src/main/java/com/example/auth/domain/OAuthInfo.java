@@ -32,6 +32,8 @@ public class OAuthInfo {
     @Enumerated(EnumType.STRING)
     private OAuthType type;
 
+    private String email;
+
     @Column
     private Long memberId;
 
@@ -40,9 +42,11 @@ public class OAuthInfo {
     private String authorizedToken;
 
     @Builder
-    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, Long memberId, String authorizedToken) {
+    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, String email, Long memberId,
+                      String authorizedToken) {
         this.idUsingResourceServer = idUsingResourceServer;
         this.type = oAuthType;
+        this.email = email;
         this.memberId = memberId;
         this.authorizedToken = authorizedToken;
     }

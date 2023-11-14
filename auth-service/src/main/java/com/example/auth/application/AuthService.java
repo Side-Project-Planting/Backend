@@ -11,6 +11,8 @@ import com.example.auth.application.dto.response.OAuthLoginResponse;
 import com.example.auth.application.dto.response.OAuthUserResponse;
 import com.example.auth.application.dto.response.RegisterResponse;
 import com.example.auth.client.MemberServiceClient;
+import com.example.auth.client.dto.MemberRegisterRequest;
+import com.example.auth.client.dto.MemberRegisterResponse;
 import com.example.auth.domain.AuthInfoRepository;
 import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
@@ -74,29 +76,28 @@ public class AuthService {
     }
 
     /**
-     * 서비스를 이용하기 위해 필요한 초기값을 입력받는다.
-     * OAuth 방식으로 인증이 끝난 사용자는 profileUrl, name, email을 추가로 입력한다.
-     * Member를 관리하는 MSA 서버에게 register 요청을 보낸다.
-     * 요청이 성공하면 OAuthInfo의 registered 필드를 true로 변경하고 응답을 반환한다
+     * 서비스를 이용하기 위해 필요한 초기값을 입력한 뒤 MemberService로 등록 요청을 보내는 로직.
+     * 기존 OAuthInfo로 등록된 정보에 profileUrl, name을 추가로 입력한다.
+     * 요청에 성공하면 Auth Service의 Member DB에 값을 추가한다
      */
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
-//        OAuthInfo info = authInfoRepository.findById(request.getAuthId())
-//            .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
-//        if (!info.validateAuthorizedToken(request.getAuthorizedToken())) {
-//            throw new ApiException(ErrorCode.TOKEN_UNAUTHORIZED);
-//        }
-//
-//        MemberRegisterRequest requestUsingMemberService =
-//            MemberRegisterRequest.create(request.getProfileUrl(), request.getName(), info.getEmail());
-//        MemberRegisterResponse response = memberServiceClient.register(requestUsingMemberService);
-//        info.init(response.getId());
-//
-//        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(response.getId(), LocalDateTime.now());
-//
-//        info.changeRefreshToken(tokenInfo.getRefreshToken());
-//        return RegisterResponse.create(tokenInfo, info.getMemberId());
-        return null;
+        OAuthInfo info = authInfoRepository.findById(request.getAuthId())
+            .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
+        if (!info.validateAuthorizedToken(request.getAuthorizedToken())) {
+            throw new ApiException(ErrorCode.TOKEN_UNAUTHORIZED);
+        }
+
+        MemberRegisterRequest memberServiceRequest =
+            MemberRegisterRequest.create(request.getProfileUrl(), request.getName(), info.getEmail());
+        MemberRegisterResponse responseAboutMemberRegister = memberServiceClient.register(memberServiceRequest);
+        Long memberId = responseAboutMemberRegister.getId();
+
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
+        Member member = Member.builder().id(memberId).refreshToken(tokenInfo.getRefreshToken()).build();
+        memberRepository.save(member);
+        info.init(memberId);
+        return RegisterResponse.create(tokenInfo, info.getMemberId());
     }
 
     /**

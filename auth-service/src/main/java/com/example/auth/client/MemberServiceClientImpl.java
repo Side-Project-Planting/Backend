@@ -40,7 +40,8 @@ public class MemberServiceClientImpl implements MemberServiceClient {
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
                     log.error("[Auth Service] 에러: 회원가입 요청 시 {}번 응답이 왔습니다", clientResponse.statusCode().value());
                     return clientResponse.bodyToMono(ErrorResponse.class)
-                        .flatMap(errorResponse -> Mono.error(new MicroserviceException(clientResponse.statusCode(), errorResponse.getMessage())));
+                        .flatMap(errorResponse -> Mono.error(
+                            new MicroserviceException(clientResponse.statusCode(), errorResponse.getMessage())));
                 })
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse -> {
                     log.error("[Auth Service] 하위 서버 에러: 회원가입 요청 시 {}번 응답이 왔습니다", clientResponse.statusCode().value());
