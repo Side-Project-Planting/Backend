@@ -326,8 +326,16 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.accessToken").value(createdAccessToken))
-            .andExpect(jsonPath("$.refreshToken").value(createdRefreshToken))
-            .andExpect(jsonPath("$.grantType").value("Bearer"));
+            .andExpect(jsonPath("$.refreshToken").doesNotExist())
+            .andExpect(jsonPath("$.grantType").value("Bearer"))
+            .andExpect(cookie().exists("refresh"))
+            .andExpect(cookie().httpOnly("refresh", true))
+            .andDo(result -> {
+                MockHttpServletResponse resp = result.getResponse();
+                String setCookieHeader = resp.getHeader("Set-Cookie");
+                Assertions.assertThat(setCookieHeader).contains("SameSite=Strict");
+            });
+        ;
 
 
     }
