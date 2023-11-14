@@ -34,6 +34,9 @@ public class Member {
     }
 
     public boolean isRefreshTokenMatching(@NotNull String input) {
+        if (input == null) {
+            return false;
+        }
         return Objects.equals(this.refreshToken, input);
     }
 }

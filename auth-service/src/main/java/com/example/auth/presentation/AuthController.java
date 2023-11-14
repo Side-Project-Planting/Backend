@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -68,11 +67,9 @@ public class AuthController {
     }
 
     @PostMapping("/auth/refresh-token")
-    public ResponseEntity<TokenInfo> refreshToken(@CookieValue(name = "refresh") Cookie refreshCookie,
-                                                  @RequestHeader("X-User-Id") Long userId) {
-        // 쿠키가 적절한지 확인하고
+    public ResponseEntity<TokenInfo> refreshToken(@CookieValue(name = "refresh") Cookie refreshCookie) {
         String refreshToken = refreshCookie.getValue();
-        return ResponseEntity.ok().body(authService.refreshToken(refreshToken, userId));
+        return ResponseEntity.ok().body(authService.refreshToken(refreshToken));
     }
 
 

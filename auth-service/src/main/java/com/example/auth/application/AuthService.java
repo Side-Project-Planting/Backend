@@ -104,23 +104,18 @@ public class AuthService {
      * 만약 리프레쉬 토큰이 잘못되었거나, 만료되었다면 예외를 반환한다.
      */
     @Transactional
-    public TokenInfo refreshToken(String refreshToken, Long userId) {
-//        OAuthInfo info = authInfoRepository.findById(userId)
-//            .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
-//
-//        if (!info.isRefreshTokenMatching(refreshToken)) {
-//            throw new ApiException(ErrorCode.REFRESH_TOKEN_INVALID);
-//        }
-//
-//        if (jwtTokenProvider.isTokenExpired(info.getRefreshToken())) {
-//            throw new ApiException(ErrorCode.TOKEN_TIMEOVER);
-//        }
-//
-//        TokenInfo generatedTokenInfo = jwtTokenProvider.generateTokenInfo(info.getId(), LocalDateTime.now());
-//
-//        info.changeRefreshToken(generatedTokenInfo.getRefreshToken());
-//        return generatedTokenInfo;
-        return null;
+    public TokenInfo refreshToken(String refreshToken) {
+        TokenInfoResponse refreshTokenInfo = jwtTokenProvider.parse(refreshToken);
+        Long memberId = refreshTokenInfo.getId();
+        Member member = memberRepository.findById(memberId)
+            .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
+        if (!member.isRefreshTokenMatching(refreshToken)) {
+            throw new ApiException(ErrorCode.TOKEN_ID_INVALID);
+        }
+        TokenInfo generatedTokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
+        member.changeRefreshToken(generatedTokenInfo.getRefreshToken());
+
+        return generatedTokenInfo;
     }
 
     /**

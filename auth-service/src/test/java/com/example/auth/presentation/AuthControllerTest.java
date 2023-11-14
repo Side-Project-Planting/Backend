@@ -1,6 +1,7 @@
 package com.example.auth.presentation;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -311,7 +312,7 @@ class AuthControllerTest {
         String createdRefreshToken = makeToken();
 
         // stub
-        when(authService.refreshToken(anyString(), anyLong()))
+        when(authService.refreshToken(anyString()))
             .thenReturn(TokenInfo.builder()
                 .accessToken(createdAccessToken)
                 .refreshToken(createdRefreshToken)
@@ -338,7 +339,7 @@ class AuthControllerTest {
         String token = makeToken();
 
         // stub
-        when(authService.refreshToken(anyString(), anyLong()))
+        when(authService.refreshToken(anyString()))
             .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
 
         // when & then
@@ -355,7 +356,7 @@ class AuthControllerTest {
         String token = makeToken();
 
         // stub
-        when(authService.refreshToken(anyString(), anyLong()))
+        when(authService.refreshToken(anyString()))
             .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
 
         // when & then
