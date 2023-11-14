@@ -2,18 +2,27 @@ package com.example.auth.application.dto.response;
 
 import com.example.auth.domain.OAuthInfo;
 import com.example.auth.jwt.TokenInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 public class OAuthLoginResponse {
     private String accessToken;
+
+    @JsonIgnore
     private String refreshToken;
+
     private String grantType;
+
     private String profileUrl;
+
     private String email;
+
     private Long authId;
+
     private String authorizedToken;
+
     private boolean registered;
 
     @Builder

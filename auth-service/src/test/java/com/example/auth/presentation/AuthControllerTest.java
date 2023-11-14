@@ -5,17 +5,18 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.UUID;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.auth.application.AuthService;
@@ -77,14 +78,14 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("로그인에 성공하면 200번 상태와 OAuthLoginResponse를 반환한다")
+    @DisplayName("회원가입된 사용자가 로그인에 성공하면 200번 상태와 OAuthLoginResponse와 refresh 쿠키를 반환한다")
     void login() throws Exception {
         // given
         String providerName = "google";
         OAuthLoginRequest request = new OAuthLoginRequest("authcode");
         OAuthLoginResponse response = OAuthLoginResponse.builder()
             .accessToken("access")
-            .refreshToken("refresh")
+            .refreshToken("refresh_value")
             .grantType("Bearer")
             .profileUrl("https://이미지")
             .email("email@google.com")
@@ -100,12 +101,50 @@ class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.refreshToken").doesNotExist())
             .andExpect(jsonPath("$.accessToken").exists())
-            .andExpect(jsonPath("$.refreshToken").exists())
             .andExpect(jsonPath("$.grantType").exists())
             .andExpect(jsonPath("$.profileUrl").exists())
             .andExpect(jsonPath("$.email").exists())
-            .andExpect(jsonPath("$.registered").exists());
+            .andExpect(jsonPath("$.registered").exists())
+            .andExpect(cookie().exists("refresh"))
+            .andExpect(cookie().httpOnly("refresh", true))
+            .andDo(result -> {
+                MockHttpServletResponse resp = result.getResponse();
+                String setCookieHeader = resp.getHeader("Set-Cookie");
+                Assertions.assertThat(setCookieHeader).contains("SameSite=Strict");
+            });
+    }
+
+    @Test
+    @DisplayName("최초 로그인에 성공하면 200번 상태와 OAuthLoginResponse와 refresh 쿠키를 반환한다")
+    void testLoginOnUserIsFirstTime() throws Exception {
+        // given
+        String providerName = "google";
+        OAuthLoginRequest request = new OAuthLoginRequest("authcode");
+        OAuthLoginResponse response = OAuthLoginResponse.builder()
+            .profileUrl("https://이미지")
+            .email("email@google.com")
+            .authId(1L)
+            .registered(false)
+            .authorizedToken("인증토큰")
+            .build();
+
+        // stub
+        when(authService.login(providerName, request.getAuthCode()))
+            .thenReturn(response);
+
+        // when & then
+        mockMvc.perform(post(String.format("/oauth/%s/login", providerName))
+                .content(objectMapper.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.profileUrl").value(response.getProfileUrl()))
+            .andExpect(jsonPath("$.email").value(response.getEmail()))
+            .andExpect(jsonPath("$.authId").value(response.getAuthId()))
+            .andExpect(jsonPath("$.registered").value(response.isRegistered()))
+            .andExpect(jsonPath("$.authorizedToken").value(response.getAuthorizedToken()))
+            .andExpect(cookie().doesNotExist("refresh"));
     }
 
     @Test

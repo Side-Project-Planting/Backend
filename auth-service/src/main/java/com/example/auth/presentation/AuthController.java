@@ -21,6 +21,7 @@ import com.example.auth.jwt.TokenInfoResponse;
 import com.example.auth.presentation.dto.request.OAuthLoginRequest;
 import com.example.auth.presentation.dto.request.RegisterRequest;
 import com.example.auth.presentation.dto.request.TokenRefreshRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -44,8 +45,11 @@ public class AuthController {
 
     @PostMapping("/oauth/{provider}/login")
     public ResponseEntity<OAuthLoginResponse> oauthLogin(@PathVariable String provider,
-                                                         @RequestBody OAuthLoginRequest request) {
-        return ResponseEntity.ok(authService.login(provider, request.getAuthCode()));
+                                                         @RequestBody OAuthLoginRequest request,
+                                                         HttpServletResponse httpServletResponse) {
+        OAuthLoginResponse response = authService.login(provider, request.getAuthCode());
+        addCookieUsingRefreshToken(httpServletResponse, response.getRefreshToken());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/auth/register")
@@ -64,5 +68,15 @@ public class AuthController {
     public ResponseEntity<TokenInfo> refreshToken(@RequestBody TokenRefreshRequest request,
                                                   @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok().body(authService.refreshToken(request, userId));
+    }
+
+
+    private void addCookieUsingRefreshToken(HttpServletResponse httpServletResponse, String refreshToken) {
+        if (refreshToken == null) {
+            return;
+        }
+        String cookieValue =
+            String.format("refresh=%s; Max-Age=%s; Path=/; HttpOnly; SameSite=Strict", refreshToken, 60 * 60 * 24 * 30);
+        httpServletResponse.setHeader("Set-Cookie", cookieValue);
     }
 }
