@@ -8,6 +8,8 @@ import lombok.Getter;
 
 @Getter
 public class OAuthLoginResponse {
+    private boolean registered;
+
     private String accessToken;
 
     @JsonIgnore
@@ -23,8 +25,6 @@ public class OAuthLoginResponse {
 
     private String authorizedToken;
 
-    private boolean registered;
-
     @Builder
     @SuppressWarnings("java:S107")
     private OAuthLoginResponse(String accessToken, String refreshToken, String grantType, String profileUrl,
@@ -39,24 +39,26 @@ public class OAuthLoginResponse {
         this.authorizedToken = authorizedToken;
     }
 
-    public static OAuthLoginResponse create(OAuthInfo oAuthInfo, TokenInfo tokenInfo, String profileUrl) {
+    // TODO 프로필주소, 이메일이 필요한지? 일단은 넣어서 보내기 (없어도 되면 ProviderResponse tkrwp rksmd)
+    public static OAuthLoginResponse create(OAuthInfo oAuthInfo, TokenInfo tokenInfo,
+                                            OAuthUserResponse providerResponse) {
         return OAuthLoginResponse.builder()
             .accessToken(tokenInfo.getAccessToken())
-            .refreshToken(oAuthInfo.getRefreshToken())
+            .refreshToken(tokenInfo.getRefreshToken())
             .grantType(tokenInfo.getGrantType())
-            .profileUrl(profileUrl)
-            .email(oAuthInfo.getEmail())
-            .registered(oAuthInfo.isRegistered())
+            .profileUrl(providerResponse.getProfileUrl())
+            .email(providerResponse.getEmail())
+            .registered(oAuthInfo.getMemberId() != null)
             .build();
     }
 
-    public static OAuthLoginResponse createWithoutToken(OAuthInfo oAuthInfo, String profileUrl) {
+    public static OAuthLoginResponse createWithoutToken(OAuthInfo oAuthInfo, OAuthUserResponse providerResponse) {
         return OAuthLoginResponse.builder()
-            .profileUrl(profileUrl)
-            .email(oAuthInfo.getEmail())
             .authId(oAuthInfo.getId())
-            .registered(oAuthInfo.isRegistered())
             .authorizedToken(oAuthInfo.getAuthorizedToken())
+            .profileUrl(providerResponse.getProfileUrl())
+            .email(providerResponse.getEmail())
+            .registered(oAuthInfo.getMemberId() != null)
             .build();
     }
 }

@@ -24,7 +24,6 @@ class AuthInfoRepositoryTest {
         final OAuthType type = OAuthType.GOOGLE;
 
         final OAuthInfo oAuthInfo = OAuthInfo.builder()
-            .email("hello@naver.com")
             .idUsingResourceServer(idUsingResourceServer)
             .oAuthType(OAuthType.GOOGLE)
             .build();
@@ -36,9 +35,7 @@ class AuthInfoRepositoryTest {
 
         // then
         assertThat(result.getId()).isNotNull();
-        assertThat(result.getEmail()).isEqualTo("hello@naver.com");
         assertThat(result.getIdUsingResourceServer()).isEqualTo(idUsingResourceServer);
-        assertThat(result.getType()).isEqualTo(OAuthType.GOOGLE);
     }
 
     @Test

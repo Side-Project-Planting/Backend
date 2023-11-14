@@ -15,7 +15,8 @@ public enum ErrorCode {
     REFRESH_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "사용자의 refresh token이 일치하지 않습니다"),
     SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에러입니다. 관리자에게 문의하세요"),
     EXTERNAL_AUTH_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "현재 외부 Auth 서버가 정상 동작하지 않습니다"),
-    TOKEN_UNAUTHORIZED(HttpStatus.FORBIDDEN, "Authorized Token이 일치하지 않습니다");
+    TOKEN_UNAUTHORIZED(HttpStatus.FORBIDDEN, "Authorized Token이 일치하지 않습니다"),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당되는 멤버를 찾을 수 없습니다");
 
     private final HttpStatus status;
     private String message;
