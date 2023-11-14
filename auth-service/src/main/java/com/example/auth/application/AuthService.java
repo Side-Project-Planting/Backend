@@ -93,7 +93,7 @@ public class AuthService {
 
         TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
         Member member = Member.builder().id(memberId).refreshToken(tokenInfo.getRefreshToken()).build();
-        memberRepository.save(member);
+        memberRepository.saveAndFlush(member);
         info.init(member);
         return RegisterResponse.create(tokenInfo, memberId);
     }
