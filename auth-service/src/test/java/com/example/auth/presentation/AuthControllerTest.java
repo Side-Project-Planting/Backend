@@ -1,7 +1,6 @@
 package com.example.auth.presentation;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,8 +28,8 @@ import com.example.auth.jwt.TokenInfo;
 import com.example.auth.jwt.TokenInfoResponse;
 import com.example.auth.presentation.dto.request.OAuthLoginRequest;
 import com.example.auth.presentation.dto.request.RegisterRequest;
-import com.example.auth.presentation.dto.request.TokenRefreshRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 
 @WebMvcTest
 @DisplayName("AuthController 슬라이싱 테스트")
@@ -308,12 +307,11 @@ class AuthControllerTest {
     void refreshToken() throws Exception {
         // given
         String token = makeToken();
-        TokenRefreshRequest request = new TokenRefreshRequest(token);
         String createdAccessToken = makeToken();
         String createdRefreshToken = makeToken();
 
         // stub
-        when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
+        when(authService.refreshToken(anyString(), anyLong()))
             .thenReturn(TokenInfo.builder()
                 .accessToken(createdAccessToken)
                 .refreshToken(createdRefreshToken)
@@ -323,7 +321,7 @@ class AuthControllerTest {
         // when & then
         mockMvc.perform(post("/auth/refresh-token")
                 .header("X-User-Id", 1L)
-                .content(objectMapper.writeValueAsString(request))
+                .cookie(new Cookie("refresh", token))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.accessToken").value(createdAccessToken))
@@ -338,15 +336,14 @@ class AuthControllerTest {
     void cantRefreshTokenBecauseOfExpired() throws Exception {
         // given
         String token = makeToken();
-        TokenRefreshRequest request = new TokenRefreshRequest(token);
 
         // stub
-        when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
+        when(authService.refreshToken(anyString(), anyLong()))
             .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
 
         // when & then
         mockMvc.perform(post("/auth/refresh-token")
-                .content(objectMapper.writeValueAsString(request))
+                .cookie(new Cookie("refresh", token))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
@@ -356,15 +353,23 @@ class AuthControllerTest {
     void cantRefreshTokenBecauseOfInvalid() throws Exception {
         // given
         String token = makeToken();
-        TokenRefreshRequest request = new TokenRefreshRequest(token);
 
         // stub
-        when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
+        when(authService.refreshToken(anyString(), anyLong()))
             .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
 
         // when & then
         mockMvc.perform(post("/auth/refresh-token")
-                .content(objectMapper.writeValueAsString(request))
+                .cookie(new Cookie("refresh", token))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("refresh 요청 시 refresh 쿠키는 필수다")
+    void cantRefreshTokenBecauseTokenIsNull() throws Exception {
+        // when & then
+        mockMvc.perform(post("/auth/refresh-token")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }

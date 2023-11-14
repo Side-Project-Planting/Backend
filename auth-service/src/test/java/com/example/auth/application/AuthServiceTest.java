@@ -44,7 +44,6 @@ import com.example.auth.oauth.OAuthProviderResolver;
 import com.example.auth.oauth.google.GoogleOAuthClient;
 import com.example.auth.oauth.google.GoogleOAuthProvider;
 import com.example.auth.presentation.dto.request.RegisterRequest;
-import com.example.auth.presentation.dto.request.TokenRefreshRequest;
 
 @SpringBootTest
 @Transactional
@@ -291,11 +290,10 @@ class AuthServiceTest {
         final String refreshToken = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now())
             .getRefreshToken();
         member.changeRefreshToken(refreshToken);
-        final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
         final Long memberId = member.getId();
 
         // when
-        final TokenInfo response = authService.refreshToken(request, memberId);
+        final TokenInfo response = authService.refreshToken(refreshToken, memberId);
 
         // then
         assertThat(response.getAccessToken()).isNotBlank();
@@ -312,10 +310,9 @@ class AuthServiceTest {
         final Long memberId = 1L;
         final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now())
             .getRefreshToken();
-        final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
 
         // when & then
-        assertThatThrownBy(() -> authService.refreshToken(request, memberId))
+        assertThatThrownBy(() -> authService.refreshToken(refreshToken, memberId))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.AUTH_INFO_NOT_FOUND.getMessage());
     }
@@ -332,10 +329,9 @@ class AuthServiceTest {
         final Long memberId = member.getId();
         final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now())
             .getRefreshToken();
-        final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
 
         // when & then
-        assertThatThrownBy(() -> authService.refreshToken(request, memberId))
+        assertThatThrownBy(() -> authService.refreshToken(refreshToken, memberId))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.REFRESH_TOKEN_INVALID.getMessage());
     }
@@ -352,10 +348,9 @@ class AuthServiceTest {
                 LocalDateTime.of(1900, 1, 1, 1, 1))
             .getRefreshToken();
         member.changeRefreshToken(refreshToken);
-        final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
 
         // when & then
-        assertThatThrownBy(() -> authService.refreshToken(request, memberId))
+        assertThatThrownBy(() -> authService.refreshToken(refreshToken, memberId))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.TOKEN_TIMEOVER.getMessage());
     }

@@ -25,7 +25,6 @@ import com.example.auth.jwt.TokenInfoResponse;
 import com.example.auth.oauth.OAuthProvider;
 import com.example.auth.oauth.OAuthProviderResolver;
 import com.example.auth.presentation.dto.request.RegisterRequest;
-import com.example.auth.presentation.dto.request.TokenRefreshRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -101,11 +100,11 @@ public class AuthService {
      * 만약 리프레쉬 토큰이 잘못되었거나, 만료되었다면 예외를 반환한다.
      */
     @Transactional
-    public TokenInfo refreshToken(TokenRefreshRequest request, Long userId) {
+    public TokenInfo refreshToken(String refreshToken, Long userId) {
         OAuthInfo info = authInfoRepository.findById(userId)
             .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
 
-        if (!info.isRefreshTokenMatching(request.getRefreshToken())) {
+        if (!info.isRefreshTokenMatching(refreshToken)) {
             throw new ApiException(ErrorCode.REFRESH_TOKEN_INVALID);
         }
 

@@ -3,6 +3,7 @@ package com.example.auth.presentation;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +21,7 @@ import com.example.auth.jwt.TokenInfo;
 import com.example.auth.jwt.TokenInfoResponse;
 import com.example.auth.presentation.dto.request.OAuthLoginRequest;
 import com.example.auth.presentation.dto.request.RegisterRequest;
-import com.example.auth.presentation.dto.request.TokenRefreshRequest;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -67,9 +68,11 @@ public class AuthController {
     }
 
     @PostMapping("/auth/refresh-token")
-    public ResponseEntity<TokenInfo> refreshToken(@RequestBody TokenRefreshRequest request,
+    public ResponseEntity<TokenInfo> refreshToken(@CookieValue(name = "refresh") Cookie refreshCookie,
                                                   @RequestHeader("X-User-Id") Long userId) {
-        return ResponseEntity.ok().body(authService.refreshToken(request, userId));
+        // 쿠키가 적절한지 확인하고
+        String refreshToken = refreshCookie.getValue();
+        return ResponseEntity.ok().body(authService.refreshToken(refreshToken, userId));
     }
 
 
