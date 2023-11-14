@@ -8,7 +8,6 @@ import org.hibernate.annotations.Where;
 import org.jetbrains.annotations.NotNull;
 
 import com.example.planservice.domain.BaseEntity;
-import com.example.planservice.domain.Linkable;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.exception.ApiException;
@@ -34,7 +33,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Where(clause = "is_deleted = false")
 @Getter
-public class Task extends BaseEntity implements Linkable<Task> {
+public class Task extends BaseEntity {
     public static final String FIRST_DUMMY_NAME = "first";
     public static final String LAST_DUMMY_NAME = "last";
 
@@ -120,7 +119,8 @@ public class Task extends BaseEntity implements Linkable<Task> {
 
         target.prev = this;
         this.next = target;
-        tab.getTasks().add(target);
+        tab.getTasks()
+            .add(target);
     }
 
     public void putInFront(@NotNull Task target) {
@@ -138,7 +138,8 @@ public class Task extends BaseEntity implements Linkable<Task> {
 
         target.next = this;
         this.prev = target;
-        tab.getTasks().add(target);
+        tab.getTasks()
+            .add(target);
     }
 
     public void disconnect() {
@@ -151,16 +152,19 @@ public class Task extends BaseEntity implements Linkable<Task> {
 
         this.prev = null;
         this.next = null;
-        tab.getTasks().remove(this);
+        tab.getTasks()
+            .remove(this);
     }
 
     public void validateCanModify() {
         Task firstDummyTask = tab.getFirstDummyTask();
-        if (this.getId().equals(firstDummyTask.getId())) {
+        if (this.getId()
+            .equals(firstDummyTask.getId())) {
             throw new ApiException(ErrorCode.TASK_NOT_FOUND);
         }
         Task lastDummyTask = tab.getLastDummyTask();
-        if (this.getId().equals(lastDummyTask.getId())) {
+        if (this.getId()
+            .equals(lastDummyTask.getId())) {
             throw new ApiException(ErrorCode.TASK_NOT_FOUND);
         }
     }

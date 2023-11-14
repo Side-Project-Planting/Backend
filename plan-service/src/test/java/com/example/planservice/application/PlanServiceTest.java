@@ -30,7 +30,9 @@ import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
+import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.PlanResponse;
+import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 
 @SpringBootTest
 @Transactional
@@ -59,20 +61,21 @@ class PlanServiceTest {
     @Autowired
     TaskRepository taskRepository;
     private Long userId;
+    private Member tester;
 
     @BeforeEach
     void testSetUp() {
-        Member member = Member.builder()
+        tester = Member.builder()
             .name("tester")
             .email("testEach@example.com")
             .build();
-        Member savedMember = memberRepository.save(member);
+        Member savedMember = memberRepository.save(tester);
         userId = savedMember.getId();
 
         Mockito.doNothing()
             .when(emailService)
-            .sendEmail(ArgumentMatchers.anyString(),
-                ArgumentMatchers.anyString());
+            .sendInviteEmail(ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(), ArgumentMatchers.anyLong());
     }
 
     @Test
@@ -93,11 +96,38 @@ class PlanServiceTest {
 
         // then
         assertThat(savedId).isNotNull();
-
         Plan savedPlan = planRepository.findById(savedId)
             .get();
+
         assertThat(savedPlan.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedPlan.getIntro()).isEqualTo(request.getIntro());
+    }
+
+    @Test
+    @DisplayName("플랜 생성시 기본 탭이 생성 되었다")
+    void createPlanWithDefaultTab() {
+        // given
+        List<String> invitedEmails = List.of("test@example.com");
+
+        PlanCreateRequest request = PlanCreateRequest.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .invitedEmails(invitedEmails)
+            .build();
+
+        // when
+        Long savedId = planService.create(request, userId);
+
+        // then
+        List<Tab> tabs = tabRepository.findAllByPlanId(savedId);
+        assertThat(tabs.size()).isEqualTo(3);
+        assertThat(tabs.get(0)
+            .getName()).isEqualTo("To Do");
+        assertThat(tabs.get(1)
+            .getName()).isEqualTo("In Progress");
+        assertThat(tabs.get(2)
+            .getName()).isEqualTo("Done");
     }
 
     @Test
@@ -141,6 +171,7 @@ class PlanServiceTest {
             .title("testPlan")
             .intro("hi")
             .build();
+
 
         Tab tab2 = Tab.builder()
             .plan(plan)
@@ -188,6 +219,7 @@ class PlanServiceTest {
             .member(member1)
             .plan(plan)
             .build();
+
         MemberOfPlan memberOfPlan2 = MemberOfPlan.builder()
             .member(member2)
             .plan(plan)
@@ -201,13 +233,6 @@ class PlanServiceTest {
             .add(memberOfPlan1);
         plan.getMembers()
             .add(memberOfPlan2);
-
-        plan.getTasks()
-            .add(task1);
-        plan.getTasks()
-            .add(task2);
-        plan.getTasks()
-            .add(task3);
 
         plan.getLabels()
             .add(label1);
@@ -297,7 +322,7 @@ class PlanServiceTest {
         Long memberOfPlanId = planService.inviteMember(plan.getId(), member.getId());
 
         // then
-        assertThat(memberOfPlanId).isNotNull();
+        assertThat(memberOfPlanRepository.findById(memberOfPlanId)).isPresent();
     }
 
     @Test
@@ -330,6 +355,8 @@ class PlanServiceTest {
             .name("tester")
             .email("test@example.com")
             .build();
+
+
         Member savedMember = memberRepository.save(member);
 
         // when & then
@@ -338,5 +365,138 @@ class PlanServiceTest {
             .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
 
 
+    }
+
+
+    @Test
+    @DisplayName("플랜을 삭제한다")
+    void delete() {
+        // given
+        Plan plan = creatDefaultPlan("testPlan");
+        saveDefaultMemberOfPlan(plan, tester);
+
+        // when
+        planService.delete(plan.getId(), tester.getId());
+
+        // then
+        assertThat(plan.isDeleted()).isEqualTo(true);
+    }
+
+    @Test
+    @DisplayName("플랜을 수정한다")
+    void update() {
+        // given
+        Member nextOwner = Member.builder()
+            .name("nextOwner")
+            .email("test@test.com")
+            .build();
+        Plan plan = Plan.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .owner(tester)
+            .isPublic(true)
+            .build();
+        memberRepository.save(nextOwner);
+        Plan savedPlan = planRepository.save(plan);
+
+
+        PlanUpdateRequest planUpdateRequest = PlanUpdateRequest.builder()
+            .title("수정된 플랜 제목")
+            .intro("수정된 플랜 소개")
+            .ownerId(nextOwner.getId())
+            .isPublic(false)
+            .build();
+
+        // when
+        planService.update(savedPlan.getId(), planUpdateRequest, userId);
+
+        // then
+        Plan updatedPlan = planRepository.findById(plan.getId())
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+
+        assertThat(updatedPlan.getTitle()).isEqualTo("수정된 플랜 제목");
+        assertThat(updatedPlan.getIntro()).isEqualTo("수정된 플랜 소개");
+        assertThat(updatedPlan.getOwner()).isEqualTo(nextOwner);
+        assertThat(updatedPlan.isPublic()).isFalse();
+    }
+
+    @Test
+    @DisplayName("플랜에서 나간다")
+    void exit() {
+        // given
+        Plan plan = Plan.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .build();
+        planRepository.save(plan);
+
+        Member member = Member.builder()
+            .name("tester")
+            .email("test@example.com")
+            .build();
+        memberRepository.save(member);
+        Long memberOfPlanId = planService.inviteMember(plan.getId(), member.getId());
+
+        // when
+        planService.exit(plan.getId(), member.getId());
+
+        // then
+        assertThat(memberOfPlanRepository.findById(memberOfPlanId)).isEmpty();
+        assertThat(planService.getAllPlanByMemberId(member.getId())).isEmpty();
+    }
+
+
+    @Test
+    @DisplayName("멤버 아이디로 모든 플랜을 가져온다")
+    void getAllPlanByMemberId() {
+        // given
+        Member member = createDefaultMember();
+        Plan plan1 = creatDefaultPlan("plan1");
+        Plan plan2 = creatDefaultPlan("plan2");
+        Plan plan3 = creatDefaultPlan("plan3");
+        saveDefaultMemberOfPlan(plan1, member);
+        saveDefaultMemberOfPlan(plan2, member);
+        saveDefaultMemberOfPlan(plan3, member);
+
+        // when
+        List<PlanTitleIdResponse> allPlanByMemberId = planService.getAllPlanByMemberId(member.getId());
+
+        // then
+        assertThat(allPlanByMemberId.size()).isEqualTo(3);
+        assertThat(allPlanByMemberId.get(0)
+            .getTitle()).isEqualTo("plan1");
+        assertThat(allPlanByMemberId.get(1)
+            .getTitle()).isEqualTo("plan2");
+        assertThat(allPlanByMemberId.get(2)
+            .getTitle()).isEqualTo("plan3");
+
+    }
+
+    private Plan creatDefaultPlan(String planTitle) {
+        return planRepository.save(Plan.builder()
+            .title(planTitle)
+            .intro("플랜 소개")
+            .owner(tester)
+            .isPublic(true)
+            .build());
+    }
+
+    private Member createDefaultMember() {
+        return memberRepository.save(Member.builder()
+            .name("tester1")
+            .email("tester@example.com")
+            .build());
+    }
+
+    private void saveDefaultMemberOfPlan(Plan plan, Member member) {
+
+        MemberOfPlan memberOfPlan = MemberOfPlan.builder()
+            .member(member)
+            .plan(plan)
+            .build();
+        plan.getMembers()
+            .add(memberOfPlan);
+        memberOfPlanRepository.save(memberOfPlan);
     }
 }

@@ -25,14 +25,17 @@ class EmailServiceTest {
         String recipient = "test@example.com";
         String text = "Hello, this is a test email.";
         EmailService emailServiceMock = Mockito.spy(emailService);
-        Mockito.doNothing().when(emailServiceMock).send(any(Message.class));
+        Mockito.doNothing()
+            .when(emailServiceMock)
+            .send(any(Message.class));
 
         // when
-        emailServiceMock.sendEmail(recipient, text);
+        emailServiceMock.sendInviteEmail(recipient, text, 1L);
 
         // then
         ArgumentCaptor<Message> messageCaptor = ArgumentCaptor.forClass(Message.class);
-        Mockito.verify(emailServiceMock, times(1)).send(messageCaptor.capture());
+        Mockito.verify(emailServiceMock, times(1))
+            .send(messageCaptor.capture());
         Message sentMessage = messageCaptor.getValue();
         assertEquals(sentMessage.getRecipients(Message.RecipientType.TO)[0].toString(), recipient);
         assertEquals(sentMessage.getSubject(), "Planting의 플랜에 초대되었습니다");

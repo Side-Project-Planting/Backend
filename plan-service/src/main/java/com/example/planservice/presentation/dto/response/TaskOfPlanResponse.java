@@ -31,7 +31,7 @@ public class TaskOfPlanResponse {
         this.endDate = endDate;
     }
 
-    public static TaskOfPlanResponse to(Task task) {
+    public static TaskOfPlanResponse from(Task task) {
         return builder()
             .id(task.getId())
             .title(task.getName())

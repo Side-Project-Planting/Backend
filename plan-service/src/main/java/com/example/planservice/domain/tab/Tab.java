@@ -8,7 +8,6 @@ import org.hibernate.annotations.Where;
 import org.jetbrains.annotations.NotNull;
 
 import com.example.planservice.domain.BaseEntity;
-import com.example.planservice.domain.Linkable;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.task.Task;
 import jakarta.persistence.Column;
@@ -37,7 +36,7 @@ import lombok.NoArgsConstructor;
         @UniqueConstraint(name = "UniquePlanAndTabName", columnNames = {"plan_id", "name"})
     })
 @Where(clause = "is_deleted = false")
-public class Tab extends BaseEntity implements Linkable<Tab> {
+public class Tab extends BaseEntity {
     public static final int TAB_MAX_SIZE = 5;
 
     @Id

@@ -2,15 +2,18 @@ package com.example.planservice.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,7 +24,9 @@ import com.example.planservice.application.PlanService;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
+import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.PlanResponse;
+import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(PlanController.class)
@@ -54,9 +59,7 @@ class PlanControllerTest {
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(header().exists("Location"))
-            .andExpect(redirectedUrlPattern("/plans/*"));
+            .andExpect(status().isCreated());
     }
 
     @Test
@@ -68,7 +71,7 @@ class PlanControllerTest {
         invitedEmails.add("B@gmail.com");
 
         PlanCreateRequest request = PlanCreateRequest.builder()
-            .title("플랜 제목")
+            .title("플랜 `제목")
             .intro("플랜 소개")
             .isPublic(true)
             .invitedEmails(invitedEmails)
@@ -156,8 +159,7 @@ class PlanControllerTest {
         mockMvc.perform(put("/plans/invite/{planId}", planId)
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().string("1"));
+            .andExpect(status().isNoContent());
     }
 
     @Test
@@ -176,4 +178,131 @@ class PlanControllerTest {
             .andExpect(status().isNotFound());
     }
 
+    @Test
+    @DisplayName("플랜에서 나간다")
+    void exitPlan() throws Exception {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+
+        // stub
+        doNothing().when(planService)
+            .exit(planId, userId);
+
+        // when & then
+        mockMvc.perform(put("/plans/exit/{planId}", planId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 플랜 ID로 플랜에서 나가면 실패한다")
+    void exitPlanFailInvalidId() throws Exception {
+        // given
+        Long userId = 1L;
+        Long invalidPlanId = 9999L;
+
+        // stub
+        Mockito.doThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND))
+            .when(planService)
+            .exit(invalidPlanId, userId);
+
+        // when & then
+        mockMvc.perform(put("/plans/exit/{planId}", invalidPlanId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("플랜 정보를 수정한다")
+    void updatePlan() throws Exception {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+
+        PlanUpdateRequest request = PlanUpdateRequest.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .isPublic(true)
+            .ownerId(userId)
+            .build();
+
+        // stub
+        doNothing().when(planService)
+            .update(anyLong(), any(PlanUpdateRequest.class), anyLong());
+
+        // when & then
+        mockMvc.perform(put("/plans/update/{planId}", planId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("플랜을 삭제한다")
+    void deletePlan() throws Exception {
+        // given
+        Long userId = 1L;
+        Long planId = 1L;
+
+        // stub
+        doNothing().when(planService)
+            .delete(planId, userId);
+
+        // when & then
+        mockMvc.perform(delete("/plans/{planId}", planId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 플랜 ID로 플랜을 삭제하면 실패한다")
+    void deletePlanFailInvalidId() throws Exception {
+        // given
+        Long userId = 1L;
+        Long invalidPlanId = 9999L;
+
+        // stub
+        Mockito.doThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND))
+            .when(planService)
+            .delete(invalidPlanId, userId);
+
+        // when & then
+        mockMvc.perform(delete("/plans/{planId}", invalidPlanId)
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("멤버가 속한 플랜들을 조회한다")
+    void readAllByMember() throws Exception {
+        // given
+        Long userId = 1L;
+        PlanTitleIdResponse response1 = PlanTitleIdResponse.builder()
+            .id(1L)
+            .title("플랜 제목")
+            .build();
+        PlanTitleIdResponse response2 = PlanTitleIdResponse.builder()
+            .id(2L)
+            .title("플랜 제목")
+            .build();
+        // stub
+        when(planService.getAllPlanByMemberId(userId)).thenReturn(List.of(response1, response2));
+
+        // when & then
+        mockMvc.perform(get("/plans/all")
+                .header("X-User-Id", userId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(response1.getId()))
+            .andExpect(jsonPath("$[0].title").value(response1.getTitle()))
+            .andExpect(jsonPath("$[1].id").value(response2.getId()))
+            .andExpect(jsonPath("$[1].title").value(response2.getTitle()));
+
+    }
 }

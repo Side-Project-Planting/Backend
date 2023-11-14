@@ -30,7 +30,7 @@ public class EmailService {
         session = createSession();
     }
 
-    public void sendEmail(String to, String text) {
+    public void sendInviteEmail(String to, String text, Long userId) {
         try {
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(mailProperties.getUsername()));
@@ -38,7 +38,7 @@ public class EmailService {
             message.setSubject(INVITING_SUBJECT);
             String content = text + ' ' + INVITING_ANNOUNCEMENT;
             content += "<br>";
-            content += "http://localhost/invite";
+            content += "http://localhost/invite" + userId;
 
             message.setContent(content, "text/html; charset=utf-8");
 

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PlanResponse {
+    private Long id;
     private String title;
     private String description;
     private List<MemberOfPlanResponse> members;
@@ -21,9 +22,11 @@ public class PlanResponse {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private PlanResponse(String title, String description, List<MemberOfPlanResponse> members, List<Long> tabOrder,
+    private PlanResponse(Long id, String title, String description, List<MemberOfPlanResponse> members,
+                         List<Long> tabOrder,
                          List<TabOfPlanResponse> tabs, List<TaskOfPlanResponse> tasks, List<LabelOfPlanResponse> labels,
                          boolean isPublic) {
+        this.id = id;
         this.title = title;
         this.description = description;
         this.members = members;

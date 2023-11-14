@@ -8,7 +8,6 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.planservice.domain.Linkable;
 import com.example.planservice.domain.label.Label;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.member.repository.MemberRepository;
@@ -22,9 +21,12 @@ import com.example.planservice.domain.task.Task;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
+import com.example.planservice.presentation.dto.request.PlanKickRequest;
+import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.LabelOfPlanResponse;
 import com.example.planservice.presentation.dto.response.MemberOfPlanResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
+import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import com.example.planservice.presentation.dto.response.TabOfPlanResponse;
 import com.example.planservice.presentation.dto.response.TaskOfPlanResponse;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class PlanService {
 
     private final EmailService emailService;
+    private final TabService tabService;
     private final PlanRepository planRepository;
     private final MemberRepository memberRepository;
     private final TabRepository tabRepository;
@@ -58,27 +61,39 @@ public class PlanService {
             .plan(plan)
             .build();
         memberOfPlanRepository.save(memberOfPlan);
+        sendInviteMail(request.getInvitedEmails(), request.getTitle(), member.getId());
+        Plan savedPlan = planRepository.save(plan);
 
-        sendInviteMail(request.getInvitedEmails(), request.getTitle());
         createDefaultTab(plan);
 
-        Plan savedPlan = planRepository.save(plan);
         return savedPlan.getId();
     }
 
     public PlanResponse getTotalPlanResponse(Long planId) {
+        if (isDeletedPlan(planId)) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        List<Tab> tabList = tabRepository.findAllByPlanId(planId);
 
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+        List<Tab> tabList = tabRepository.findAllByPlanId(planId);
         List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner()
             .getId());
+        List<Task> allTask = tabList.stream()
+            .map(Tab::getTasks)
+            .flatMap(List::stream)
+            .toList();
         List<LabelOfPlanResponse> labels = getLabelResponses(plan.getLabels());
-        List<TaskOfPlanResponse> tasks = getTaskResponses(plan.getTasks());
-        List<Long> tabOrder = orderByNext(tabList);
+        List<TaskOfPlanResponse> tasks = getTaskResponses(allTask);
+        List<Long> tabOrder = getSortedTabID(tabList);
         List<TabOfPlanResponse> tabs = getTabResponses(tabList);
 
         return PlanResponse.builder()
+            .id(plan.getId())
             .title(plan.getTitle())
             .description(plan.getIntro())
             .members(members)
@@ -92,8 +107,16 @@ public class PlanService {
 
     @Transactional
     public Long inviteMember(Long planId, Long memberId) {
+        if (isDeletedPlan(planId)) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
         Member member =
             memberRepository.findById(memberId)
                 .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
@@ -105,27 +128,106 @@ public class PlanService {
         return memberOfPlan.getId();
     }
 
-    private void sendInviteMail(List<String> invitedEmails, String title) {
-        invitedEmails.forEach(email -> emailService.sendEmail(email, title));
+    @Transactional
+    public void exit(Long planId, Long memberId) {
+        memberOfPlanRepository.deleteByPlanIdAndMemberId(planId, memberId);
+    }
+
+    @Transactional
+    public void kick(Long planId, PlanKickRequest request, Long userId) {
+        if (isDeletedPlan(planId)) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
+        validateOwner(plan.getOwner()
+            .getId(), userId);
+        memberOfPlanRepository.deleteAllByPlanIdAndMemberIds(planId, request.getKickingMemberIds());
+    }
+
+    @Transactional
+    public void delete(Long planId, Long userId) {
+        MemberOfPlan memberOfPlan = memberOfPlanRepository.findByPlanIdAndMemberId(planId, userId)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
+        validateOwner(memberOfPlan.getPlan()
+            .getOwner()
+            .getId(), userId);
+
+        Plan plan = memberOfPlan.getPlan();
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+        plan.softDelete();
+        planRepository.save(plan);
+        memberOfPlanRepository.delete(memberOfPlan);
+    }
+
+    @Transactional
+    public void update(Long planId, PlanUpdateRequest request, Long userId) {
+        if (isDeletedPlan(planId)) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+        validateOwner(plan.getOwner()
+            .getId(), userId);
+        Member nextOwner = memberRepository.findById(request.getOwnerId())
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+        plan.update(request.getTitle(), request.getIntro(), nextOwner, request.isPublic());
+    }
+
+    public List<PlanTitleIdResponse> getAllPlanByMemberId(Long userId) {
+        List<MemberOfPlan> memberOfPlans = memberOfPlanRepository.findAllByMemberId(userId)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+
+        return memberOfPlans.stream()
+            .map(memberOfPlan -> PlanTitleIdResponse.from(memberOfPlan.getPlan()))
+            .toList();
+    }
+
+    private void validateOwner(Long ownerId, Long userId) {
+        if (!ownerId.equals(userId)) {
+            throw new ApiException(ErrorCode.AUTHORIZATION_FAIL);
+        }
+    }
+
+    private void sendInviteMail(List<String> invitedEmails, String title, Long userId) {
+        invitedEmails.forEach(email -> emailService.sendInviteEmail(email, title, userId));
     }
 
     private void createDefaultTab(Plan plan) {
-        Tab firstTab = Tab.builder()
-            .name("ToDo")
-            .plan(plan)
-            .build();
-        Tab lastTab = Tab.builder()
-            .name("Done")
-            .plan(plan)
-            .build();
-        firstTab.connect(lastTab);
-        tabRepository.save(firstTab);
-        tabRepository.save(lastTab);
+        Tab todoTab = Tab.create(plan, "To Do");
+        Tab inprogressTab = Tab.create(plan, "In Progress");
+        Tab doneTab = Tab.create(plan, "Done");
+
+        todoTab.connect(inprogressTab);
+        inprogressTab.connect(doneTab);
+
+        plan.getTabs()
+            .add(todoTab);
+        plan.getTabs()
+            .add(inprogressTab);
+        plan.getTabs()
+            .add(doneTab);
+
+        tabRepository.saveAll(List.of(todoTab, inprogressTab, doneTab));
+
+        tabService.createDummyTask(todoTab);
+        tabService.createDummyTask(inprogressTab);
+        tabService.createDummyTask(doneTab);
     }
 
     private List<MemberOfPlanResponse> getMemberResponses(List<MemberOfPlan> members, Long ownerId) {
         return members.stream()
-            .map(member -> MemberOfPlanResponse.to(member.getMember(), ownerId))
+            .map(member -> MemberOfPlanResponse.from(member.getMember(), ownerId))
             .toList();
     }
 
@@ -133,29 +235,29 @@ public class PlanService {
         return tabList.stream()
             .map(tab -> {
                 List<Task> tasksOfTab = tab.getTasks();
-                List<Long> taskOrder = orderByNext(tasksOfTab);
-                return TabOfPlanResponse.to(tab, taskOrder);
+                List<Long> taskOrder = getSortedTaskID(tasksOfTab);
+                return TabOfPlanResponse.from(tab, taskOrder);
             })
             .toList();
     }
 
     private List<LabelOfPlanResponse> getLabelResponses(List<Label> labels) {
         return labels.stream()
-            .map(LabelOfPlanResponse::to)
+            .map(LabelOfPlanResponse::from)
             .toList();
     }
 
     private List<TaskOfPlanResponse> getTaskResponses(List<Task> tasks) {
         return tasks.stream()
-            .map(TaskOfPlanResponse::to)
+            .map(TaskOfPlanResponse::from)
             .toList();
     }
 
-    public <T extends Linkable<T>> List<Long> orderByNext(List<T> items) {
+    public List<Long> getSortedTaskID(List<Task> items) {
         List<Long> orderedItems = new ArrayList<>();
-        Set<T> allNodes = new HashSet<>(items);
-        T start = null;
-        for (T item : items) {
+        Set<Task> allNodes = new HashSet<>(items);
+        Task start = null;
+        for (Task item : items) {
             if (item.getNext() != null) {
                 allNodes.remove(item.getNext());
             }
@@ -165,7 +267,7 @@ public class PlanService {
                 .next();
         }
 
-        T current = start;
+        Task current = start;
         while (current != null) {
             orderedItems.add(current.getId());
             current = current.getNext();
@@ -173,4 +275,34 @@ public class PlanService {
 
         return orderedItems;
     }
+
+    public List<Long> getSortedTabID(List<Tab> items) {
+        List<Long> orderedItems = new ArrayList<>();
+        Set<Tab> allNodes = new HashSet<>(items);
+        Tab start = null;
+        for (Tab item : items) {
+            if (item.getNext() != null) {
+                allNodes.remove(item.getNext());
+            }
+        }
+        if (!allNodes.isEmpty()) {
+            start = allNodes.iterator()
+                .next();
+        }
+
+        Tab current = start;
+        while (current != null) {
+            orderedItems.add(current.getId());
+            current = current.getNext();
+        }
+
+        return orderedItems;
+    }
+
+    public boolean isDeletedPlan(Long planId) {
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        return plan.isDeleted();
+    }
+
 }

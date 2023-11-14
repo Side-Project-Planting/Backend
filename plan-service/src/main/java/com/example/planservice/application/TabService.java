@@ -39,14 +39,11 @@ public class TabService {
             List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
             TabGroup tabGroup = new TabGroup(plan.getId(), tabsOfPlan);
             tabGroup.addLast(createdTab);
-            plan.getTabs().add(createdTab);
+            plan.getTabs()
+                .add(createdTab);
 
             Tab savedTab = tabRepository.save(createdTab);
-
-            List<Task> dummies = Task.createFirstAndLastDummy(createdTab);
-            Task firstDummyTask = dummies.get(0);
-            Task lastDummyTask = dummies.get(1);
-            taskRepository.saveAll(List.of(firstDummyTask, lastDummyTask));
+            createDummyTask(createdTab);
 
             return savedTab.getId();
         } catch (ObjectOptimisticLockingFailureException e) {
@@ -61,7 +58,9 @@ public class TabService {
         List<Tab> tabs = tabRepository.findAllByPlanId(request.getPlanId());
         TabGroup tabGroup = new TabGroup(plan.getId(), tabs);
         List<Tab> result = tabGroup.changeOrder(request.getTargetId(), request.getNewPrevId());
-        return result.stream().map(Tab::getId).toList();
+        return result.stream()
+            .map(Tab::getId)
+            .toList();
     }
 
     // TODO Tab은 Plan에 강하게 의존관계를 가짐. 단독으로 쓰일일도 잘 없음.(앞으로도 그럴거로 예상됨)
@@ -97,6 +96,13 @@ public class TabService {
         Tab target = tabGroup.findById(tabId);
         target.delete();
         return tabId;
+    }
+
+    public void createDummyTask(Tab createdTab) {
+        List<Task> dummies = Task.createFirstAndLastDummy(createdTab);
+        Task firstDummyTask = dummies.get(0);
+        Task lastDummyTask = dummies.get(1);
+        taskRepository.saveAll(List.of(firstDummyTask, lastDummyTask));
     }
 
     public TabFindResponse find(Long tabId, Long memberId) {
