@@ -70,8 +70,16 @@ public class PlanService {
     }
 
     public PlanResponse getTotalPlanResponse(Long planId) {
+        if (isDeletedPlan(planId)) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
         List<Tab> tabList = tabRepository.findAllByPlanId(planId);
         List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner()
             .getId());
@@ -99,8 +107,16 @@ public class PlanService {
 
     @Transactional
     public Long inviteMember(Long planId, Long memberId) {
+        if (isDeletedPlan(planId)) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
         Member member =
             memberRepository.findById(memberId)
                 .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
@@ -119,8 +135,16 @@ public class PlanService {
 
     @Transactional
     public void kick(Long planId, PlanKickRequest request, Long userId) {
+        if (isDeletedPlan(planId)) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
+
         validateOwner(plan.getOwner()
             .getId(), userId);
         memberOfPlanRepository.deleteAllByPlanIdAndMemberIds(planId, request.getKickingMemberIds());
@@ -135,6 +159,9 @@ public class PlanService {
             .getId(), userId);
 
         Plan plan = memberOfPlan.getPlan();
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
         plan.softDelete();
         planRepository.save(plan);
         memberOfPlanRepository.delete(memberOfPlan);
@@ -142,8 +169,14 @@ public class PlanService {
 
     @Transactional
     public void update(Long planId, PlanUpdateRequest request, Long userId) {
+        if (isDeletedPlan(planId)) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        if (plan.isDeleted()) {
+            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
+        }
         validateOwner(plan.getOwner()
             .getId(), userId);
         Member nextOwner = memberRepository.findById(request.getOwnerId())
@@ -264,6 +297,12 @@ public class PlanService {
         }
 
         return orderedItems;
+    }
+
+    public boolean isDeletedPlan(Long planId) {
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        return plan.isDeleted();
     }
 
 }
