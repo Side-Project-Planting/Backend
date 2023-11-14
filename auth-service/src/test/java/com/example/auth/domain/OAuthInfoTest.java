@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.auth.domain.member.Member;
+
 @DisplayName("OAuthInfo 테스트")
 class OAuthInfoTest {
 
@@ -14,11 +16,11 @@ class OAuthInfoTest {
         // given
         OAuthInfo info = OAuthInfo.builder()
             .build();
-
+        Member member = Member.builder().build();
         // when
-        info.init(1L);
+        info.init(member);
 
         // then
-        assertThat(info.getMemberId()).isEqualTo(1L);
+        assertThat(info.getMember()).isNotNull();
     }
 }

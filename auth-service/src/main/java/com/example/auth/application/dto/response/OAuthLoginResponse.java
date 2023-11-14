@@ -39,7 +39,7 @@ public class OAuthLoginResponse {
         this.authorizedToken = authorizedToken;
     }
 
-    // TODO 프로필주소, 이메일이 필요한지? 일단은 넣어서 보내기 (없어도 되면 ProviderResponse tkrwp rksmd)
+    // TODO 프로필주소, 이메일이 필요한지? 일단은 넣어서 보내기 (없어도 되면 ProviderResponse 없애도 됨)
     public static OAuthLoginResponse create(OAuthInfo oAuthInfo, TokenInfo tokenInfo,
                                             OAuthUserResponse providerResponse) {
         return OAuthLoginResponse.builder()
@@ -48,7 +48,7 @@ public class OAuthLoginResponse {
             .grantType(tokenInfo.getGrantType())
             .profileUrl(providerResponse.getProfileUrl())
             .email(providerResponse.getEmail())
-            .registered(oAuthInfo.getMemberId() != null)
+            .registered(oAuthInfo.getMember() != null)
             .build();
     }
 
@@ -58,7 +58,7 @@ public class OAuthLoginResponse {
             .authorizedToken(oAuthInfo.getAuthorizedToken())
             .profileUrl(providerResponse.getProfileUrl())
             .email(providerResponse.getEmail())
-            .registered(oAuthInfo.getMemberId() != null)
+            .registered(oAuthInfo.getMember() != null)
             .build();
     }
 }

@@ -131,7 +131,7 @@ class AuthServiceTest {
         String authCode = "authcode";
         String accessTokenUsingProvider = "accessToken";
         String idReceivedProvider = "1";
-        OAuthInfo info = createOAuthInfo(idReceivedProvider);
+        OAuthInfo info = createOAuthInfo(idReceivedProvider, null);
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
@@ -169,8 +169,8 @@ class AuthServiceTest {
         String idUsingResourceServer = "1";
 
         Member member = createMember(memberId, prevRefreshToken);
-        OAuthInfo info = createOAuthInfo(idUsingResourceServer);
-        info.init(member.getId());
+        OAuthInfo info = createOAuthInfo(idUsingResourceServer, member);
+
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
@@ -181,7 +181,7 @@ class AuthServiceTest {
             .thenReturn(oAuthUserResponse);
 
         //when
-        final OAuthLoginResponse response = authService.login(providerName, authCode);
+        OAuthLoginResponse response = authService.login(providerName, authCode);
 
         // then
         assertThat(response.isRegistered()).isTrue();
@@ -195,7 +195,6 @@ class AuthServiceTest {
         assertThat(response.getAuthId()).isNull();
         assertThat(response.getAuthorizedToken()).isBlank();
 
-        member = memberRepository.findById(memberId++).get();
         assertThat(member.getRefreshToken()).isNotEqualTo(prevRefreshToken);
     }
 
@@ -394,11 +393,12 @@ class AuthServiceTest {
         return member;
     }
 
-    private OAuthInfo createOAuthInfo(String idUsingResourceServer) {
+    private OAuthInfo createOAuthInfo(String idUsingResourceServer, Member member) {
         OAuthInfo info = OAuthInfo.builder()
             .oAuthType(OAuthType.GOOGLE)
             .idUsingResourceServer(idUsingResourceServer)
             .build();
+        info.init(member);
         authInfoRepository.save(info);
         return info;
     }

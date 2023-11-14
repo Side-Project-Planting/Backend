@@ -62,15 +62,13 @@ public class AuthService {
         OAuthUserResponse providerResponse = oAuthProvider.getOAuthUserResponse(authCode);
         OAuthInfo oAuthInfo = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), providerResponse);
 
-        Long memberId = oAuthInfo.getMemberId();
-        if (memberId == null) {
+        Member member = oAuthInfo.getMember();
+        if (member == null) {
             oAuthInfo.setAuthorizedToken(randomStringFactory.create());
             return OAuthLoginResponse.createWithoutToken(oAuthInfo, providerResponse);
         }
 
-        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
-        Member member = memberRepository.findById(memberId)
-            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now());
         member.changeRefreshToken(tokenInfo.getRefreshToken());
         return OAuthLoginResponse.create(oAuthInfo, tokenInfo, providerResponse);
     }
@@ -96,8 +94,8 @@ public class AuthService {
         TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
         Member member = Member.builder().id(memberId).refreshToken(tokenInfo.getRefreshToken()).build();
         memberRepository.save(member);
-        info.init(memberId);
-        return RegisterResponse.create(tokenInfo, info.getMemberId());
+        info.init(member);
+        return RegisterResponse.create(tokenInfo, memberId);
     }
 
     /**
