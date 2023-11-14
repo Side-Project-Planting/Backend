@@ -32,40 +32,26 @@ public class OAuthInfo {
     @Enumerated(EnumType.STRING)
     private OAuthType type;
 
-    private String email;
-
-    private String refreshToken;
-
-    private boolean registered;
-
-    @Column(unique = true)
+    @Column
     private Long memberId;
 
+    // TODO 추후 Redis로 이동
     @Setter
     private String authorizedToken;
 
     @Builder
-    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, String email, String refreshToken,
-                      String authorizedToken) {
+    private OAuthInfo(String idUsingResourceServer, OAuthType oAuthType, Long memberId, String authorizedToken) {
         this.idUsingResourceServer = idUsingResourceServer;
         this.type = oAuthType;
-        this.email = email;
-        this.refreshToken = refreshToken;
-        this.registered = false;
+        this.memberId = memberId;
         this.authorizedToken = authorizedToken;
     }
 
+    /**
+     * 이후에 MemberId Member랑 매핑할거야
+     */
     public void init(Long memberId) {
-        this.registered = true;
         this.memberId = memberId;
-    }
-
-    public void changeRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    public boolean isRefreshTokenMatching(@NotNull String input) {
-        return Objects.equals(this.refreshToken, input);
     }
 
     public boolean validateAuthorizedToken(@NotNull String authorizedToken) {
