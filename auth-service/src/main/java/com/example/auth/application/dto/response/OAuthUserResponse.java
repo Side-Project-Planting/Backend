@@ -28,7 +28,8 @@ public class OAuthUserResponse {
 
     public OAuthInfo toEntity(OAuthType oAuthType) {
         return OAuthInfo.builder()
-            .idUsingResourceServer(this.getIdUsingResourceServer())
+            .idUsingResourceServer(idUsingResourceServer)
+            .email(email)
             .oAuthType(oAuthType)
             .build();
     }
