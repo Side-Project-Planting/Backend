@@ -185,10 +185,12 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("회원을 등록한다")
-    void register() throws Exception {
+    void testRegister() throws Exception {
         // given
         RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", 1L, "인가_코드");
-        RegisterResponse registerResponse = RegisterResponse.builder().build();
+        RegisterResponse registerResponse = RegisterResponse.builder()
+            .refreshToken("리프레쉬_토큰")
+            .build();
 
         // stub
         when(authService.register(any(RegisterRequest.class)))
@@ -198,7 +200,15 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/register")
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isCreated());
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.refreshToken").doesNotExist())
+            .andExpect(cookie().exists("refresh"))
+            .andExpect(cookie().httpOnly("refresh", true))
+            .andDo(result -> {
+                MockHttpServletResponse resp = result.getResponse();
+                String setCookieHeader = resp.getHeader("Set-Cookie");
+                Assertions.assertThat(setCookieHeader).contains("SameSite=Strict");
+            });
     }
 
     @Test

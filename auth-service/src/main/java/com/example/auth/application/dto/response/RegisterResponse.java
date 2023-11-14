@@ -1,6 +1,7 @@
 package com.example.auth.application.dto.response;
 
 import com.example.auth.jwt.TokenInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,8 +10,12 @@ import lombok.NoArgsConstructor;
 @Getter
 public class RegisterResponse {
     private Long id;
+
     private String accessToken;
+
+    @JsonIgnore
     private String refreshToken;
+
     private String grantType;
 
     @Builder

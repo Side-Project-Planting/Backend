@@ -53,8 +53,10 @@ public class AuthController {
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request,
+                                                     HttpServletResponse httpServletResponse) {
         RegisterResponse response = authService.register(request);
+        addCookieUsingRefreshToken(httpServletResponse, response.getRefreshToken());
         return ResponseEntity.created(URI.create("/members/" + response.getId()))
             .body(response);
     }
