@@ -214,4 +214,8 @@ public class Task extends BaseEntity {
         }
     }
 
+    public boolean isDummy() {
+        return this.name.equals(FIRST_DUMMY_NAME) || this.name.equals(LAST_DUMMY_NAME);
+    }
+
 }

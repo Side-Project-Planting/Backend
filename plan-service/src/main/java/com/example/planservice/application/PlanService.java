@@ -269,6 +269,10 @@ public class PlanService {
 
         Task current = start;
         while (current != null) {
+            if (current.isDummy()) {
+                current = current.getNext();
+                continue;
+            }
             orderedItems.add(current.getId());
             current = current.getNext();
         }
