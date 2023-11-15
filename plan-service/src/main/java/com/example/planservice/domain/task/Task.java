@@ -47,12 +47,8 @@ public class Task extends BaseEntity {
     private Tab tab;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id")
-    private Member manager;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "writer_id")
-    private Member writer;
+    @JoinColumn(name = "assignee_id")
+    private Member assignee;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "task")
     private List<LabelOfTask> labelOfTasks = new ArrayList<>();
@@ -80,12 +76,11 @@ public class Task extends BaseEntity {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private Task(Tab tab, Member manager, Member writer, String name, String description, LocalDateTime startDate,
+    private Task(Tab tab, Member assignee, String name, String description, LocalDateTime startDate,
                  LocalDateTime endDate, boolean isDeleted, Task next, Task prev, int version) {
         validateDates(startDate, endDate);
         this.tab = tab;
-        this.manager = manager;
-        this.writer = writer;
+        this.assignee = assignee;
         this.name = name;
         this.description = description;
         this.startDate = startDate;
@@ -172,7 +167,7 @@ public class Task extends BaseEntity {
     public void change(Task entity) {
         validateCanModify();
 
-        this.manager = entity.getManager();
+        this.assignee = entity.getAssignee();
         this.name = entity.getName();
         this.description = entity.getDescription();
         this.startDate = entity.getStartDate();

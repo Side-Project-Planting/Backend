@@ -37,11 +37,11 @@ public class TaskService {
         Tab tab = tabRepository.findById(request.getTabId())
             .orElseThrow(() -> new ApiException(ErrorCode.TAB_NOT_FOUND_IN_PLAN));
         planMembershipService.validateMemberIsInThePlan(memberId, tab.getPlan());
-        Member manager = getMember(request.getManagerId(), tab.getPlan());
+        Member assignee = getMember(request.getAssigneeId(), tab.getPlan());
 
         Task task = Task.builder()
             .tab(tab)
-            .manager(manager)
+            .assignee(assignee)
             .name(request.getName())
             .description(request.getDescription())
             .build();
@@ -78,7 +78,8 @@ public class TaskService {
         Task newPrev = getPrevTask(request.getNewPrevId(), tab);
         newPrev.putInBack(target);
 
-        return tab.getSortedTasks().stream()
+        return tab.getSortedTasks()
+            .stream()
             .map(Task::getId)
             .toList();
     }
@@ -114,7 +115,8 @@ public class TaskService {
     }
 
     private void saveAllLabelOfTask(List<Long> labelIds, Task task, Plan plan) {
-        List<LabelOfTask> labelsOfTask = labelRepository.findAllById(labelIds).stream()
+        List<LabelOfTask> labelsOfTask = labelRepository.findAllById(labelIds)
+            .stream()
             .filter(label -> Objects.equals(label.getPlan(), plan))
             .map(label -> LabelOfTask.create(label, task))
             .toList();
