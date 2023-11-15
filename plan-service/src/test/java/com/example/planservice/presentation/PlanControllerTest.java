@@ -292,7 +292,7 @@ class PlanControllerTest {
             .title("플랜 제목")
             .build();
         // stub
-        when(planService.getAllPlanByMemberId(userId)).thenReturn(List.of(response1, response2));
+        when(planService.getAllPlanTitleIdByMemberId(userId)).thenReturn(List.of(response1, response2));
 
         // when & then
         mockMvc.perform(get("/plans/all")

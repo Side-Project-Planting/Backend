@@ -184,7 +184,7 @@ public class PlanService {
         plan.update(request.getTitle(), request.getIntro(), nextOwner, request.isPublic());
     }
 
-    public List<PlanTitleIdResponse> getAllPlanByMemberId(Long userId) {
+    public List<PlanTitleIdResponse> getAllPlanTitleIdByMemberId(Long userId) {
         List<MemberOfPlan> memberOfPlans = memberOfPlanRepository.findAllByMemberId(userId)
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -233,6 +233,7 @@ public class PlanService {
 
     private List<TabOfPlanResponse> getTabResponses(List<Tab> tabList) {
         return tabList.stream()
+            .filter(tab -> !tab.isDeleted())
             .map(tab -> {
                 List<Task> tasksOfTab = tab.getTasks();
                 List<Long> taskOrder = getSortedTaskID(tasksOfTab);
@@ -249,6 +250,7 @@ public class PlanService {
 
     private List<TaskOfPlanResponse> getTaskResponses(List<Task> tasks) {
         return tasks.stream()
+            .filter(task -> !task.isDeleted())
             .map(TaskOfPlanResponse::from)
             .toList();
     }
@@ -308,5 +310,4 @@ public class PlanService {
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         return plan.isDeleted();
     }
-
 }

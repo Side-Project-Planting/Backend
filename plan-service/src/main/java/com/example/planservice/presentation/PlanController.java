@@ -115,7 +115,7 @@ public class PlanController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .build();
         }
-        return ResponseEntity.ok(planService.getAllPlanByMemberId(userId));
+        return ResponseEntity.ok(planService.getAllPlanTitleIdByMemberId(userId));
     }
 
 }
