@@ -20,7 +20,7 @@ public class PlanCreateRequest {
     private String intro;
 
     @NotNull
-    private boolean isPublic;
+    private Boolean isPublic;
 
     private List<@Email String> invitedEmails;
 
