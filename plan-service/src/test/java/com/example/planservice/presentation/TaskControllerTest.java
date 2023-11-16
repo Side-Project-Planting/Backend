@@ -2,8 +2,8 @@ package com.example.planservice.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.TaskService;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
+import com.example.planservice.presentation.dto.response.TaskFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = {TaskController.class})
@@ -43,7 +44,7 @@ class TaskControllerTest {
         Long userId = 2L;
 
         // stub
-        Mockito.when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
+        when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
             .thenReturn(createdId);
 
         // when & then
@@ -81,7 +82,7 @@ class TaskControllerTest {
         Long userId = 2L;
 
         // stub
-        Mockito.when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
+        when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
             .thenReturn(createdId);
 
         // when & then
@@ -104,7 +105,7 @@ class TaskControllerTest {
         Long userId = 2L;
 
         // stub
-        Mockito.when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
+        when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
             .thenReturn(createdId);
 
         // when & then
@@ -128,7 +129,7 @@ class TaskControllerTest {
         Long userId = 2L;
 
         // stub
-        Mockito.when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
+        when(taskService.create(anyLong(), any(TaskCreateRequest.class)))
             .thenReturn(createdId);
 
         // when & then
@@ -162,4 +163,37 @@ class TaskControllerTest {
             .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    @DisplayName("태스크를 조회한다")
+    void testFindTask() throws Exception {
+        // given
+        Long userId = 2L;
+        Long taskId = 1L;
+
+        TaskFindResponse response = TaskFindResponse.builder()
+            .id(taskId)
+            .name("이름")
+            .build();
+
+        // stub
+        when(taskService.find(anyLong(), anyLong()))
+            .thenReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/tasks/" + taskId)
+                .header("X-User-Id", userId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(response.getId()))
+            .andExpect(jsonPath("$.name").value(response.getName()));
+    }
+
+    @Test
+    @DisplayName("로그인하지 않은 사용자는 태스크를 조회할 수 없다")
+    void testFindTaskFailNotLogin() throws Exception {
+        Long taskId = 1L;
+
+        // when & then
+        mockMvc.perform(get("/tasks/" + taskId))
+            .andExpect(status().isUnauthorized());
+    }
 }
