@@ -1,6 +1,8 @@
 package com.example.planservice.presentation.dto.request;
 
 import com.example.planservice.application.dto.TabChangeTitleServiceRequest;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,8 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class TabChangeTitleRequest {
-    private Long planId;
+    @NotBlank
     private String title;
+
+    @NotNull
+    private Long planId;
 
     @Builder
     private TabChangeTitleRequest(Long planId, String title) {
