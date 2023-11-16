@@ -24,10 +24,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/")
+@Slf4j
 public class AuthController {
     private final AuthService authService;
 
@@ -55,6 +57,7 @@ public class AuthController {
     @PostMapping("/auth/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request,
                                                      HttpServletResponse httpServletResponse) {
+        log.debug("[AuthController] Register 로직 실행");
         RegisterResponse response = authService.register(request);
         addCookieUsingRefreshToken(httpServletResponse, response.getRefreshToken());
         return ResponseEntity.created(URI.create("/members/" + response.getId()))

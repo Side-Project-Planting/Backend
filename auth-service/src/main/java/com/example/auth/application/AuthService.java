@@ -28,7 +28,9 @@ import com.example.auth.oauth.OAuthProvider;
 import com.example.auth.oauth.OAuthProviderResolver;
 import com.example.auth.presentation.dto.request.RegisterRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -80,18 +82,21 @@ public class AuthService {
      */
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
+        log.debug("[AuthService] Register 로직 실행");
         OAuthInfo info = authInfoRepository.findById(request.getAuthId())
             .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
         if (!info.validateAuthorizedToken(request.getAuthorizedToken())) {
+            log.debug("[AuthService] 토큰이 적절하지 않음");
             throw new ApiException(ErrorCode.TOKEN_UNAUTHORIZED);
         }
-
         MemberRegisterRequest memberServiceRequest =
             MemberRegisterRequest.create(request.getProfileUrl(), request.getName(), info.getEmail());
+        log.debug("[AuthService] MemberServiceClient를 사용해 요청을 보낸다");
         MemberRegisterResponse responseAboutMemberRegister = memberServiceClient.register(memberServiceRequest);
+        log.debug("[AuthService] MemberRegisterRespones 응답 받아옴");
         Long memberId = responseAboutMemberRegister.getId();
-
         TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
+        log.debug("[AuthService] TokenInfo 생성 성공");
         Member member = Member.builder().id(memberId).refreshToken(tokenInfo.getRefreshToken()).build();
         memberRepository.saveAndFlush(member);
         info.init(member);
