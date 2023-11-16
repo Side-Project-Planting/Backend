@@ -32,6 +32,8 @@ import com.example.auth.client.dto.MemberRegisterResponse;
 import com.example.auth.domain.AuthInfoRepository;
 import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
+import com.example.auth.domain.member.Member;
+import com.example.auth.domain.member.MemberRepository;
 import com.example.auth.exception.ApiException;
 import com.example.auth.exception.ErrorCode;
 import com.example.auth.factory.RandomStringFactory;
@@ -44,16 +46,21 @@ import com.example.auth.oauth.OAuthProviderResolver;
 import com.example.auth.oauth.google.GoogleOAuthClient;
 import com.example.auth.oauth.google.GoogleOAuthProvider;
 import com.example.auth.presentation.dto.request.RegisterRequest;
-import com.example.auth.presentation.dto.request.TokenRefreshRequest;
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest
 @Transactional
 @DisplayName("AuthService 통합테스트")
 class AuthServiceTest {
+    private static Long globalMemberId = 123L;
+
     AuthService authService;
 
     @Autowired
     AuthInfoRepository authInfoRepository;
+
+    @Autowired
+    MemberRepository memberRepository;
 
     @Autowired
     RandomStringFactory factory;
@@ -74,11 +81,15 @@ class AuthServiceTest {
     @MockBean
     MemberServiceClient memberServiceClient;
 
+    @Autowired
+    EntityManager em;
+
     @BeforeEach
     void setUp() {
         provider = new GoogleOAuthProvider(oAuthProperties, googleOAuthClient);
         resolver = new OAuthProviderResolver(List.of(provider));
-        authService = new AuthService(resolver, authInfoRepository, factory, jwtTokenProvider, memberServiceClient);
+        authService = new AuthService(resolver, authInfoRepository, memberRepository, factory, jwtTokenProvider,
+            memberServiceClient);
     }
 
     @Test
@@ -113,81 +124,78 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("로그인 요청시, 회원가입하지 않은 사용자는 email, ProfileUrl, authorizedToken을 반환한다")
+    @DisplayName("회원가입되지 않은 사용자가 OAuth 로그인을 하면 email, ProfileUrl, authorizedToken를 반환한다")
     void loginSuccessIfNotRegistered() {
         // given
-        final String providerName = "google";
-        final String authCode = "authcode";
-        final String accessToken = "accessToken";
-
-        final String email = "hello@naver.com";
-        final String profileUrl = "https://imageurl";
-        final String idUsingResourceServer = "1";
-
-        final OAuthUserResponse oAuthUserResponse = createOAuthUserResponse(email, profileUrl, idUsingResourceServer);
-        final OAuthInfo info = createOAuthInfo(email, idUsingResourceServer);
-        authInfoRepository.save(info);
+        String providerName = "google";
+        String authCode = "authcode";
+        String accessTokenUsingProvider = "accessToken";
+        String idReceivedProvider = "1";
+        OAuthInfo info = createOAuthInfo(idReceivedProvider, null);
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
-            .thenReturn(new AccessTokenResponse(accessToken));
-        when(googleOAuthClient.getOAuthUserResponse(accessToken))
-            .thenReturn(oAuthUserResponse);
+            .thenReturn(new AccessTokenResponse(accessTokenUsingProvider));
+        OAuthUserResponse responseReceivedProvider =
+            createOAuthUserResponse("hello@naver.com", "https://imageurl", idReceivedProvider);
+        when(googleOAuthClient.getOAuthUserResponse(accessTokenUsingProvider))
+            .thenReturn(responseReceivedProvider);
 
         //when
-        final OAuthLoginResponse response = authService.login(providerName, authCode);
+        OAuthLoginResponse response = authService.login(providerName, authCode);
 
         // then
-        assertThat(response.getEmail()).isEqualTo(oAuthUserResponse.getEmail());
-        assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
-        assertThat(response.getAuthId()).isEqualTo(info.getId());
         assertThat(response.isRegistered()).isFalse();
-        assertThat(response.getAuthorizedToken()).isNotBlank();
+
+        assertThat(response.getEmail()).isEqualTo(responseReceivedProvider.getEmail());
+        assertThat(response.getProfileUrl()).isEqualTo(responseReceivedProvider.getProfileUrl());
+        assertThat(response.getAuthId()).isEqualTo(info.getId());
+        assertThat(info.getAuthorizedToken()).isNotBlank();
 
         assertThat(response.getAccessToken()).isNull();
         assertThat(response.getRefreshToken()).isNull();
         assertThat(response.getGrantType()).isNull();
-
-        assertThat(info.getAuthorizedToken()).isNotBlank();
     }
 
     @Test
-    @DisplayName("로그인 요청 시, 회원가입한 사용자는 access token, refresh token을 포함하여 응답을 받는다")
+    @DisplayName("회원가입된 사용자가 OAuth 로그인을 하면 access token, refresh token을 포함하여 반환한다")
     void loginSuccessIfRegistered() {
         // given
-        final String providerName = "google";
-        final String authCode = "authcode";
-        final String accessToken = "accessToken";
-        final long memberId = 1L;
+        String providerName = "google";
+        String authCode = "authcode";
+        String accessTokenUsingProvider = "accessToken";
+        String prevRefreshToken = "기존리프레쉬토큰";
+        long memberId = globalMemberId++;
+        String idUsingResourceServer = "1";
 
-        final String email = "hello@naver.com";
-        final String profileUrl = "https://imageurl";
-        final String idUsingResourceServer = "1";
-        final OAuthUserResponse oAuthUserResponse = createOAuthUserResponse(email, profileUrl, idUsingResourceServer);
+        Member member = createMember(memberId, prevRefreshToken);
+        OAuthInfo info = createOAuthInfo(idUsingResourceServer, member);
 
-        final OAuthInfo info = createOAuthInfo(email, idUsingResourceServer);
-        info.init(memberId);
-        authInfoRepository.save(info);
 
         // stub
         when(googleOAuthClient.getAccessToken(anyString()))
-            .thenReturn(new AccessTokenResponse(accessToken));
-        when(googleOAuthClient.getOAuthUserResponse(accessToken))
+            .thenReturn(new AccessTokenResponse(accessTokenUsingProvider));
+        OAuthUserResponse oAuthUserResponse =
+            createOAuthUserResponse("hello@naver.com", "https://imageurl", idUsingResourceServer);
+        when(googleOAuthClient.getOAuthUserResponse(accessTokenUsingProvider))
             .thenReturn(oAuthUserResponse);
 
         //when
-        final OAuthLoginResponse response = authService.login(providerName, authCode);
+        OAuthLoginResponse response = authService.login(providerName, authCode);
 
         // then
-        assertThat(response.getAccessToken()).isNotBlank();
-        assertThat(response.getRefreshToken()).isNotBlank();
+        assertThat(response.isRegistered()).isTrue();
+
+        assertThat(response.getAccessToken()).isNotEmpty();
+        assertThat(response.getRefreshToken()).isNotEmpty();
         assertThat(response.getGrantType()).isEqualTo("Bearer");
 
         assertThat(response.getEmail()).isEqualTo(oAuthUserResponse.getEmail());
         assertThat(response.getProfileUrl()).isEqualTo(oAuthUserResponse.getProfileUrl());
-        assertThat(response.isRegistered()).isTrue();
         assertThat(response.getAuthId()).isNull();
         assertThat(response.getAuthorizedToken()).isBlank();
+
+        assertThat(member.getRefreshToken()).isNotEqualTo(prevRefreshToken);
     }
 
     @ParameterizedTest
@@ -241,38 +249,43 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("OAuthInfo를 등록한다")
-    void registerOAuthInfo() {
+    @DisplayName("Member를 등록한다")
+    void testMemberRegister() {
         // given
         String authToken = "인가_토큰";
-        final OAuthInfo info = OAuthInfo.builder().authorizedToken(authToken).build();
+        OAuthInfo info = OAuthInfo.builder().authorizedToken(authToken).build();
         authInfoRepository.save(info);
 
-        final RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", info.getId(), authToken);
-        final long registeredId = 2L;
+        RegisterRequest request = createRegisterRequest("https://profile", "김태태", info.getId(), authToken);
 
-        MemberRegisterResponse responseAboutMemberService = MemberRegisterResponse.builder()
+        long registeredId = 2L;
+        MemberRegisterResponse memberServiceResponse = MemberRegisterResponse.builder()
             .id(registeredId)
             .build();
 
         // stub
         when(memberServiceClient.register(any(MemberRegisterRequest.class)))
-            .thenReturn(responseAboutMemberService);
+            .thenReturn(memberServiceResponse);
 
         // when
-        final RegisterResponse response = authService.register(request);
+        RegisterResponse response = authService.register(request);
 
-        //when & then
+        //then
         assertThat(response.getId()).isNotNull();
-        assertThat(info.isRegistered()).isTrue();
+        assertThat(response.getAccessToken()).isNotBlank();
+        assertThat(response.getRefreshToken()).isNotBlank();
+
+        Member member = memberRepository.findById(response.getId()).get();
+        assertThat(member.getRefreshToken()).isEqualTo(response.getRefreshToken());
     }
 
     @Test
     @DisplayName("회원가입 시 userId를 사용해 OAuthInfo를 조회할 수 없으면 예외를 반환한다")
     void registerFailNotFoundUser() {
         // given
-        Long notFoundedId = 12451L;
-        final RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", notFoundedId, "인가_코드");
+        Long notRegisteredId = 12451L;
+        RegisterRequest request = createRegisterRequest("https://profileUrl",
+            "김태태", notRegisteredId, "인가_코드");
 
         // when & then
         assertThatThrownBy(() -> authService.register(request))
@@ -281,81 +294,86 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("회원가입 시 발급해줬던 AuthorizedToken을 입력해야 한다")
+    void registerFailInvalidAuthorizedToken() {
+        // given
+        OAuthInfo info = OAuthInfo.builder().authorizedToken("인가_토큰").build();
+        authInfoRepository.save(info);
+
+        RegisterRequest request = createRegisterRequest("https://profileUrl",
+            "김태태", info.getId(), "잘못된_인가_코드");
+
+        // when & then
+        assertThatThrownBy(() -> authService.register(request))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining(ErrorCode.TOKEN_UNAUTHORIZED.getMessage());
+    }
+
+    @Test
     @DisplayName("refresh token으로 access token을 재발급한다")
     void refreshToken() {
         // given
-        final OAuthInfo member = OAuthInfo.builder()
-            .build();
-        authInfoRepository.save(member);
-
-        final String refreshToken = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now())
-            .getRefreshToken();
+        Member member = Member.builder().id(globalMemberId++).refreshToken("기존_리프레쉬_토큰").build();
+        String refreshToken = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now()).getRefreshToken();
         member.changeRefreshToken(refreshToken);
-        final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
-        final Long memberId = member.getId();
+        em.persist(member);
+        // TODO 집가서 JPA 책 살펴보기. 왜 member save -> member.changeRefreshToken 하면 이후에 flush, clear 해도 변경을 못잡는거지?
+        Long memberId = member.getId();
+
 
         // when
-        final TokenInfo response = authService.refreshToken(request, memberId);
+        TokenInfo response = authService.refreshToken(refreshToken);
 
         // then
         assertThat(response.getAccessToken()).isNotBlank();
         assertThat(response.getRefreshToken()).isNotBlank();
+        assertThat(response.getGrantType()).isEqualTo("Bearer");
 
-        final TokenInfoResponse parsedToken = jwtTokenProvider.parse(response.getAccessToken());
+        TokenInfoResponse parsedToken = jwtTokenProvider.parse(response.getAccessToken());
         assertThat(parsedToken.getId()).isEqualTo(memberId);
+
+        assertThat(member.getRefreshToken()).isNotEqualTo("기존_리프레쉬_토큰");
     }
 
     @Test
     @DisplayName("존재하지 않는 사용자가 refresh token 발급 요청을 하면 예외를 반환한다")
     void requestRefreshTokenIfNotExistsUser() {
         // given
-        final Long memberId = 1L;
-        final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now())
+        Long notRegisteredMemberId = globalMemberId++;
+        String refreshToken = jwtTokenProvider.generateTokenInfo(notRegisteredMemberId, LocalDateTime.now())
             .getRefreshToken();
-        final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
 
         // when & then
-        assertThatThrownBy(() -> authService.refreshToken(request, memberId))
+        assertThatThrownBy(() -> authService.refreshToken(refreshToken))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.AUTH_INFO_NOT_FOUND.getMessage());
+            .hasMessageContaining(ErrorCode.SERVER_ERROR.getMessage());
     }
 
     @Test
     @DisplayName("입력받은 RefreshToken이 기존에 발급한 Refresh Token과 일치하지 않으면 예외를 반환한다")
     void refreshTokenNotEqualPrevValue() {
         // given
-        final OAuthInfo member = OAuthInfo.builder()
-            .refreshToken("기존 RefreshToken")
-            .build();
-        authInfoRepository.save(member);
-
-        final Long memberId = member.getId();
-        final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now())
+        Member member = createMember(1L, "진짜_리프레쉬_토큰");
+        String fakeRefreshToken = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now())
             .getRefreshToken();
-        final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
 
         // when & then
-        assertThatThrownBy(() -> authService.refreshToken(request, memberId))
+        assertThatThrownBy(() -> authService.refreshToken(fakeRefreshToken))
             .isInstanceOf(ApiException.class)
-            .hasMessageContaining(ErrorCode.REFRESH_TOKEN_INVALID.getMessage());
+            .hasMessageContaining(ErrorCode.TOKEN_ID_INVALID.getMessage());
     }
 
     @Test
     @DisplayName("Refresh Token의 기한이 지났으면 예외를 반환한다")
     void refreshTokenExpired() {
         // given
-        final OAuthInfo member = OAuthInfo.builder()
-            .build();
-        authInfoRepository.save(member);
-        final Long memberId = member.getId();
-        final String refreshToken = jwtTokenProvider.generateTokenInfo(memberId,
+        Long memberId = globalMemberId++;
+        String refreshToken = jwtTokenProvider.generateTokenInfo(memberId,
                 LocalDateTime.of(1900, 1, 1, 1, 1))
             .getRefreshToken();
-        member.changeRefreshToken(refreshToken);
-        final TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
 
         // when & then
-        assertThatThrownBy(() -> authService.refreshToken(request, memberId))
+        assertThatThrownBy(() -> authService.refreshToken(refreshToken))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.TOKEN_TIMEOVER.getMessage());
     }
@@ -369,12 +387,20 @@ class AuthServiceTest {
         return params;
     }
 
-    private OAuthInfo createOAuthInfo(String email, String idUsingResourceServer) {
-        return OAuthInfo.builder()
+    private Member createMember(long memberId, String refreshToken) {
+        Member member = Member.builder().id(memberId).refreshToken(refreshToken).build();
+        memberRepository.save(member);
+        return member;
+    }
+
+    private OAuthInfo createOAuthInfo(String idUsingResourceServer, Member member) {
+        OAuthInfo info = OAuthInfo.builder()
             .oAuthType(OAuthType.GOOGLE)
-            .email(email)
             .idUsingResourceServer(idUsingResourceServer)
             .build();
+        info.init(member);
+        authInfoRepository.save(info);
+        return info;
     }
 
     private OAuthUserResponse createOAuthUserResponse(String email, String profileUrl,

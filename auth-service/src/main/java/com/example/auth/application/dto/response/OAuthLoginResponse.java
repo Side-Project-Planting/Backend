@@ -2,19 +2,28 @@ package com.example.auth.application.dto.response;
 
 import com.example.auth.domain.OAuthInfo;
 import com.example.auth.jwt.TokenInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 public class OAuthLoginResponse {
-    private String accessToken;
-    private String refreshToken;
-    private String grantType;
-    private String profileUrl;
-    private String email;
-    private Long authId;
-    private String authorizedToken;
     private boolean registered;
+
+    private String accessToken;
+
+    @JsonIgnore
+    private String refreshToken;
+
+    private String grantType;
+
+    private String profileUrl;
+
+    private String email;
+
+    private Long authId;
+
+    private String authorizedToken;
 
     @Builder
     @SuppressWarnings("java:S107")
@@ -30,24 +39,26 @@ public class OAuthLoginResponse {
         this.authorizedToken = authorizedToken;
     }
 
-    public static OAuthLoginResponse create(OAuthInfo oAuthInfo, TokenInfo tokenInfo, String profileUrl) {
+    // TODO 프로필주소, 이메일이 필요한지? 일단은 넣어서 보내기 (없어도 되면 ProviderResponse 없애도 됨)
+    public static OAuthLoginResponse create(OAuthInfo oAuthInfo, TokenInfo tokenInfo,
+                                            OAuthUserResponse providerResponse) {
         return OAuthLoginResponse.builder()
             .accessToken(tokenInfo.getAccessToken())
-            .refreshToken(oAuthInfo.getRefreshToken())
+            .refreshToken(tokenInfo.getRefreshToken())
             .grantType(tokenInfo.getGrantType())
-            .profileUrl(profileUrl)
-            .email(oAuthInfo.getEmail())
-            .registered(oAuthInfo.isRegistered())
+            .profileUrl(providerResponse.getProfileUrl())
+            .email(providerResponse.getEmail())
+            .registered(oAuthInfo.getMember() != null)
             .build();
     }
 
-    public static OAuthLoginResponse createWithoutToken(OAuthInfo oAuthInfo, String profileUrl) {
+    public static OAuthLoginResponse createWithoutToken(OAuthInfo oAuthInfo, OAuthUserResponse providerResponse) {
         return OAuthLoginResponse.builder()
-            .profileUrl(profileUrl)
-            .email(oAuthInfo.getEmail())
             .authId(oAuthInfo.getId())
-            .registered(oAuthInfo.isRegistered())
             .authorizedToken(oAuthInfo.getAuthorizedToken())
+            .profileUrl(providerResponse.getProfileUrl())
+            .email(providerResponse.getEmail())
+            .registered(oAuthInfo.getMember() != null)
             .build();
     }
 }

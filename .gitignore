@@ -1,4 +1,5 @@
 ### Custom ###
+application-single.yml
 application-local.yml
 application-docker.yml
 /.env

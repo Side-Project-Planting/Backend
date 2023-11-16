@@ -26,18 +26,10 @@ public class OAuthUserResponse {
         this.idUsingResourceServer = idUsingResourceServer;
     }
 
-    public static OAuthInfo create(OAuthUserResponse response, OAuthType oAuthType) {
-        return OAuthInfo.builder()
-            .idUsingResourceServer(response.getIdUsingResourceServer())
-            .oAuthType(oAuthType)
-            .email(response.getEmail())
-            .build();
-    }
-
     public OAuthInfo toEntity(OAuthType oAuthType) {
         return OAuthInfo.builder()
-            .idUsingResourceServer(this.getIdUsingResourceServer())
-            .email(this.getEmail())
+            .idUsingResourceServer(idUsingResourceServer)
+            .email(email)
             .oAuthType(oAuthType)
             .build();
     }

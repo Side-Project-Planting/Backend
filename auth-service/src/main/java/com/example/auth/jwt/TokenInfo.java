@@ -1,5 +1,6 @@
 package com.example.auth.jwt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -7,6 +8,7 @@ import lombok.Getter;
 public class TokenInfo {
     private String grantType;
     private String accessToken;
+    @JsonIgnore
     private String refreshToken;
 
     @Builder

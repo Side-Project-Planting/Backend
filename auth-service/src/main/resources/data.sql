@@ -1,1 +1,1 @@
-insert into oauth_infos(id, email, registered) values (1, "not-registered@naver.com", false);
+insert into oauth_infos(id, email) values (1, "not-registered@naver.com");

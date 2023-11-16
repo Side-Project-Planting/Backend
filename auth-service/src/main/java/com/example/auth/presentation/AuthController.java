@@ -3,11 +3,11 @@ package com.example.auth.presentation;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,13 +20,16 @@ import com.example.auth.jwt.TokenInfo;
 import com.example.auth.jwt.TokenInfoResponse;
 import com.example.auth.presentation.dto.request.OAuthLoginRequest;
 import com.example.auth.presentation.dto.request.RegisterRequest;
-import com.example.auth.presentation.dto.request.TokenRefreshRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/")
+@Slf4j
 public class AuthController {
     private final AuthService authService;
 
@@ -44,13 +47,19 @@ public class AuthController {
 
     @PostMapping("/oauth/{provider}/login")
     public ResponseEntity<OAuthLoginResponse> oauthLogin(@PathVariable String provider,
-                                                         @RequestBody OAuthLoginRequest request) {
-        return ResponseEntity.ok(authService.login(provider, request.getAuthCode()));
+                                                         @RequestBody OAuthLoginRequest request,
+                                                         HttpServletResponse httpServletResponse) {
+        OAuthLoginResponse response = authService.login(provider, request.getAuthCode());
+        addCookieUsingRefreshToken(httpServletResponse, response.getRefreshToken());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request,
+                                                     HttpServletResponse httpServletResponse) {
+        log.debug("[AuthController] Register 로직 실행");
         RegisterResponse response = authService.register(request);
+        addCookieUsingRefreshToken(httpServletResponse, response.getRefreshToken());
         return ResponseEntity.created(URI.create("/members/" + response.getId()))
             .body(response);
     }
@@ -61,8 +70,21 @@ public class AuthController {
     }
 
     @PostMapping("/auth/refresh-token")
-    public ResponseEntity<TokenInfo> refreshToken(@RequestBody TokenRefreshRequest request,
-                                                  @RequestHeader("X-User-Id") Long userId) {
-        return ResponseEntity.ok().body(authService.refreshToken(request, userId));
+    public ResponseEntity<TokenInfo> refreshToken(@CookieValue(name = "refresh") Cookie refreshCookie,
+                                                  HttpServletResponse httpServletResponse) {
+        String refreshToken = refreshCookie.getValue();
+        TokenInfo response = authService.refreshToken(refreshToken);
+        addCookieUsingRefreshToken(httpServletResponse, response.getRefreshToken());
+        return ResponseEntity.ok().body(response);
+    }
+
+
+    private void addCookieUsingRefreshToken(HttpServletResponse httpServletResponse, String refreshToken) {
+        if (refreshToken == null) {
+            return;
+        }
+        String cookieValue =
+            String.format("refresh=%s; Max-Age=%s; Path=/; HttpOnly; SameSite=Strict", refreshToken, 60 * 60 * 24 * 30);
+        httpServletResponse.setHeader("Set-Cookie", cookieValue);
     }
 }

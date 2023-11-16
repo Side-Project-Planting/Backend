@@ -16,6 +16,8 @@ import com.example.auth.client.dto.MemberRegisterResponse;
 import com.example.auth.domain.AuthInfoRepository;
 import com.example.auth.domain.OAuthInfo;
 import com.example.auth.domain.OAuthType;
+import com.example.auth.domain.member.Member;
+import com.example.auth.domain.member.MemberRepository;
 import com.example.auth.exception.ApiException;
 import com.example.auth.exception.ErrorCode;
 import com.example.auth.factory.RandomStringFactory;
@@ -25,15 +27,17 @@ import com.example.auth.jwt.TokenInfoResponse;
 import com.example.auth.oauth.OAuthProvider;
 import com.example.auth.oauth.OAuthProviderResolver;
 import com.example.auth.presentation.dto.request.RegisterRequest;
-import com.example.auth.presentation.dto.request.TokenRefreshRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
     private final OAuthProviderResolver oAuthProviderResolver;
     private final AuthInfoRepository authInfoRepository;
+    private final MemberRepository memberRepository;
     private final RandomStringFactory randomStringFactory;
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberServiceClient memberServiceClient;
@@ -49,51 +53,54 @@ public class AuthService {
     }
 
     /**
-     * 어떤 OAuthProvider와 상호작용중인지, 그리고 해당 Proviver에게 받아온 AuthCode를 입력한다. ex. google, google에게 받아온 authCode
+     * 특정 Provider에게 받아온 Auth Code를 사용해 providerResponse를 가져온다. ex. google에게 받아온 Auth Code를 사용함
      * 기존에 등록된 적 없던 사용자면 DB에 저장해주고, 기존에 등록된 적 있는 사용자의 경우 해당 데이터를 불러온다.
-     * 불러온 데이터를 사용해 TokenInfo를 만들어 사용자에게 반환한다.
-     * OAuthInfo의 refreshToken 필드를 새롭게 만들어진 RefreshToken으로 갱신한다
+     * 가져온 데이터를 사용해 TokenInfo를 생성한다.(access token, refresh token)
+     * Member의 Refresh Token을 갱신한다.
      */
     @Transactional
     public OAuthLoginResponse login(String providerName, String authCode) {
         OAuthProvider oAuthProvider = oAuthProviderResolver.find(providerName);
-        OAuthUserResponse response = oAuthProvider.getOAuthUserResponse(authCode);
-        OAuthInfo oAuthInfo = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), response);
+        OAuthUserResponse providerResponse = oAuthProvider.getOAuthUserResponse(authCode);
+        OAuthInfo oAuthInfo = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), providerResponse);
 
-        Long memberId = oAuthInfo.getMemberId();
-        if (memberId == null) {
+        Member member = oAuthInfo.getMember();
+        if (member == null) {
             oAuthInfo.setAuthorizedToken(randomStringFactory.create());
-            return OAuthLoginResponse.createWithoutToken(oAuthInfo, response.getProfileUrl());
+            return OAuthLoginResponse.createWithoutToken(oAuthInfo, providerResponse);
         }
-        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
 
-        oAuthInfo.changeRefreshToken(tokenInfo.getRefreshToken());
-        return OAuthLoginResponse.create(oAuthInfo, tokenInfo, response.getProfileUrl());
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now());
+        member.changeRefreshToken(tokenInfo.getRefreshToken());
+        return OAuthLoginResponse.create(oAuthInfo, tokenInfo, providerResponse);
     }
 
     /**
-     * 서비스를 이용하기 위해 필요한 초기값을 입력받는다.
-     * OAuth 방식으로 인증이 끝난 사용자는 profileUrl, name, email을 추가로 입력한다.
-     * Member를 관리하는 MSA 서버에게 register 요청을 보낸다.
-     * 요청이 성공하면 OAuthInfo의 registered 필드를 true로 변경하고 응답을 반환한다
+     * 서비스를 이용하기 위해 필요한 초기값을 입력한 뒤 MemberService로 등록 요청을 보내는 로직.
+     * 기존 OAuthInfo로 등록된 정보에 profileUrl, name을 추가로 입력한다.
+     * 요청에 성공하면 Auth Service의 Member DB에 값을 추가한다
      */
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
+        log.debug("[AuthService] Register 로직 실행");
         OAuthInfo info = authInfoRepository.findById(request.getAuthId())
             .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
         if (!info.validateAuthorizedToken(request.getAuthorizedToken())) {
+            log.debug("[AuthService] 토큰이 적절하지 않음");
             throw new ApiException(ErrorCode.TOKEN_UNAUTHORIZED);
         }
-
-        MemberRegisterRequest requestUsingMemberService =
+        MemberRegisterRequest memberServiceRequest =
             MemberRegisterRequest.create(request.getProfileUrl(), request.getName(), info.getEmail());
-        MemberRegisterResponse response = memberServiceClient.register(requestUsingMemberService);
-        info.init(response.getId());
-
-        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(response.getId(), LocalDateTime.now());
-
-        info.changeRefreshToken(tokenInfo.getRefreshToken());
-        return RegisterResponse.create(tokenInfo, info.getMemberId());
+        log.debug("[AuthService] MemberServiceClient를 사용해 요청을 보낸다");
+        MemberRegisterResponse responseAboutMemberRegister = memberServiceClient.register(memberServiceRequest);
+        log.debug("[AuthService] MemberRegisterRespones 응답 받아옴");
+        Long memberId = responseAboutMemberRegister.getId();
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
+        log.debug("[AuthService] TokenInfo 생성 성공");
+        Member member = Member.builder().id(memberId).refreshToken(tokenInfo.getRefreshToken()).build();
+        memberRepository.saveAndFlush(member);
+        info.init(member);
+        return RegisterResponse.create(tokenInfo, memberId);
     }
 
     /**
@@ -101,21 +108,17 @@ public class AuthService {
      * 만약 리프레쉬 토큰이 잘못되었거나, 만료되었다면 예외를 반환한다.
      */
     @Transactional
-    public TokenInfo refreshToken(TokenRefreshRequest request, Long userId) {
-        OAuthInfo info = authInfoRepository.findById(userId)
-            .orElseThrow(() -> new ApiException(ErrorCode.AUTH_INFO_NOT_FOUND));
-
-        if (!info.isRefreshTokenMatching(request.getRefreshToken())) {
-            throw new ApiException(ErrorCode.REFRESH_TOKEN_INVALID);
+    public TokenInfo refreshToken(String refreshToken) {
+        TokenInfoResponse refreshTokenInfo = jwtTokenProvider.parse(refreshToken);
+        Long memberId = refreshTokenInfo.getId();
+        Member member = memberRepository.findById(memberId)
+            .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
+        if (!member.isRefreshTokenMatching(refreshToken)) {
+            throw new ApiException(ErrorCode.TOKEN_ID_INVALID);
         }
+        TokenInfo generatedTokenInfo = jwtTokenProvider.generateTokenInfo(memberId, LocalDateTime.now());
+        member.changeRefreshToken(generatedTokenInfo.getRefreshToken());
 
-        if (jwtTokenProvider.isTokenExpired(info.getRefreshToken())) {
-            throw new ApiException(ErrorCode.TOKEN_TIMEOVER);
-        }
-
-        TokenInfo generatedTokenInfo = jwtTokenProvider.generateTokenInfo(info.getId(), LocalDateTime.now());
-
-        info.changeRefreshToken(generatedTokenInfo.getRefreshToken());
         return generatedTokenInfo;
     }
 

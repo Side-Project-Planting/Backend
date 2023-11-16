@@ -1,21 +1,22 @@
 package com.example.auth.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.UUID;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.auth.application.AuthService;
@@ -28,8 +29,8 @@ import com.example.auth.jwt.TokenInfo;
 import com.example.auth.jwt.TokenInfoResponse;
 import com.example.auth.presentation.dto.request.OAuthLoginRequest;
 import com.example.auth.presentation.dto.request.RegisterRequest;
-import com.example.auth.presentation.dto.request.TokenRefreshRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 
 @WebMvcTest
 @DisplayName("AuthController 슬라이싱 테스트")
@@ -77,14 +78,14 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("로그인에 성공하면 200번 상태와 OAuthLoginResponse를 반환한다")
+    @DisplayName("회원가입된 사용자가 로그인에 성공하면 200번 상태와 OAuthLoginResponse와 refresh 쿠키를 반환한다")
     void login() throws Exception {
         // given
         String providerName = "google";
         OAuthLoginRequest request = new OAuthLoginRequest("authcode");
         OAuthLoginResponse response = OAuthLoginResponse.builder()
             .accessToken("access")
-            .refreshToken("refresh")
+            .refreshToken("refresh_value")
             .grantType("Bearer")
             .profileUrl("https://이미지")
             .email("email@google.com")
@@ -100,12 +101,50 @@ class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.refreshToken").doesNotExist())
             .andExpect(jsonPath("$.accessToken").exists())
-            .andExpect(jsonPath("$.refreshToken").exists())
             .andExpect(jsonPath("$.grantType").exists())
             .andExpect(jsonPath("$.profileUrl").exists())
             .andExpect(jsonPath("$.email").exists())
-            .andExpect(jsonPath("$.registered").exists());
+            .andExpect(jsonPath("$.registered").exists())
+            .andExpect(cookie().exists("refresh"))
+            .andExpect(cookie().httpOnly("refresh", true))
+            .andDo(result -> {
+                MockHttpServletResponse resp = result.getResponse();
+                String setCookieHeader = resp.getHeader("Set-Cookie");
+                Assertions.assertThat(setCookieHeader).contains("SameSite=Strict");
+            });
+    }
+
+    @Test
+    @DisplayName("최초 로그인에 성공하면 200번 상태와 OAuthLoginResponse와 refresh 쿠키를 반환한다")
+    void testLoginOnUserIsFirstTime() throws Exception {
+        // given
+        String providerName = "google";
+        OAuthLoginRequest request = new OAuthLoginRequest("authcode");
+        OAuthLoginResponse response = OAuthLoginResponse.builder()
+            .profileUrl("https://이미지")
+            .email("email@google.com")
+            .authId(1L)
+            .registered(false)
+            .authorizedToken("인증토큰")
+            .build();
+
+        // stub
+        when(authService.login(providerName, request.getAuthCode()))
+            .thenReturn(response);
+
+        // when & then
+        mockMvc.perform(post(String.format("/oauth/%s/login", providerName))
+                .content(objectMapper.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.profileUrl").value(response.getProfileUrl()))
+            .andExpect(jsonPath("$.email").value(response.getEmail()))
+            .andExpect(jsonPath("$.authId").value(response.getAuthId()))
+            .andExpect(jsonPath("$.registered").value(response.isRegistered()))
+            .andExpect(jsonPath("$.authorizedToken").value(response.getAuthorizedToken()))
+            .andExpect(cookie().doesNotExist("refresh"));
     }
 
     @Test
@@ -146,10 +185,12 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("회원을 등록한다")
-    void register() throws Exception {
+    void testRegister() throws Exception {
         // given
         RegisterRequest request = createRegisterRequest("https://profileUrl", "김태태", 1L, "인가_코드");
-        RegisterResponse registerResponse = RegisterResponse.builder().build();
+        RegisterResponse registerResponse = RegisterResponse.builder()
+            .refreshToken("리프레쉬_토큰")
+            .build();
 
         // stub
         when(authService.register(any(RegisterRequest.class)))
@@ -159,7 +200,15 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/register")
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isCreated());
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.refreshToken").doesNotExist())
+            .andExpect(cookie().exists("refresh"))
+            .andExpect(cookie().httpOnly("refresh", true))
+            .andDo(result -> {
+                MockHttpServletResponse resp = result.getResponse();
+                String setCookieHeader = resp.getHeader("Set-Cookie");
+                Assertions.assertThat(setCookieHeader).contains("SameSite=Strict");
+            });
     }
 
     @Test
@@ -259,12 +308,11 @@ class AuthControllerTest {
     void refreshToken() throws Exception {
         // given
         String token = makeToken();
-        TokenRefreshRequest request = new TokenRefreshRequest(token);
         String createdAccessToken = makeToken();
         String createdRefreshToken = makeToken();
 
         // stub
-        when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
+        when(authService.refreshToken(anyString()))
             .thenReturn(TokenInfo.builder()
                 .accessToken(createdAccessToken)
                 .refreshToken(createdRefreshToken)
@@ -274,12 +322,20 @@ class AuthControllerTest {
         // when & then
         mockMvc.perform(post("/auth/refresh-token")
                 .header("X-User-Id", 1L)
-                .content(objectMapper.writeValueAsString(request))
+                .cookie(new Cookie("refresh", token))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.accessToken").value(createdAccessToken))
-            .andExpect(jsonPath("$.refreshToken").value(createdRefreshToken))
-            .andExpect(jsonPath("$.grantType").value("Bearer"));
+            .andExpect(jsonPath("$.refreshToken").doesNotExist())
+            .andExpect(jsonPath("$.grantType").value("Bearer"))
+            .andExpect(cookie().exists("refresh"))
+            .andExpect(cookie().httpOnly("refresh", true))
+            .andDo(result -> {
+                MockHttpServletResponse resp = result.getResponse();
+                String setCookieHeader = resp.getHeader("Set-Cookie");
+                Assertions.assertThat(setCookieHeader).contains("SameSite=Strict");
+            });
+        ;
 
 
     }
@@ -289,15 +345,14 @@ class AuthControllerTest {
     void cantRefreshTokenBecauseOfExpired() throws Exception {
         // given
         String token = makeToken();
-        TokenRefreshRequest request = new TokenRefreshRequest(token);
 
         // stub
-        when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
+        when(authService.refreshToken(anyString()))
             .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
 
         // when & then
         mockMvc.perform(post("/auth/refresh-token")
-                .content(objectMapper.writeValueAsString(request))
+                .cookie(new Cookie("refresh", token))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
@@ -307,15 +362,23 @@ class AuthControllerTest {
     void cantRefreshTokenBecauseOfInvalid() throws Exception {
         // given
         String token = makeToken();
-        TokenRefreshRequest request = new TokenRefreshRequest(token);
 
         // stub
-        when(authService.refreshToken(any(TokenRefreshRequest.class), anyLong()))
+        when(authService.refreshToken(anyString()))
             .thenThrow(new ApiException(ErrorCode.TOKEN_TIMEOVER));
 
         // when & then
         mockMvc.perform(post("/auth/refresh-token")
-                .content(objectMapper.writeValueAsString(request))
+                .cookie(new Cookie("refresh", token))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("refresh 요청 시 refresh 쿠키는 필수다")
+    void cantRefreshTokenBecauseTokenIsNull() throws Exception {
+        // when & then
+        mockMvc.perform(post("/auth/refresh-token")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
