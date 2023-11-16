@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -172,7 +171,7 @@ class TaskControllerTest {
 
         TaskFindResponse response = TaskFindResponse.builder()
             .id(taskId)
-            .name("이름")
+            .title("태스크제목")
             .build();
 
         // stub
@@ -184,7 +183,7 @@ class TaskControllerTest {
                 .header("X-User-Id", userId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(response.getId()))
-            .andExpect(jsonPath("$.name").value(response.getName()));
+            .andExpect(jsonPath("$.title").value(response.getTitle()));
     }
 
     @Test
