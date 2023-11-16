@@ -38,7 +38,7 @@ class TaskControllerTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(1L)
             .tabId(1L)
-            .name("이름")
+            .title("이름")
             .build();
         Long createdId = 1L;
         Long userId = 2L;
@@ -76,7 +76,7 @@ class TaskControllerTest {
         // given
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(1L)
-            .name("이름")
+            .title("이름")
             .build();
         Long createdId = 1L;
         Long userId = 2L;
@@ -99,7 +99,7 @@ class TaskControllerTest {
         // given
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(1L)
-            .name("이름")
+            .title("이름")
             .build();
         Long createdId = 1L;
         Long userId = 2L;
@@ -123,7 +123,7 @@ class TaskControllerTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(1L)
             .tabId(1L)
-            .name("")
+            .title("")
             .build();
         Long createdId = 1L;
         Long userId = 2L;

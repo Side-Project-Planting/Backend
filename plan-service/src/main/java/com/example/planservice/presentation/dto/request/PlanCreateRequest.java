@@ -38,5 +38,6 @@ public class PlanCreateRequest {
             .intro(intro)
             .isPublic(isPublic)
             .owner(member)
-            .build();    }
+            .build();
+    }
 }

@@ -23,7 +23,7 @@ public class TaskCreateRequest {
     private Long assigneeId;
 
     @NotBlank
-    private String name;
+    private String title;
 
     private String description;
 
@@ -35,12 +35,12 @@ public class TaskCreateRequest {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private TaskCreateRequest(Long planId, Long tabId, Long assigneeId, String name, String description,
+    private TaskCreateRequest(Long planId, Long tabId, Long assigneeId, String title, String description,
                               LocalDateTime startDate, LocalDateTime endDate, List<Long> labels) {
         this.planId = planId;
         this.tabId = tabId;
         this.assigneeId = assigneeId;
-        this.name = name;
+        this.title = title;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;

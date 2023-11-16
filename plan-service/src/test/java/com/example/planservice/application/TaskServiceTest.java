@@ -79,7 +79,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(tab.getId())
             .assigneeId(taskManager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
             .endDate(null)
@@ -98,7 +98,7 @@ class TaskServiceTest {
             .getId()).isEqualTo(request.getTabId());
         assertThat(task.getAssignee()
             .getId()).isEqualTo(request.getAssigneeId());
-        assertThat(task.getName()).isEqualTo(request.getName());
+        assertThat(task.getName()).isEqualTo(request.getTitle());
         assertThat(task.getDescription()).isEqualTo(request.getDescription());
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
@@ -118,7 +118,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(tab.getId())
             .assigneeId(null)
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
             .endDate(null)
@@ -136,7 +136,7 @@ class TaskServiceTest {
         assertThat(task.getId()).isEqualTo(createdId);
         assertThat(task.getTab()
             .getId()).isEqualTo(request.getTabId());
-        assertThat(task.getName()).isEqualTo(request.getName());
+        assertThat(task.getName()).isEqualTo(request.getTitle());
         assertThat(task.getDescription()).isEqualTo(request.getDescription());
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
@@ -159,7 +159,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(tab.getId())
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
             .endDate(null)
@@ -188,7 +188,7 @@ class TaskServiceTest {
             .planId(plan.getId())
             .tabId(tab.getId())
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .labels(List.of(label1.getId(), label2.getId()))
             .build();
@@ -227,7 +227,7 @@ class TaskServiceTest {
             .planId(plan.getId())
             .tabId(tab.getId())
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .labels(List.of(label1.getId(), notRegisteredLabelId))
             .build();
@@ -266,7 +266,7 @@ class TaskServiceTest {
             .planId(plan.getId())
             .tabId(tab.getId())
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .labels(List.of(otherPlansLabel.getId()))
             .build();
@@ -303,7 +303,7 @@ class TaskServiceTest {
             .planId(notRegisteredPlanId)
             .tabId(notRegisteredTabId)
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
             .endDate(null)
