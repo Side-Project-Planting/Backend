@@ -20,7 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.TabService;
-import com.example.planservice.application.dto.TabChangeNameResponse;
+import com.example.planservice.application.dto.TabChangeTitleResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.TabChangeTitleRequest;
@@ -220,8 +220,8 @@ class TabControllerTest {
         Long userId = 1L;
         TabChangeTitleRequest request = TabChangeTitleRequest.builder()
             .build();
-        TabChangeNameResponse response = TabChangeNameResponse.builder()
-            .name("변경된이름")
+        TabChangeTitleResponse response = TabChangeTitleResponse.builder()
+            .title("변경된이름")
             .id(3L)
             .build();
 
@@ -236,7 +236,7 @@ class TabControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(response.getId()))
-            .andExpect(jsonPath("$.name").value(response.getName()));
+            .andExpect(jsonPath("$.title").value(response.getTitle()));
     }
 
     @Test
@@ -244,7 +244,7 @@ class TabControllerTest {
     void changeTabNameFailNotAuthenticated() throws Exception {
         // given
         TabChangeTitleRequest request = TabChangeTitleRequest.builder().build();
-        TabChangeNameResponse response = TabChangeNameResponse.builder().build();
+        TabChangeTitleResponse response = TabChangeTitleResponse.builder().build();
 
         // stub
         when(tabService.changeName(any(TabChangeNameServiceRequest.class)))

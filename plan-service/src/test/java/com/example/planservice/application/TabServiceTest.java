@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.planservice.application.dto.TabChangeNameResponse;
+import com.example.planservice.application.dto.TabChangeTitleResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.domain.member.Member;
@@ -335,11 +335,11 @@ class TabServiceTest {
             .build();
 
         // when
-        TabChangeNameResponse response = tabService.changeName(request);
+        TabChangeTitleResponse response = tabService.changeName(request);
 
         // then
         assertThat(response.getId()).isEqualTo(tab.getId());
-        assertThat(response.getName()).isEqualTo(title);
+        assertThat(response.getTitle()).isEqualTo(title);
     }
 
     @Test
