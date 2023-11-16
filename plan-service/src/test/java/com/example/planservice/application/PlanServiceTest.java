@@ -443,7 +443,7 @@ class PlanServiceTest {
 
         // then
         assertThat(memberOfPlanRepository.findById(memberOfPlanId)).isEmpty();
-        assertThat(planService.getAllPlanByMemberId(member.getId())).isEmpty();
+        assertThat(planService.getAllPlanTitleIdByMemberId(member.getId())).isEmpty();
     }
 
 
@@ -460,7 +460,7 @@ class PlanServiceTest {
         saveDefaultMemberOfPlan(plan3, member);
 
         // when
-        List<PlanTitleIdResponse> allPlanByMemberId = planService.getAllPlanByMemberId(member.getId());
+        List<PlanTitleIdResponse> allPlanByMemberId = planService.getAllPlanTitleIdByMemberId(member.getId());
 
         // then
         assertThat(allPlanByMemberId.size()).isEqualTo(3);

@@ -47,12 +47,8 @@ public class Task extends BaseEntity {
     private Tab tab;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id")
-    private Member manager;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "writer_id")
-    private Member writer;
+    @JoinColumn(name = "assignee_id")
+    private Member assignee;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "task")
     private List<LabelOfTask> labelOfTasks = new ArrayList<>();
@@ -80,12 +76,11 @@ public class Task extends BaseEntity {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private Task(Tab tab, Member manager, Member writer, String name, String description, LocalDateTime startDate,
+    private Task(Tab tab, Member manager, String name, String description, LocalDateTime startDate,
                  LocalDateTime endDate, boolean isDeleted, Task next, Task prev, int version) {
         validateDates(startDate, endDate);
         this.tab = tab;
-        this.manager = manager;
-        this.writer = writer;
+        this.assignee = manager;
         this.name = name;
         this.description = description;
         this.startDate = startDate;
@@ -172,7 +167,7 @@ public class Task extends BaseEntity {
     public void change(Task entity) {
         validateCanModify();
 
-        this.manager = entity.getManager();
+        this.assignee = entity.getAssignee();
         this.name = entity.getName();
         this.description = entity.getDescription();
         this.startDate = entity.getStartDate();
@@ -212,6 +207,10 @@ public class Task extends BaseEntity {
         if (startDate.isAfter(endDate)) {
             throw new ApiException(ErrorCode.TASK_DATE_INVALID);
         }
+    }
+
+    public boolean isDummy() {
+        return this.name.equals(FIRST_DUMMY_NAME) || this.name.equals(LAST_DUMMY_NAME);
     }
 
 }

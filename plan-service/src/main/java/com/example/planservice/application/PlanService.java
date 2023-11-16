@@ -107,10 +107,6 @@ public class PlanService {
 
     @Transactional
     public Long inviteMember(Long planId, Long memberId) {
-        if (isDeletedPlan(planId)) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
-
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         if (plan.isDeleted()) {
@@ -135,10 +131,6 @@ public class PlanService {
 
     @Transactional
     public void kick(Long planId, PlanKickRequest request, Long userId) {
-        if (isDeletedPlan(planId)) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
-
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         if (plan.isDeleted()) {
@@ -169,9 +161,6 @@ public class PlanService {
 
     @Transactional
     public void update(Long planId, PlanUpdateRequest request, Long userId) {
-        if (isDeletedPlan(planId)) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         if (plan.isDeleted()) {
@@ -184,7 +173,7 @@ public class PlanService {
         plan.update(request.getTitle(), request.getIntro(), nextOwner, request.isPublic());
     }
 
-    public List<PlanTitleIdResponse> getAllPlanByMemberId(Long userId) {
+    public List<PlanTitleIdResponse> getAllPlanTitleIdByMemberId(Long userId) {
         List<MemberOfPlan> memberOfPlans = memberOfPlanRepository.findAllByMemberId(userId)
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -233,6 +222,7 @@ public class PlanService {
 
     private List<TabOfPlanResponse> getTabResponses(List<Tab> tabList) {
         return tabList.stream()
+            .filter(tab -> !tab.isDeleted())
             .map(tab -> {
                 List<Task> tasksOfTab = tab.getTasks();
                 List<Long> taskOrder = getSortedTaskID(tasksOfTab);
@@ -249,6 +239,7 @@ public class PlanService {
 
     private List<TaskOfPlanResponse> getTaskResponses(List<Task> tasks) {
         return tasks.stream()
+            .filter(task -> !task.isDeleted())
             .map(TaskOfPlanResponse::from)
             .toList();
     }
@@ -269,6 +260,10 @@ public class PlanService {
 
         Task current = start;
         while (current != null) {
+            if (current.isDummy()) {
+                current = current.getNext();
+                continue;
+            }
             orderedItems.add(current.getId());
             current = current.getNext();
         }
@@ -304,5 +299,4 @@ public class PlanService {
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         return plan.isDeleted();
     }
-
 }

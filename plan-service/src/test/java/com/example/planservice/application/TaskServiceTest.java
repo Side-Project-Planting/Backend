@@ -78,7 +78,7 @@ class TaskServiceTest {
 
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(tab.getId())
-            .managerId(taskManager.getId())
+            .assigneeId(taskManager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
@@ -90,11 +90,14 @@ class TaskServiceTest {
         Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
-        Task task = taskRepository.findById(createdId).get();
+        Task task = taskRepository.findById(createdId)
+            .get();
 
         assertThat(task.getId()).isEqualTo(createdId);
-        assertThat(task.getTab().getId()).isEqualTo(request.getTabId());
-        assertThat(task.getManager().getId()).isEqualTo(request.getManagerId());
+        assertThat(task.getTab()
+            .getId()).isEqualTo(request.getTabId());
+        assertThat(task.getAssignee()
+            .getId()).isEqualTo(request.getAssigneeId());
         assertThat(task.getName()).isEqualTo(request.getName());
         assertThat(task.getDescription()).isEqualTo(request.getDescription());
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
@@ -114,7 +117,7 @@ class TaskServiceTest {
 
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(tab.getId())
-            .managerId(null)
+            .assigneeId(null)
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
@@ -126,11 +129,13 @@ class TaskServiceTest {
         Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
-        Task task = taskRepository.findById(createdId).get();
+        Task task = taskRepository.findById(createdId)
+            .get();
 
-        assertThat(task.getManager()).isNull();
+        assertThat(task.getAssignee()).isNull();
         assertThat(task.getId()).isEqualTo(createdId);
-        assertThat(task.getTab().getId()).isEqualTo(request.getTabId());
+        assertThat(task.getTab()
+            .getId()).isEqualTo(request.getTabId());
         assertThat(task.getName()).isEqualTo(request.getName());
         assertThat(task.getDescription()).isEqualTo(request.getDescription());
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
@@ -153,7 +158,7 @@ class TaskServiceTest {
 
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(tab.getId())
-            .managerId(manager.getId())
+            .assigneeId(manager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
@@ -182,7 +187,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(plan.getId())
             .tabId(tab.getId())
-            .managerId(manager.getId())
+            .assigneeId(manager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .labels(List.of(label1.getId(), label2.getId()))
@@ -192,14 +197,17 @@ class TaskServiceTest {
         Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
-        List<Label> labels = labelOfTaskRepository.findAll().stream()
-            .filter(labelOfTask -> labelOfTask.getTask().getId() == createdId)
+        List<Label> labels = labelOfTaskRepository.findAll()
+            .stream()
+            .filter(labelOfTask -> labelOfTask.getTask()
+                .getId() == createdId)
             .map(LabelOfTask::getLabel)
             .toList();
         assertThat(labels).hasSize(2)
             .contains(label1, label2);
 
-        Task task = taskRepository.findById(createdId).get();
+        Task task = taskRepository.findById(createdId)
+            .get();
         assertThat(task.getId()).isEqualTo(createdId);
     }
 
@@ -218,7 +226,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(plan.getId())
             .tabId(tab.getId())
-            .managerId(manager.getId())
+            .assigneeId(manager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .labels(List.of(label1.getId(), notRegisteredLabelId))
@@ -228,13 +236,17 @@ class TaskServiceTest {
         Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
-        List<Label> labels = labelOfTaskRepository.findAll().stream()
-            .filter(labelOfTask -> labelOfTask.getTask().getId() == createdId)
+        List<Label> labels = labelOfTaskRepository.findAll()
+            .stream()
+            .filter(labelOfTask -> labelOfTask.getTask()
+                .getId() == createdId)
             .map(LabelOfTask::getLabel)
             .toList();
 
-        assertThat(labels).hasSize(1).contains(label1);
-        Task task = taskRepository.findById(createdId).get();
+        assertThat(labels).hasSize(1)
+            .contains(label1);
+        Task task = taskRepository.findById(createdId)
+            .get();
         assertThat(task.getId()).isEqualTo(createdId);
     }
 
@@ -253,7 +265,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(plan.getId())
             .tabId(tab.getId())
-            .managerId(manager.getId())
+            .assigneeId(manager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .labels(List.of(otherPlansLabel.getId()))
@@ -263,13 +275,16 @@ class TaskServiceTest {
         Long createdId = taskService.create(loginMember.getId(), request);
 
         // then
-        List<Label> labels = labelOfTaskRepository.findAll().stream()
-            .filter(labelOfTask -> labelOfTask.getTask().getId() == createdId)
+        List<Label> labels = labelOfTaskRepository.findAll()
+            .stream()
+            .filter(labelOfTask -> labelOfTask.getTask()
+                .getId() == createdId)
             .map(LabelOfTask::getLabel)
             .toList();
         assertThat(labels).isEmpty();
 
-        Task task = taskRepository.findById(createdId).get();
+        Task task = taskRepository.findById(createdId)
+            .get();
         assertThat(task.getId()).isEqualTo(createdId);
     }
 
@@ -287,7 +302,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(notRegisteredPlanId)
             .tabId(notRegisteredTabId)
-            .managerId(manager.getId())
+            .assigneeId(manager.getId())
             .name("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
@@ -527,7 +542,10 @@ class TaskServiceTest {
             .build();
         labelRepository.saveAll(List.of(label1, label2));
 
-        labelOfTaskRepository.save(LabelOfTask.builder().label(label1).task(task).build());
+        labelOfTaskRepository.save(LabelOfTask.builder()
+            .label(label1)
+            .task(task)
+            .build());
 
         TaskUpdateServiceRequest request = TaskUpdateServiceRequest.builder()
             .taskId(task.getId())
@@ -536,8 +554,10 @@ class TaskServiceTest {
             .managerId(taskManager.getId())
             .name("변경된 이름")
             .description("이렇게 설명할게요")
-            .startDate(LocalDateTime.now().minusDays(10))
-            .endDate(LocalDateTime.now().plusDays(2))
+            .startDate(LocalDateTime.now()
+                .minusDays(10))
+            .endDate(LocalDateTime.now()
+                .plusDays(2))
             .labels(List.of(label1.getId(), label2.getId()))
             .build();
 
@@ -545,10 +565,11 @@ class TaskServiceTest {
         Long updatedId = taskService.updateContents(request);
 
         // then
-        Task updatedTask = taskRepository.findById(updatedId).get();
+        Task updatedTask = taskRepository.findById(updatedId)
+            .get();
         assertThat(updatedTask).isEqualTo(task);
         assertThat(updatedTask)
-            .extracting(Task::getTab, Task::getManager, Task::getName,
+            .extracting(Task::getTab, Task::getAssignee, Task::getName,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
             .containsExactly(tab, taskManager, request.getName(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());
@@ -577,7 +598,10 @@ class TaskServiceTest {
             .build();
         labelRepository.saveAll(List.of(label1, label2));
 
-        labelOfTaskRepository.save(LabelOfTask.builder().label(label1).task(task).build());
+        labelOfTaskRepository.save(LabelOfTask.builder()
+            .label(label1)
+            .task(task)
+            .build());
 
         TaskUpdateServiceRequest request = TaskUpdateServiceRequest.builder()
             .taskId(task.getId())
@@ -586,8 +610,10 @@ class TaskServiceTest {
             .managerId(null)
             .name("변경된 이름")
             .description("이렇게 설명할게요")
-            .startDate(LocalDateTime.now().minusDays(10))
-            .endDate(LocalDateTime.now().plusDays(2))
+            .startDate(LocalDateTime.now()
+                .minusDays(10))
+            .endDate(LocalDateTime.now()
+                .plusDays(2))
             .labels(List.of(label1.getId(), label2.getId()))
             .build();
 
@@ -595,10 +621,11 @@ class TaskServiceTest {
         Long updatedId = taskService.updateContents(request);
 
         // then
-        Task updatedTask = taskRepository.findById(updatedId).get();
+        Task updatedTask = taskRepository.findById(updatedId)
+            .get();
         assertThat(updatedTask).isEqualTo(task);
         assertThat(updatedTask)
-            .extracting(Task::getTab, Task::getManager, Task::getName,
+            .extracting(Task::getTab, Task::getAssignee, Task::getName,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
             .containsExactly(tab, null, request.getName(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());
@@ -627,8 +654,10 @@ class TaskServiceTest {
             .filter(each -> task.getId() == each.getId())
             .findAny();
         assertThat(resultOpt).isEmpty();
-        assertThat(tab.getFirstDummyTask().getNext()).isEqualTo(tab.getLastDummyTask());
-        assertThat(tab.getLastDummyTask().getPrev()).isEqualTo(tab.getFirstDummyTask());
+        assertThat(tab.getFirstDummyTask()
+            .getNext()).isEqualTo(tab.getLastDummyTask());
+        assertThat(tab.getLastDummyTask()
+            .getPrev()).isEqualTo(tab.getFirstDummyTask());
         assertThat(task.getNext()).isNull();
         assertThat(task.getPrev()).isNull();
     }
@@ -654,8 +683,10 @@ class TaskServiceTest {
             .filter(each -> task.getId() == each.getId())
             .findAny();
         assertThat(resultOpt).isEmpty();
-        assertThat(tab.getFirstDummyTask().getNext()).isEqualTo(tab.getLastDummyTask());
-        assertThat(tab.getLastDummyTask().getPrev()).isEqualTo(tab.getFirstDummyTask());
+        assertThat(tab.getFirstDummyTask()
+            .getNext()).isEqualTo(tab.getLastDummyTask());
+        assertThat(tab.getLastDummyTask()
+            .getPrev()).isEqualTo(tab.getFirstDummyTask());
         assertThat(task.getNext()).isNull();
         assertThat(task.getPrev()).isNull();
 
@@ -816,13 +847,15 @@ class TaskServiceTest {
     }
 
     private Member createMember() {
-        Member member = Member.builder().build();
+        Member member = Member.builder()
+            .build();
         memberRepository.save(member);
         return member;
     }
 
     private Task createTask() {
-        Task task = Task.builder().build();
+        Task task = Task.builder()
+            .build();
         taskRepository.save(task);
         return task;
     }
