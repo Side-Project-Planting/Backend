@@ -552,7 +552,7 @@ class TaskServiceTest {
             .memberId(loginMember.getId())
             .planId(plan.getId())
             .managerId(taskManager.getId())
-            .name("변경된 이름")
+            .title("변경된 이름")
             .description("이렇게 설명할게요")
             .startDate(LocalDateTime.now()
                 .minusDays(10))
@@ -571,7 +571,7 @@ class TaskServiceTest {
         assertThat(updatedTask)
             .extracting(Task::getTab, Task::getAssignee, Task::getName,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
-            .containsExactly(tab, taskManager, request.getName(),
+            .containsExactly(tab, taskManager, request.getTitle(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());
 
         List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(updatedId);
@@ -608,7 +608,7 @@ class TaskServiceTest {
             .memberId(loginMember.getId())
             .planId(plan.getId())
             .managerId(null)
-            .name("변경된 이름")
+            .title("변경된 이름")
             .description("이렇게 설명할게요")
             .startDate(LocalDateTime.now()
                 .minusDays(10))
@@ -627,7 +627,7 @@ class TaskServiceTest {
         assertThat(updatedTask)
             .extracting(Task::getTab, Task::getAssignee, Task::getName,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
-            .containsExactly(tab, null, request.getName(),
+            .containsExactly(tab, null, request.getTitle(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());
 
         List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(updatedId);

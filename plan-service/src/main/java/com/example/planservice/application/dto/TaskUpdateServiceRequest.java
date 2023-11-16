@@ -16,7 +16,7 @@ public class TaskUpdateServiceRequest {
     private Long memberId;
     private Long planId;
     private Long managerId;
-    private String name;
+    private String title;
     private String description;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
@@ -24,14 +24,14 @@ public class TaskUpdateServiceRequest {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private TaskUpdateServiceRequest(Long taskId, Long memberId, Long planId, Long managerId, String name,
+    private TaskUpdateServiceRequest(Long taskId, Long memberId, Long planId, Long managerId, String title,
                                      String description, LocalDateTime startDate, LocalDateTime endDate,
                                      List<Long> labels) {
         this.taskId = taskId;
         this.memberId = memberId;
         this.planId = planId;
         this.managerId = managerId;
-        this.name = name;
+        this.title = title;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -41,7 +41,7 @@ public class TaskUpdateServiceRequest {
     public Task toEntity(Member manager) {
         return Task.builder()
             .manager(manager)
-            .name(name)
+            .name(title)
             .description(description)
             .startDate(startDate)
             .endDate(endDate)
