@@ -1,6 +1,6 @@
 package com.example.planservice.presentation.dto.request;
 
-import com.example.planservice.application.dto.TabChangeNameServiceRequest;
+import com.example.planservice.application.dto.TabChangeTitleServiceRequest;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,8 +17,8 @@ public class TabChangeTitleRequest {
         this.title = title;
     }
 
-    public TabChangeNameServiceRequest toServiceRequest(Long memberId, Long tabId) {
-        return TabChangeNameServiceRequest.builder()
+    public TabChangeTitleServiceRequest toServiceRequest(Long memberId, Long tabId) {
+        return TabChangeTitleServiceRequest.builder()
             .planId(planId)
             .title(title)
             .tabId(tabId)

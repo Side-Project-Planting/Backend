@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.TabChangeTitleResponse;
-import com.example.planservice.application.dto.TabChangeNameServiceRequest;
+import com.example.planservice.application.dto.TabChangeTitleServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
@@ -327,7 +327,7 @@ class TabServiceTest {
         Tab tab = createTab(plan, "TODO", null, true);
         String title = "변경할 제목";
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(plan.getId())
             .title(title)
             .memberId(member.getId())
@@ -351,7 +351,7 @@ class TabServiceTest {
         createMemberOfPlan(plan, member);
         Tab tab = createTab(plan, "이름", null, true);
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(123123L)
             .title("변경할 제목")
             .memberId(member.getId())
@@ -373,7 +373,7 @@ class TabServiceTest {
         Member member = createMember();
         Tab tab = createTab(plan, "이름", null, true);
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(plan.getId())
             .title("변경할 제목")
             .memberId(member.getId())
@@ -398,7 +398,7 @@ class TabServiceTest {
 
         Tab otherTab = createTab(null, "다른플랜의탭", null, true);
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(plan.getId())
             .title("변경할 제목")
             .tabId(otherTab.getId())
@@ -423,7 +423,7 @@ class TabServiceTest {
         Tab tab = createTab(plan, duplicatedTitle, null, false);
         Tab target = createTab(plan, "시작탭", tab, true);
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(plan.getId())
             .title(duplicatedTitle)
             .tabId(target.getId())

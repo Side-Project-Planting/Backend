@@ -21,7 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.TabService;
 import com.example.planservice.application.dto.TabChangeTitleResponse;
-import com.example.planservice.application.dto.TabChangeNameServiceRequest;
+import com.example.planservice.application.dto.TabChangeTitleServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.TabChangeTitleRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
@@ -226,7 +226,7 @@ class TabControllerTest {
             .build();
 
         // stub
-        when(tabService.changeName(any(TabChangeNameServiceRequest.class)))
+        when(tabService.changeName(any(TabChangeTitleServiceRequest.class)))
             .thenReturn(response);
 
         // when & then
@@ -247,7 +247,7 @@ class TabControllerTest {
         TabChangeTitleResponse response = TabChangeTitleResponse.builder().build();
 
         // stub
-        when(tabService.changeName(any(TabChangeNameServiceRequest.class)))
+        when(tabService.changeName(any(TabChangeTitleServiceRequest.class)))
             .thenReturn(response);
 
         // when & then

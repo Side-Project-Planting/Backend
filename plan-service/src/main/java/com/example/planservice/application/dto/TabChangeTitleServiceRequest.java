@@ -6,14 +6,14 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Getter
-public class TabChangeNameServiceRequest {
+public class TabChangeTitleServiceRequest {
     private Long planId;
     private Long tabId;
     private Long memberId;
     private String title;
 
     @Builder
-    private TabChangeNameServiceRequest(Long planId, Long tabId, Long memberId, String title) {
+    private TabChangeTitleServiceRequest(Long planId, Long tabId, Long memberId, String title) {
         this.planId = planId;
         this.tabId = tabId;
         this.memberId = memberId;
