@@ -2,6 +2,8 @@ package com.example.planservice.presentation.dto.request;
 
 import java.util.List;
 
+import com.example.planservice.domain.member.Member;
+import com.example.planservice.domain.plan.Plan;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,4 +31,12 @@ public class PlanCreateRequest {
         this.isPublic = isPublic;
         this.invitedEmails = invitedEmails;
     }
+
+    public Plan toEntity(Member member) {
+        return Plan.builder()
+            .title(title)
+            .intro(intro)
+            .isPublic(isPublic)
+            .owner(member)
+            .build();    }
 }

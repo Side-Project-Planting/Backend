@@ -38,7 +38,6 @@ import lombok.RequiredArgsConstructor;
 public class PlanService {
 
     private final EmailService emailService;
-    private final TabService tabService;
     private final PlanRepository planRepository;
     private final MemberRepository memberRepository;
     private final TabRepository tabRepository;
@@ -48,23 +47,12 @@ public class PlanService {
     public Long create(PlanCreateRequest request, Long userId) {
         Member member = memberRepository.findById(userId)
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
-        Plan plan = Plan.builder()
-            .title(request.getTitle())
-            .intro(request.getIntro())
-            .isPublic(request.isPublic())
-            .owner(member)
-            .build();
-
-        MemberOfPlan memberOfPlan = MemberOfPlan.builder()
-            .member(member)
-            .plan(plan)
-            .build();
+        Plan plan = request.toEntity(member);
+        createDefaultTab(plan);
+        MemberOfPlan memberOfPlan = MemberOfPlan.create(member, plan);
         memberOfPlanRepository.save(memberOfPlan);
         sendInviteMail(request.getInvitedEmails(), request.getTitle(), member.getId());
         Plan savedPlan = planRepository.save(plan);
-
-        createDefaultTab(plan);
-
         return savedPlan.getId();
     }
 
