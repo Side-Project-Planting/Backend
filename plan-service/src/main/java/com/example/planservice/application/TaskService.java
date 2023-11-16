@@ -20,6 +20,7 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
+import com.example.planservice.presentation.dto.response.TaskFindResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -112,6 +113,17 @@ public class TaskService {
         }
         return taskRepository.findById(prevId)
             .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
+    }
+
+    public TaskFindResponse find(Long taskId, Long memberId) {
+        Task task = taskRepository.findById(taskId)
+            .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
+        Tab tab = task.getTab();
+        Plan plan = tab.getPlan();
+        if (!plan.isPublic()) {
+            planMembershipService.validateMemberIsInThePlan(memberId, plan);
+        }
+        return TaskFindResponse.from(task);
     }
 
     private void saveAllLabelOfTask(List<Long> labelIds, Task task, Plan plan) {
