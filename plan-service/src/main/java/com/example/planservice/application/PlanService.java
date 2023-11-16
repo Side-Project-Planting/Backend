@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.domain.task.Task;
+import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
@@ -41,6 +43,7 @@ public class PlanService {
     private final PlanRepository planRepository;
     private final MemberRepository memberRepository;
     private final TabRepository tabRepository;
+    private final TaskRepository taskRepository;
     private final MemberOfPlanRepository memberOfPlanRepository;
 
     @Transactional
@@ -186,6 +189,14 @@ public class PlanService {
         firstTab.connect(secondTab);
         secondTab.connect(lastTab);
         tabRepository.saveAll(List.of(firstTab, secondTab, lastTab));
+
+        List<Task> allDummyTasks = Stream.of(
+                Task.createFirstAndLastDummy(firstTab),
+                Task.createFirstAndLastDummy(secondTab),
+                Task.createFirstAndLastDummy(lastTab))
+            .flatMap(List::stream)
+            .toList();
+        taskRepository.saveAll(allDummyTasks);
     }
 
     private List<MemberOfPlanResponse> getMemberResponses(List<MemberOfPlan> members, Long ownerId) {
