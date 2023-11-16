@@ -34,7 +34,7 @@ class TabTest {
         Tab tab = Tab.createTodoTab(plan);
 
         // then
-        assertThat(tab.getName()).isEqualTo("TODO");
+        assertThat(tab.getName()).isEqualTo("To Do");
         assertThat(tab.getNext()).isNull();
         assertThat(tab.isFirst()).isTrue();
         assertThat(tab.getPlan()).isEqualTo(plan);

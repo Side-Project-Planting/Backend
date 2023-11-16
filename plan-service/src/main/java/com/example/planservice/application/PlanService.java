@@ -47,8 +47,7 @@ public class PlanService {
     @Transactional
     public Long create(PlanCreateRequest request, Long userId) {
         Member member = memberRepository.findById(userId)
-            .orElseThrow(() -> new ApiException(
-                ErrorCode.MEMBER_NOT_FOUND));
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
         Plan plan = Plan.builder()
             .title(request.getTitle())
             .intro(request.getIntro())
@@ -193,25 +192,12 @@ public class PlanService {
     }
 
     private void createDefaultTab(Plan plan) {
-        Tab todoTab = Tab.create(plan, "To Do");
-        Tab inprogressTab = Tab.create(plan, "In Progress");
-        Tab doneTab = Tab.create(plan, "Done");
-
-        todoTab.connect(inprogressTab);
-        inprogressTab.connect(doneTab);
-
-        plan.getTabs()
-            .add(todoTab);
-        plan.getTabs()
-            .add(inprogressTab);
-        plan.getTabs()
-            .add(doneTab);
-
-        tabRepository.saveAll(List.of(todoTab, inprogressTab, doneTab));
-
-        tabService.createDummyTask(todoTab);
-        tabService.createDummyTask(inprogressTab);
-        tabService.createDummyTask(doneTab);
+        Tab firstTab = Tab.createTodoTab(plan);
+        Tab secondTab = Tab.create(plan, Tab.IN_PROGRESS);
+        Tab lastTab = Tab.create(plan, Tab.DONE);
+        firstTab.connect(secondTab);
+        secondTab.connect(lastTab);
+        tabRepository.saveAll(List.of(firstTab, secondTab, lastTab));
     }
 
     private List<MemberOfPlanResponse> getMemberResponses(List<MemberOfPlan> members, Long ownerId) {

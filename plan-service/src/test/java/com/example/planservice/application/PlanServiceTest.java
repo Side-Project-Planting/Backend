@@ -96,8 +96,7 @@ class PlanServiceTest {
 
         // then
         assertThat(savedId).isNotNull();
-        Plan savedPlan = planRepository.findById(savedId)
-            .get();
+        Plan savedPlan = planRepository.findById(savedId).get();
 
         assertThat(savedPlan.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedPlan.getIntro()).isEqualTo(request.getIntro());

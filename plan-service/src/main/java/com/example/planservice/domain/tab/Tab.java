@@ -38,6 +38,9 @@ import lombok.NoArgsConstructor;
 @Where(clause = "is_deleted = false")
 public class Tab extends BaseEntity {
     public static final int TAB_MAX_SIZE = 5;
+    public static final String TODO = "To Do";
+    public static final String IN_PROGRESS = "In Progress";
+    public static final String DONE = "Done";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -96,7 +99,7 @@ public class Tab extends BaseEntity {
     public static Tab createTodoTab(Plan plan) {
         return Tab.builder()
             .plan(plan)
-            .name("TODO")
+            .name(TODO)
             .first(true)
             .build();
     }
