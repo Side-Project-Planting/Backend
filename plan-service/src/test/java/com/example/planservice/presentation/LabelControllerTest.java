@@ -12,16 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.LabelService;
+import com.example.planservice.config.JpaAuditingConfig;
 import com.example.planservice.presentation.dto.request.LabelCreateRequest;
 import com.example.planservice.presentation.dto.response.LabelFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(controllers = LabelController.class)
-@ActiveProfiles("test")
+@WebMvcTest(controllers = LabelController.class, excludeAutoConfiguration = JpaAuditingConfig.class)
 class LabelControllerTest {
     @Autowired
     MockMvc mockMvc;

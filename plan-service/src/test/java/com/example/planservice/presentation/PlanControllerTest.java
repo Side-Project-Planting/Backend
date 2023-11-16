@@ -21,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.PlanService;
+import com.example.planservice.config.JpaAuditingConfig;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
@@ -29,7 +30,7 @@ import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(PlanController.class)
+@WebMvcTest(controllers = PlanController.class, excludeAutoConfiguration = JpaAuditingConfig.class)
 class PlanControllerTest {
     @MockBean
     PlanService planService;

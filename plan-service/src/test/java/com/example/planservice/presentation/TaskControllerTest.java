@@ -15,11 +15,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.TaskService;
+import com.example.planservice.config.JpaAuditingConfig;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
 import com.example.planservice.presentation.dto.response.TaskFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(controllers = {TaskController.class})
+@WebMvcTest(controllers = TaskController.class, excludeAutoConfiguration = JpaAuditingConfig.class)
 class TaskControllerTest {
     @Autowired
     private MockMvc mockMvc;

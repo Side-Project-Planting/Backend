@@ -23,13 +23,14 @@ import com.example.planservice.application.TabService;
 import com.example.planservice.application.dto.TabChangeTitleResponse;
 import com.example.planservice.application.dto.TabChangeTitleServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
+import com.example.planservice.config.JpaAuditingConfig;
 import com.example.planservice.presentation.dto.request.TabChangeTitleRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(controllers = {TabController.class})
+@WebMvcTest(controllers = TabController.class, excludeAutoConfiguration = JpaAuditingConfig.class)
 class TabControllerTest {
     @Autowired
     private MockMvc mockMvc;
