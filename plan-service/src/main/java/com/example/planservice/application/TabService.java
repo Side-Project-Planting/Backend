@@ -34,7 +34,7 @@ public class TabService {
     public Long create(Long memberId, TabCreateRequest request) {
         try {
             Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), memberId);
-            Tab createdTab = Tab.create(plan, request.getName());
+            Tab createdTab = Tab.create(plan, request.getTitle());
 
             List<Tab> tabsOfPlan = tabRepository.findAllByPlanId(plan.getId());
             TabGroup tabGroup = new TabGroup(plan.getId(), tabsOfPlan);

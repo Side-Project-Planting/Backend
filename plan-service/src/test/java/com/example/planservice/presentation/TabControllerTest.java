@@ -47,7 +47,7 @@ class TabControllerTest {
         Long userId = 1L;
         Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
-            .name("탭이름")
+            .title("탭제목")
             .planId(planId)
             .build();
         Long createdTabId = 2L;
@@ -71,7 +71,7 @@ class TabControllerTest {
         // given
         Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
-            .name("탭이름")
+            .title("탭제목")
             .planId(planId)
             .build();
 
@@ -83,14 +83,14 @@ class TabControllerTest {
     }
 
     @ParameterizedTest
-    @DisplayName("탭의 이름은 공백이 될 수 없다")
+    @DisplayName("탭의 제목은 공백이 될 수 없다")
     @ValueSource(strings = {"", " ", "  "})
-    void createTabFailTabNameBlank(String name) throws Exception {
+    void createTabFailTabTitleBlank(String title) throws Exception {
         // given
         Long userId = 1L;
         Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
-            .name(name)
+            .title(title)
             .planId(planId)
             .build();
 
@@ -103,7 +103,7 @@ class TabControllerTest {
     }
 
     @Test
-    @DisplayName("탭의 이름은 null이 될 수 없다")
+    @DisplayName("탭의 제목은 null이 될 수 없다")
     void createTabFailTabNameNull() throws Exception {
         // given
         Long userId = 1L;
@@ -126,7 +126,7 @@ class TabControllerTest {
         // given
         Long userId = 1L;
         TabCreateRequest request = TabCreateRequest.builder()
-            .name("탭이름")
+            .title("탭제목")
             .build();
 
         // when & then

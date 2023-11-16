@@ -64,7 +64,7 @@ class TabServiceTest {
         Tab savedTab = tabRepository.findById(savedId).get();
         assertThat(savedTab)
             .extracting(Tab::getName, Tab::getPlan)
-            .containsExactly(request.getName(), plan);
+            .containsExactly(request.getTitle(), plan);
 
         Task firstDummyTask = savedTab.getFirstDummyTask();
         Task lastDummyTask = savedTab.getLastDummyTask();
@@ -148,7 +148,7 @@ class TabServiceTest {
         assertThat(savedId).isNotNull();
 
         Tab savedTab = tabRepository.findById(savedId).get();
-        assertThat(savedTab.getName()).isEqualTo(request.getName());
+        assertThat(savedTab.getName()).isEqualTo(request.getTitle());
         assertThat(savedTab.getPlan().getId()).isEqualTo(request.getPlanId());
     }
 
@@ -668,9 +668,9 @@ class TabServiceTest {
 
 
     @NotNull
-    private TabCreateRequest createTabCreateRequest(Long planId, String name) {
+    private TabCreateRequest createTabCreateRequest(Long planId, String title) {
         return TabCreateRequest.builder()
-            .name(name)
+            .title(title)
             .planId(planId)
             .build();
     }
