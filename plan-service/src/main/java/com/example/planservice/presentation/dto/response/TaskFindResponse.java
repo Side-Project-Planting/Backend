@@ -78,7 +78,7 @@ public class TaskFindResponse {
             .managerId(task.getAssignee() != null ? task.getAssignee()
                 .getId() : null)
             .labels(labels)
-            .title(task.getName())
+            .title(task.getTitle())
             .description(task.getDescription())
             .startDate(task.getStartDate())
             .endDate(task.getEndDate())

@@ -186,13 +186,13 @@ class PlanServiceTest {
             .build();
 
         Task task2 = Task.builder()
-            .name("testTask2")
+            .title("testTask2")
             .tab(tab1)
             .description("testTaskDesc2")
             .build();
 
         Task task1 = Task.builder()
-            .name("testTask1")
+            .title("testTask1")
             .tab(tab1)
             .description("testTaskDesc1")
             .next(task2)
@@ -201,13 +201,13 @@ class PlanServiceTest {
         tab1.setLastDummyTask(task2);
 
         Task task3 = Task.builder()
-            .name("testTask3")
+            .title("testTask3")
             .tab(tab2)
             .description("testTaskDesc3")
             .build();
 
         Task task4 = Task.builder()
-            .name("testTask4")
+            .title("testTask4")
             .tab(tab2)
             .description("testTaskDesc4")
             .prev(task3)

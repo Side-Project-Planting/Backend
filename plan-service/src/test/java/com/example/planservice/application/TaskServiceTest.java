@@ -98,7 +98,7 @@ class TaskServiceTest {
             .getId()).isEqualTo(request.getTabId());
         assertThat(task.getAssignee()
             .getId()).isEqualTo(request.getAssigneeId());
-        assertThat(task.getName()).isEqualTo(request.getTitle());
+        assertThat(task.getTitle()).isEqualTo(request.getTitle());
         assertThat(task.getDescription()).isEqualTo(request.getDescription());
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
@@ -136,7 +136,7 @@ class TaskServiceTest {
         assertThat(task.getId()).isEqualTo(createdId);
         assertThat(task.getTab()
             .getId()).isEqualTo(request.getTabId());
-        assertThat(task.getName()).isEqualTo(request.getTitle());
+        assertThat(task.getTitle()).isEqualTo(request.getTitle());
         assertThat(task.getDescription()).isEqualTo(request.getDescription());
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
@@ -569,7 +569,7 @@ class TaskServiceTest {
             .get();
         assertThat(updatedTask).isEqualTo(task);
         assertThat(updatedTask)
-            .extracting(Task::getTab, Task::getAssignee, Task::getName,
+            .extracting(Task::getTab, Task::getAssignee, Task::getTitle,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
             .containsExactly(tab, taskManager, request.getTitle(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());
@@ -625,7 +625,7 @@ class TaskServiceTest {
             .get();
         assertThat(updatedTask).isEqualTo(task);
         assertThat(updatedTask)
-            .extracting(Task::getTab, Task::getAssignee, Task::getName,
+            .extracting(Task::getTab, Task::getAssignee, Task::getTitle,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
             .containsExactly(tab, null, request.getTitle(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());

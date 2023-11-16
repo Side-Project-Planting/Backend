@@ -34,7 +34,7 @@ public class TaskOfPlanResponse {
     public static TaskOfPlanResponse from(Task task) {
         return builder()
             .id(task.getId())
-            .title(task.getName())
+            .title(task.getTitle())
             .labels(task.getLabelOfTasks() != null ?
                 task.getLabelOfTasks()
                     .stream()

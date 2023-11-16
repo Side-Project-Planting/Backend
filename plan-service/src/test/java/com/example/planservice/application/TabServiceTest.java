@@ -68,8 +68,8 @@ class TabServiceTest {
 
         Task firstDummyTask = savedTab.getFirstDummyTask();
         Task lastDummyTask = savedTab.getLastDummyTask();
-        assertThat(firstDummyTask.getName()).isEqualTo("first");
-        assertThat(lastDummyTask.getName()).isEqualTo("last");
+        assertThat(firstDummyTask.getTitle()).isEqualTo("first");
+        assertThat(lastDummyTask.getTitle()).isEqualTo("last");
         assertThat(savedTab.getTasks()).hasSize(2)
             .contains(firstDummyTask, lastDummyTask);
     }

@@ -41,7 +41,7 @@ public class TaskUpdateServiceRequest {
     public Task toEntity(Member manager) {
         return Task.builder()
             .manager(manager)
-            .name(title)
+            .title(title)
             .description(description)
             .startDate(startDate)
             .endDate(endDate)
