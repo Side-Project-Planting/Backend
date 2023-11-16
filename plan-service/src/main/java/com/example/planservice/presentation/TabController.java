@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.planservice.application.TabService;
 import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
-import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
+import com.example.planservice.presentation.dto.request.TabChangeTitleRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabChangeOrderResponse;
@@ -46,10 +46,10 @@ public class TabController {
         return ResponseEntity.ok().body(new TabChangeOrderResponse(sortedTabList));
     }
 
-    @PatchMapping("/{tabId}/name")
-    public ResponseEntity<TabChangeNameResponse> changeName(@PathVariable Long tabId,
-                                                            @Valid @RequestBody TabChangeNameRequest request,
-                                                            @RequestAttribute Long userId) {
+    @PatchMapping("/{tabId}/title")
+    public ResponseEntity<TabChangeNameResponse> changeTitle(@PathVariable Long tabId,
+                                                             @Valid @RequestBody TabChangeTitleRequest request,
+                                                             @RequestAttribute Long userId) {
         return ResponseEntity.ok().body(tabService.changeName(request.toServiceRequest(userId, tabId)));
     }
 

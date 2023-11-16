@@ -10,13 +10,13 @@ public class TabChangeNameServiceRequest {
     private Long planId;
     private Long tabId;
     private Long memberId;
-    private String name;
+    private String title;
 
     @Builder
-    private TabChangeNameServiceRequest(Long planId, Long tabId, Long memberId, String name) {
+    private TabChangeNameServiceRequest(Long planId, Long tabId, Long memberId, String title) {
         this.planId = planId;
         this.tabId = tabId;
         this.memberId = memberId;
-        this.name = name;
+        this.title = title;
     }
 }

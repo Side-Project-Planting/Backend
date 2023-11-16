@@ -70,7 +70,7 @@ public class TabService {
         Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), request.getMemberId());
         List<Tab> tabs = tabRepository.findAllByPlanId(plan.getId());
         TabGroup tabGroup = new TabGroup(plan.getId(), tabs);
-        Tab tab = tabGroup.changeName(request.getTabId(), request.getName());
+        Tab tab = tabGroup.changeName(request.getTabId(), request.getTitle());
 
         return TabChangeNameResponse.builder()
             .id(tab.getId())

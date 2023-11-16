@@ -319,17 +319,17 @@ class TabServiceTest {
 
     @Test
     @DisplayName("탭의 이름을 변경한다")
-    void changeName() {
+    void changeTitle() {
         // given
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
         Tab tab = createTab(plan, "TODO", null, true);
-        String name = "변경할이름";
+        String title = "변경할 제목";
 
         TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())
-            .name(name)
+            .title(title)
             .memberId(member.getId())
             .tabId(tab.getId())
             .build();
@@ -339,7 +339,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab.getId());
-        assertThat(response.getName()).isEqualTo(name);
+        assertThat(response.getName()).isEqualTo(title);
     }
 
     @Test
@@ -353,7 +353,7 @@ class TabServiceTest {
 
         TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(123123L)
-            .name("변경할이름")
+            .title("변경할 제목")
             .memberId(member.getId())
             .tabId(tab.getId())
             .build();
@@ -375,7 +375,7 @@ class TabServiceTest {
 
         TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())
-            .name("변경할이름")
+            .title("변경할 제목")
             .memberId(member.getId())
             .tabId(tab.getId())
             .build();
@@ -400,7 +400,7 @@ class TabServiceTest {
 
         TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())
-            .name("변경할이름")
+            .title("변경할 제목")
             .tabId(otherTab.getId())
             .memberId(member.getId())
             .build();
@@ -415,17 +415,17 @@ class TabServiceTest {
     @DisplayName("동일한 플랜에 속해있는 탭들은 이름이 달라야 한다")
     void changeNameFailSameName() {
         // given
-        String duplicatedName = "동일이름";
+        String duplicatedTitle = "동일 타이틀";
 
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab tab = createTab(plan, duplicatedName, null, false);
+        Tab tab = createTab(plan, duplicatedTitle, null, false);
         Tab target = createTab(plan, "시작탭", tab, true);
 
         TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
             .planId(plan.getId())
-            .name(duplicatedName)
+            .title(duplicatedTitle)
             .tabId(target.getId())
             .memberId(member.getId())
             .build();

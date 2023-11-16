@@ -23,7 +23,7 @@ import com.example.planservice.application.TabService;
 import com.example.planservice.application.dto.TabChangeNameResponse;
 import com.example.planservice.application.dto.TabChangeNameServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
-import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
+import com.example.planservice.presentation.dto.request.TabChangeTitleRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabFindResponse;
@@ -218,7 +218,7 @@ class TabControllerTest {
     void changeTabName() throws Exception {
         // given
         Long userId = 1L;
-        TabChangeNameRequest request = TabChangeNameRequest.builder()
+        TabChangeTitleRequest request = TabChangeTitleRequest.builder()
             .build();
         TabChangeNameResponse response = TabChangeNameResponse.builder()
             .name("변경된이름")
@@ -230,7 +230,7 @@ class TabControllerTest {
             .thenReturn(response);
 
         // when & then
-        mockMvc.perform(patch("/tabs/1/name")
+        mockMvc.perform(patch("/tabs/1/title")
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -243,7 +243,7 @@ class TabControllerTest {
     @DisplayName("인증되지 않은 사용자는 Tab의 이름을 변경할 수 없다")
     void changeTabNameFailNotAuthenticated() throws Exception {
         // given
-        TabChangeNameRequest request = TabChangeNameRequest.builder().build();
+        TabChangeTitleRequest request = TabChangeTitleRequest.builder().build();
         TabChangeNameResponse response = TabChangeNameResponse.builder().build();
 
         // stub

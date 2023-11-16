@@ -7,20 +7,20 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Getter
-public class TabChangeNameRequest {
+public class TabChangeTitleRequest {
     private Long planId;
-    private String name;
+    private String title;
 
     @Builder
-    private TabChangeNameRequest(Long planId, String name) {
+    private TabChangeTitleRequest(Long planId, String title) {
         this.planId = planId;
-        this.name = name;
+        this.title = title;
     }
 
     public TabChangeNameServiceRequest toServiceRequest(Long memberId, Long tabId) {
         return TabChangeNameServiceRequest.builder()
             .planId(planId)
-            .name(name)
+            .title(title)
             .tabId(tabId)
             .memberId(memberId)
             .build();
