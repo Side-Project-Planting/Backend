@@ -107,10 +107,6 @@ public class PlanService {
 
     @Transactional
     public Long inviteMember(Long planId, Long memberId) {
-        if (isDeletedPlan(planId)) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
-
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         if (plan.isDeleted()) {
@@ -135,10 +131,6 @@ public class PlanService {
 
     @Transactional
     public void kick(Long planId, PlanKickRequest request, Long userId) {
-        if (isDeletedPlan(planId)) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
-
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         if (plan.isDeleted()) {
@@ -169,9 +161,6 @@ public class PlanService {
 
     @Transactional
     public void update(Long planId, PlanUpdateRequest request, Long userId) {
-        if (isDeletedPlan(planId)) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         if (plan.isDeleted()) {

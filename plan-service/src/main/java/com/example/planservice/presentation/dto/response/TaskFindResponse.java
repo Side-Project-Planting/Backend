@@ -1,14 +1,14 @@
 package com.example.planservice.presentation.dto.response;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.task.Task;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
 
 @NoArgsConstructor
 @Getter
@@ -55,22 +55,28 @@ public class TaskFindResponse {
 
     public static TaskFindResponse from(Task task) {
         Tab tab = task.getTab();
-        List<Long> labels = task.getLabelOfTasks().stream()
-            .map(labelOfTask -> labelOfTask.getLabel().getId())
+        List<Long> labels = task.getLabelOfTasks()
+            .stream()
+            .map(labelOfTask -> labelOfTask.getLabel()
+                .getId())
             .toList();
         Long nextId = null;
         Long prevId = null;
         if (!Objects.equals(task.getNext(), tab.getLastDummyTask())) {
-            nextId = task.getNext().getId();
+            nextId = task.getNext()
+                .getId();
         }
         if (!Objects.equals(task.getPrev(), tab.getFirstDummyTask())) {
-            prevId = task.getPrev().getId();
+            prevId = task.getPrev()
+                .getId();
         }
         return TaskFindResponse.builder()
             .id(task.getId())
             .tabId(tab.getId())
-            .planId(tab.getPlan().getId())
-            .managerId(task.getManager() != null ? task.getManager().getId() : null)
+            .planId(tab.getPlan()
+                .getId())
+            .managerId(task.getAssignee() != null ? task.getAssignee()
+                .getId() : null)
             .labels(labels)
             .name(task.getName())
             .description(task.getDescription())
