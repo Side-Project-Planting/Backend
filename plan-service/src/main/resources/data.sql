@@ -25,6 +25,7 @@ insert into tabs(tab_id, first, version, plan_id, title, is_deleted) values (4, 
 
 -- 1번탭(1번플랜 투두)에는 투두 첫번째 - 투두의 두번째- 투두의 세번째 순서로 태스크가 존재한다.
 insert into tasks(task_id, tab_id, title, is_deleted, version, prev_id) values (1, 1, "first", false, 1, null);
+update tabs set first_task_id = 1 where tab_id = 1;
 
 insert into tasks(task_id, tab_id, title, is_deleted, version, prev_id) values (2, 1, "투두 첫번째", false, 1, 1);
 update tasks set next_id = 2 where task_id = 1;
@@ -37,6 +38,7 @@ update tasks set next_id = 4 where task_id = 3;
 
 insert into tasks(task_id, tab_id, title, is_deleted, version, prev_id) values (5, 1, "last", false, 1, 4);
 update tasks set next_id = 5 where task_id = 4;
+update tabs set last_task_id = 5 where tab_id = 1;
 
 update tabs set first_task_id = 1 where tab_id = 1;
 update tabs set last_task_id = 5 where tab_id = 1;
