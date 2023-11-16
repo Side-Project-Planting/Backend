@@ -23,7 +23,7 @@ public class TabFindResponse {
     public static TabFindResponse from(Tab tab) {
         return TabFindResponse.builder()
             .id(tab.getId())
-            .title(tab.getName())
+            .title(tab.getTitle())
             .nextId(tab.getNext() == null ? null : tab.getNext().getId())
             .build();
     }

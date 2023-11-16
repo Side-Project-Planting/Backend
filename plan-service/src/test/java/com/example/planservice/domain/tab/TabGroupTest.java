@@ -260,7 +260,7 @@ class TabGroupTest {
         Plan plan = createPlan();
         Tab tab1 = createTab(plan, "탭1", null);
 
-        Tab addedTab = Tab.builder().name("탭1").build();
+        Tab addedTab = Tab.builder().title("탭1").build();
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1));
 
         // when & then
@@ -308,10 +308,10 @@ class TabGroupTest {
         return plan;
     }
 
-    private Tab createTab(Plan plan, String name, Tab prev) {
+    private Tab createTab(Plan plan, String title, Tab prev) {
         Tab.TabBuilder tabBuilder = Tab.builder()
             .plan(plan)
-            .name(name);
+            .title(title);
 
         Tab tab;
         if (prev == null) {

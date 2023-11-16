@@ -122,11 +122,11 @@ class PlanServiceTest {
         List<Tab> tabs = tabRepository.findAllByPlanId(savedId);
         assertThat(tabs.size()).isEqualTo(3);
         assertThat(tabs.get(0)
-            .getName()).isEqualTo("To Do");
+            .getTitle()).isEqualTo("To Do");
         assertThat(tabs.get(1)
-            .getName()).isEqualTo("In Progress");
+            .getTitle()).isEqualTo("In Progress");
         assertThat(tabs.get(2)
-            .getName()).isEqualTo("Done");
+            .getTitle()).isEqualTo("Done");
     }
 
     @Test
@@ -174,13 +174,13 @@ class PlanServiceTest {
 
         Tab tab2 = Tab.builder()
             .plan(plan)
-            .name("testTab2")
+            .title("testTab2")
             .first(false)
             .build();
 
         Tab tab1 = Tab.builder()
             .plan(plan)
-            .name("testTab1")
+            .title("testTab1")
             .next(tab2)
             .first(true)
             .build();

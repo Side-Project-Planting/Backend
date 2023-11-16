@@ -38,7 +38,7 @@ public class TabGroup {
         if (hash.size() >= TAB_MAX_SIZE) {
             throw new ApiException(ErrorCode.TAB_SIZE_INVALID);
         }
-        checkDuplicatedName(target.getName());
+        checkDuplicatedName(target.getTitle());
 
         Tab temp = newPrev.getNext();
         newPrev.connect(target);
@@ -85,7 +85,7 @@ public class TabGroup {
     private void checkDuplicatedName(@NotNull String name) {
         List<Tab> sortedTabs = getSortedTabs();
         boolean duplicated = sortedTabs.stream()
-            .anyMatch(tab -> Objects.equals(name, tab.getName()));
+            .anyMatch(tab -> Objects.equals(name, tab.getTitle()));
         if (duplicated) {
             throw new ApiException(ErrorCode.TAB_NAME_DUPLICATE);
         }

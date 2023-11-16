@@ -63,7 +63,7 @@ class TabServiceTest {
 
         Tab savedTab = tabRepository.findById(savedId).get();
         assertThat(savedTab)
-            .extracting(Tab::getName, Tab::getPlan)
+            .extracting(Tab::getTitle, Tab::getPlan)
             .containsExactly(request.getTitle(), plan);
 
         Task firstDummyTask = savedTab.getFirstDummyTask();
@@ -148,7 +148,7 @@ class TabServiceTest {
         assertThat(savedId).isNotNull();
 
         Tab savedTab = tabRepository.findById(savedId).get();
-        assertThat(savedTab.getName()).isEqualTo(request.getTitle());
+        assertThat(savedTab.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedTab.getPlan().getId()).isEqualTo(request.getPlanId());
     }
 
@@ -531,7 +531,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab1.getId());
-        assertThat(response.getTitle()).isEqualTo(tab1.getName());
+        assertThat(response.getTitle()).isEqualTo(tab1.getTitle());
         assertThat(response.getNextId()).isEqualTo(tab2.getId());
     }
 
@@ -551,7 +551,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab2.getId());
-        assertThat(response.getTitle()).isEqualTo(tab2.getName());
+        assertThat(response.getTitle()).isEqualTo(tab2.getTitle());
         assertThat(response.getNextId()).isNull();
     }
 
@@ -571,7 +571,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab2.getId());
-        assertThat(response.getTitle()).isEqualTo(tab2.getName());
+        assertThat(response.getTitle()).isEqualTo(tab2.getTitle());
         assertThat(response.getNextId()).isNull();
     }
 
@@ -605,10 +605,10 @@ class TabServiceTest {
             .hasMessageContaining(ErrorCode.TAB_NOT_FOUND.getMessage());
     }
 
-    private Tab createTab(Plan plan, String name, Tab next, boolean isFirst) {
+    private Tab createTab(Plan plan, String title, Tab next, boolean isFirst) {
         Tab tab = Tab.builder()
             .plan(plan)
-            .name(name)
+            .title(title)
             .next(next)
             .first(isFirst)
             .build();

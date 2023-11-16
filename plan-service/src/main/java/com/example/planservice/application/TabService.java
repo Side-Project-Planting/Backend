@@ -74,7 +74,7 @@ public class TabService {
 
         return TabChangeTitleResponse.builder()
             .id(tab.getId())
-            .title(tab.getName())
+            .title(tab.getTitle())
             .build();
     }
 

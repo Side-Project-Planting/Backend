@@ -31,15 +31,15 @@ class TabRepositoryTest {
         planRepository.save(plan);
 
         final Tab tab1 = Tab.builder()
-                            .name("탭1")
+                            .title("탭1")
                             .plan(plan)
                             .build();
         final Tab tab2 = Tab.builder()
-                            .name("탭2")
+                            .title("탭2")
                             .plan(plan)
                             .build();
         final Tab tab3 = Tab.builder()
-                            .name("탭3")
+                            .title("탭3")
                             .build();
         tabRepository.saveAll(List.of(tab1, tab2, tab3));
 
@@ -48,7 +48,7 @@ class TabRepositoryTest {
 
         // then
         assertThat(tabs).hasSize(2)
-                        .extracting("name")
+                        .extracting("title")
                         .contains("탭1", "탭2");
     }
 }

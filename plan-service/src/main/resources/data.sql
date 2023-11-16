@@ -14,14 +14,14 @@ insert into labels(label_id, plan_id, name) values (1, 1, "공부"),
                                                    (3, 2, "휴식");
 
 -- 1번 플랜에는 투두 - In Progress - 세번째탭 순서로 탭이 존재한다.
-insert into tabs(tab_id, first, version, plan_id, name, is_deleted) values (1, true, 1, 1, "투두", false);
-insert into tabs(tab_id, first, version, plan_id, name, is_deleted) values (2, false, 1, 1, "In Progress", false);
+insert into tabs(tab_id, first, version, plan_id, title, is_deleted) values (1, true, 1, 1, "투두", false);
+insert into tabs(tab_id, first, version, plan_id, title, is_deleted) values (2, false, 1, 1, "In Progress", false);
 update tabs set next_id = 2 where tab_id = 1;
-insert into tabs(tab_id, first, version, plan_id, name, is_deleted) values (3, false, 1, 1, "세번째탭", false);
+insert into tabs(tab_id, first, version, plan_id, title, is_deleted) values (3, false, 1, 1, "세번째탭", false);
 update tabs set next_id = 3 where tab_id = 2;
 
 -- 2번 플랜에는 투두 탭만 존재한다
-insert into tabs(tab_id, first, version, plan_id, name, is_deleted) values (4, true, 1, 2, "투두", false);
+insert into tabs(tab_id, first, version, plan_id, title, is_deleted) values (4, true, 1, 2, "투두", false);
 
 -- 1번탭(1번플랜 투두)에는 투두 첫번째 - 투두의 두번째- 투두의 세번째 순서로 태스크가 존재한다.
 insert into tasks(task_id, tab_id, title, is_deleted, version, prev_id) values (1, 1, "first", false, 1, null);
