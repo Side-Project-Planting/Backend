@@ -91,7 +91,7 @@ public class TabGroup {
         }
     }
 
-    private List<Tab> getSortedTabs() {
+    public List<Tab> getSortedTabs() {
         List<Tab> result = new ArrayList<>();
 
         Tab temp = first;

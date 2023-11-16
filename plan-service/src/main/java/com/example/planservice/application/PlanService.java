@@ -17,6 +17,7 @@ import com.example.planservice.domain.memberofplan.repository.MemberOfPlanReposi
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
+import com.example.planservice.domain.tab.TabGroup;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.domain.task.Task;
 import com.example.planservice.domain.task.repository.TaskRepository;
@@ -60,27 +61,25 @@ public class PlanService {
     }
 
     public PlanResponse getTotalPlanResponse(Long planId) {
-        if (isDeletedPlan(planId)) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
-
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
 
-        if (plan.isDeleted()) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
-        List<Tab> tabList = tabRepository.findAllByPlanId(planId);
-        List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner()
-            .getId());
-        List<Task> allTask = tabList.stream()
-            .map(Tab::getTasks)
+        TabGroup tabGroup = new TabGroup(plan.getId(), plan.getTabs());
+        List<Tab> sortedTabs = tabGroup.getSortedTabs();
+        List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner().getId());
+
+        List<Task> allTask = sortedTabs.stream()
+            .map(Tab::getSortedTasks)
             .flatMap(List::stream)
             .toList();
+
         List<LabelOfPlanResponse> labels = getLabelResponses(plan.getLabels());
         List<TaskOfPlanResponse> tasks = getTaskResponses(allTask);
-        List<Long> tabOrder = getSortedTabID(tabList);
-        List<TabOfPlanResponse> tabs = getTabResponses(tabList);
+        List<Long> tabOrder = sortedTabs.stream()
+            .map(Tab::getId)
+            .toList();
+
+        List<TabOfPlanResponse> tabs = getTabResponses(sortedTabs);
 
         return PlanResponse.builder()
             .id(plan.getId())
@@ -279,9 +278,4 @@ public class PlanService {
         return orderedItems;
     }
 
-    public boolean isDeletedPlan(Long planId) {
-        Plan plan = planRepository.findById(planId)
-            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        return plan.isDeleted();
-    }
 }

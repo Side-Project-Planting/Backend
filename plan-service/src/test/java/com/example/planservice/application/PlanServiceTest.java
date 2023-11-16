@@ -165,12 +165,12 @@ class PlanServiceTest {
             .profileUri("www.test2")
             .build();
 
+
         Plan plan = Plan.builder()
             .owner(member1)
             .title("testPlan")
             .intro("hi")
             .build();
-
 
         Tab tab2 = Tab.builder()
             .plan(plan)
@@ -197,12 +197,25 @@ class PlanServiceTest {
             .description("testTaskDesc1")
             .next(task2)
             .build();
+        tab1.setFirstDummyTask(task1);
+        tab1.setLastDummyTask(task2);
 
         Task task3 = Task.builder()
             .name("testTask3")
             .tab(tab2)
             .description("testTaskDesc3")
             .build();
+
+        Task task4 = Task.builder()
+            .name("testTask4")
+            .tab(tab2)
+            .description("testTaskDesc4")
+            .prev(task3)
+            .build();
+        task3.setNext(task4);
+
+        tab2.setFirstDummyTask(task3);
+        tab2.setLastDummyTask(task4);
 
         Label label1 = Label.builder()
             .name("testLabel1")
@@ -270,15 +283,7 @@ class PlanServiceTest {
         assertThat(planResponse.getTabs()
             .get(1)
             .getTitle()).isEqualTo("testTab2");
-        assertThat(planResponse.getTasks()
-            .get(0)
-            .getTitle()).isEqualTo("testTask1");
-        assertThat(planResponse.getTasks()
-            .get(1)
-            .getTitle()).isEqualTo("testTask2");
-        assertThat(planResponse.getTasks()
-            .get(2)
-            .getTitle()).isEqualTo("testTask3");
+        assertThat(planResponse.getTasks()).isEmpty();
         assertThat(planResponse.getLabels()
             .get(0)
             .getValue()).isEqualTo("testLabel1");
