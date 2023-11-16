@@ -145,7 +145,7 @@ class TabControllerTest {
         Long userId = 2L;
         TabFindResponse response = TabFindResponse.builder()
             .id(targetTabId)
-            .name("탭명")
+            .title("탭명")
             .nextId(null)
             .build();
 
@@ -158,7 +158,7 @@ class TabControllerTest {
                 .header("X-User-Id", userId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(response.getId()))
-            .andExpect(jsonPath("$.name").value(response.getName()))
+            .andExpect(jsonPath("$.title").value(response.getTitle()))
             .andExpect(jsonPath("$.nextId").value(response.getNextId()));
     }
 

@@ -531,7 +531,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab1.getId());
-        assertThat(response.getName()).isEqualTo(tab1.getName());
+        assertThat(response.getTitle()).isEqualTo(tab1.getName());
         assertThat(response.getNextId()).isEqualTo(tab2.getId());
     }
 
@@ -551,7 +551,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab2.getId());
-        assertThat(response.getName()).isEqualTo(tab2.getName());
+        assertThat(response.getTitle()).isEqualTo(tab2.getName());
         assertThat(response.getNextId()).isNull();
     }
 
@@ -571,7 +571,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab2.getId());
-        assertThat(response.getName()).isEqualTo(tab2.getName());
+        assertThat(response.getTitle()).isEqualTo(tab2.getName());
         assertThat(response.getNextId()).isNull();
     }
 
