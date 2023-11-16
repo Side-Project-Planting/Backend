@@ -220,6 +220,8 @@ class TabControllerTest {
         // given
         Long userId = 1L;
         TabChangeTitleRequest request = TabChangeTitleRequest.builder()
+            .title("탭제목")
+            .planId(1L)
             .build();
         TabChangeTitleResponse response = TabChangeTitleResponse.builder()
             .title("변경된이름")
