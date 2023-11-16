@@ -21,7 +21,7 @@ import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
-import com.example.planservice.presentation.dto.response.ChangeOrderResponse;
+import com.example.planservice.presentation.dto.response.TabChangeOrderResponse;
 import com.example.planservice.presentation.dto.response.TabFindResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,10 +40,10 @@ public class TabController {
     }
 
     @PostMapping("/change-order")
-    public ResponseEntity<ChangeOrderResponse> changeOrder(@Valid @RequestBody TabChangeOrderRequest request,
-                                                           @RequestAttribute Long userId) {
+    public ResponseEntity<TabChangeOrderResponse> changeOrder(@Valid @RequestBody TabChangeOrderRequest request,
+                                                              @RequestAttribute Long userId) {
         List<Long> sortedTabList = tabService.changeOrder(userId, request);
-        return ResponseEntity.ok().body(new ChangeOrderResponse(sortedTabList));
+        return ResponseEntity.ok().body(new TabChangeOrderResponse(sortedTabList));
     }
 
     @PatchMapping("/{tabId}/name")
