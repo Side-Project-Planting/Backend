@@ -139,9 +139,28 @@ public class PlanService {
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
         validateOwner(plan.getOwner()
             .getId(), userId);
+
+        if (!request.getInvitedEmails()
+            .isEmpty()) {
+            sendInviteMail(request.getInvitedEmails(), request.getTitle(), userId);
+        }
+
+        if (!request.getKickingMemberIds()
+            .isEmpty()) {
+            kick(planId, request.getKickingMemberIds());
+        }
+
+
         Member nextOwner = memberRepository.findById(request.getOwnerId())
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
         plan.update(request.getTitle(), request.getIntro(), nextOwner, request.isPublic());
+
+        planRepository.save(plan);
+
+    }
+
+    public void kick(Long planId, List<Long> kinkingMemberIds) {
+        memberOfPlanRepository.deleteAllByPlanIdAndMemberIds(planId, kinkingMemberIds);
     }
 
     public List<PlanTitleIdResponse> getAllPlanTitleIdByMemberId(Long userId) {

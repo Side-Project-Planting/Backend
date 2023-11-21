@@ -312,21 +312,28 @@ class PlanServiceTest {
         Plan plan = Plan.builder()
             .title("플랜 제목")
             .intro("플랜 소개")
+            .owner(tester)
             .isPublic(true)
             .build();
         planRepository.save(plan);
 
-        Member member = Member.builder()
-            .name("tester")
-            .email("test@example.com")
+        Member member1 = Member.builder()
+            .name("tester1")
+            .email("test1@example.com")
             .build();
-        memberRepository.save(member);
+        Member member2 = Member.builder()
+            .name("tester2")
+            .email("test2@example.com")
+            .build();
+        memberRepository.saveAll(List.of(member1, member2));
 
         // when
-        Long memberOfPlanId = planService.inviteMember(plan.getId(), member.getId());
+        Long memberOfPlanId1 = planService.inviteMember(plan.getId(), member1.getId());
+        Long memberOfPlanId2 = planService.inviteMember(plan.getId(), member2.getId());
 
         // then
-        assertThat(memberOfPlanRepository.findById(memberOfPlanId)).isPresent();
+        assertThat(memberOfPlanRepository.findAllByPlanId(plan.getId())
+            .get()).hasSize(2);
     }
 
     @Test
@@ -403,10 +410,11 @@ class PlanServiceTest {
         memberRepository.save(nextOwner);
         Plan savedPlan = planRepository.save(plan);
 
-
         PlanUpdateRequest planUpdateRequest = PlanUpdateRequest.builder()
             .title("수정된 플랜 제목")
             .intro("수정된 플랜 소개")
+            .invitedEmails(List.of())
+            .kickingMemberIds(List.of())
             .ownerId(nextOwner.getId())
             .isPublic(false)
             .build();
@@ -422,6 +430,42 @@ class PlanServiceTest {
         assertThat(updatedPlan.getIntro()).isEqualTo("수정된 플랜 소개");
         assertThat(updatedPlan.getOwner()).isEqualTo(nextOwner);
         assertThat(updatedPlan.isPublic()).isFalse();
+    }
+
+    @Test
+    @DisplayName("플랜을 수정할 때 기존 멤버를 삭제한다")
+    void updateDeleteMember() {
+        // given
+        Member tester1 = Member.builder()
+            .name("tester1")
+            .email("test@test.com")
+            .build();
+        Plan plan = Plan.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .owner(tester)
+            .isPublic(true)
+            .build();
+        memberRepository.save(tester1);
+        Plan savedPlan = planRepository.save(plan);
+        planService.inviteMember(savedPlan.getId(), tester1.getId());
+
+        PlanUpdateRequest planUpdateRequest = PlanUpdateRequest.builder()
+            .title("수정된 플랜 제목")
+            .intro("수정된 플랜 소개")
+            .invitedEmails(List.of())
+            .kickingMemberIds(List.of(tester1.getId()))
+            .ownerId(tester1.getId())
+            .isPublic(false)
+            .build();
+
+        // when
+        planService.update(savedPlan.getId(), planUpdateRequest, userId);
+
+        // then
+        Plan updatedPlan = planRepository.findById(plan.getId())
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        assertThat(updatedPlan.getMembers()).isEmpty();
     }
 
     @Test
