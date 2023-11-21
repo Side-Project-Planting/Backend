@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +16,6 @@ import com.example.planservice.domain.memberofplan.repository.MemberOfPlanReposi
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.Tab;
-import com.example.planservice.domain.tab.TabGroup;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.domain.task.Task;
 import com.example.planservice.domain.task.repository.TaskRepository;
@@ -41,10 +39,10 @@ import lombok.RequiredArgsConstructor;
 public class PlanService {
 
     private final EmailService emailService;
+    private final TabService tabService;
     private final PlanRepository planRepository;
     private final MemberRepository memberRepository;
     private final TabRepository tabRepository;
-    private final TaskRepository taskRepository;
     private final MemberOfPlanRepository memberOfPlanRepository;
 
     @Transactional
@@ -75,11 +73,8 @@ public class PlanService {
 
         List<LabelOfPlanResponse> labels = getLabelResponses(plan.getLabels());
         List<TaskOfPlanResponse> tasks = getTaskResponses(allTask);
-        List<Long> tabOrder = sortedTabs.stream()
-            .map(Tab::getId)
-            .toList();
-
-        List<TabOfPlanResponse> tabs = getTabResponses(sortedTabs);
+        List<Long> tabOrder = getSortedTabID(tabList);
+        List<TabOfPlanResponse> tabs = getTabResponses(tabList);
 
         return PlanResponse.builder()
             .id(plan.getId())
@@ -96,15 +91,16 @@ public class PlanService {
 
     @Transactional
     public Long inviteMember(Long planId, Long memberId) {
+        if (isDuplicatedMember(planId, memberId)) {
+            throw new ApiException(ErrorCode.MEMBER_ALREADY_REGISTERED);
+        }
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        if (plan.isDeleted()) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
 
         Member member =
             memberRepository.findById(memberId)
                 .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+
         MemberOfPlan memberOfPlan = MemberOfPlan.builder()
             .member(member)
             .plan(plan)
@@ -113,23 +109,15 @@ public class PlanService {
         return memberOfPlan.getId();
     }
 
+    public boolean isDuplicatedMember(Long planId, Long memberId) {
+        return memberOfPlanRepository.existsByPlanIdAndMemberId(planId, memberId);
+    }
+
     @Transactional
     public void exit(Long planId, Long memberId) {
         memberOfPlanRepository.deleteByPlanIdAndMemberId(planId, memberId);
     }
 
-    @Transactional
-    public void kick(Long planId, PlanKickRequest request, Long userId) {
-        Plan plan = planRepository.findById(planId)
-            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        if (plan.isDeleted()) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
-
-        validateOwner(plan.getOwner()
-            .getId(), userId);
-        memberOfPlanRepository.deleteAllByPlanIdAndMemberIds(planId, request.getKickingMemberIds());
-    }
 
     @Transactional
     public void delete(Long planId, Long userId) {
@@ -140,9 +128,6 @@ public class PlanService {
             .getId(), userId);
 
         Plan plan = memberOfPlan.getPlan();
-        if (plan.isDeleted()) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
         plan.softDelete();
         planRepository.save(plan);
         memberOfPlanRepository.delete(memberOfPlan);
@@ -152,9 +137,6 @@ public class PlanService {
     public void update(Long planId, PlanUpdateRequest request, Long userId) {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        if (plan.isDeleted()) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
         validateOwner(plan.getOwner()
             .getId(), userId);
         Member nextOwner = memberRepository.findById(request.getOwnerId())
@@ -278,4 +260,9 @@ public class PlanService {
         return orderedItems;
     }
 
+    public boolean isDeletedPlan(Long planId) {
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        return plan.isDeleted();
+    }
 }
