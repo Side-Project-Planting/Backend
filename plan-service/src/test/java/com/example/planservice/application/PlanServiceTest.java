@@ -6,7 +6,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +39,7 @@ import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
+import com.example.planservice.util.RedisUtils;
 
 @SpringBootTest
 @Import(TestConfig.class)
@@ -47,6 +50,9 @@ class PlanServiceTest {
 
     @MockBean
     EmailService emailService;
+
+    @MockBean
+    RedisUtils redisUtils;
 
     @Autowired
     PlanRepository planRepository;
@@ -67,6 +73,7 @@ class PlanServiceTest {
     TaskRepository taskRepository;
     private Long userId;
     private Member tester;
+    private Map<String, String> mockRedis;
 
     @BeforeEach
     void testSetUp() {
@@ -76,11 +83,26 @@ class PlanServiceTest {
             .build();
         Member savedMember = memberRepository.save(tester);
         userId = savedMember.getId();
+        mockRedis = new HashMap<>();
 
         Mockito.doNothing()
             .when(emailService)
-            .sendInviteEmail(ArgumentMatchers.anyString(),
-                ArgumentMatchers.anyString(), ArgumentMatchers.anyLong());
+            .sendInviteEmail(anyString(),
+                anyString(), anyString());
+
+        Mockito.doAnswer(invocation -> {
+                String key = invocation.getArgument(0);
+                String value = invocation.getArgument(1);
+                mockRedis.put(key, value);
+                return null;
+            })
+            .when(redisUtils)
+            .setData(anyString(), anyString(), anyLong());
+
+        when(redisUtils.getData(anyString())).thenAnswer(invocation -> {
+            String key = invocation.getArgument(0);
+            return mockRedis.get(key);
+        });
     }
 
     @Test
@@ -101,7 +123,8 @@ class PlanServiceTest {
 
         // then
         assertThat(savedId).isNotNull();
-        Plan savedPlan = planRepository.findById(savedId).get();
+        Plan savedPlan = planRepository.findById(savedId)
+            .get();
 
         assertThat(savedPlan.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedPlan.getIntro()).isEqualTo(request.getIntro());
@@ -331,10 +354,14 @@ class PlanServiceTest {
             .email("test2@example.com")
             .build();
         memberRepository.saveAll(List.of(member1, member2));
+        String uuid = "uuid";
+        redisUtils.setData(uuid, plan.getId()
+            .toString(), 1000L);
+
 
         // when
-        Long memberOfPlanId1 = planService.inviteMember(plan.getId(), member1.getId());
-        Long memberOfPlanId2 = planService.inviteMember(plan.getId(), member2.getId());
+        Long memberOfPlanId1 = planService.inviteMember(uuid, member1.getId());
+        Long memberOfPlanId2 = planService.inviteMember(uuid, member2.getId());
 
         // then
         assertThat(memberOfPlanRepository.findAllByPlanId(plan.getId())
@@ -352,9 +379,12 @@ class PlanServiceTest {
             .build();
         Plan savedPlan = planRepository.save(plan);
         Long notRegisteredMemberId = 20L;
+        String uuid = "uuid";
+        redisUtils.setData(uuid, plan.getId()
+            .toString(), 1000L);
 
         // when & then
-        assertThatThrownBy(() -> planService.inviteMember(savedPlan.getId(), notRegisteredMemberId))
+        assertThatThrownBy(() -> planService.inviteMember(uuid, notRegisteredMemberId))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
@@ -374,9 +404,10 @@ class PlanServiceTest {
 
 
         Member savedMember = memberRepository.save(member);
-
+        String uuid = "uuid";
+        redisUtils.setData(uuid, String.valueOf(10L), 1000L);
         // when & then
-        assertThatThrownBy(() -> planService.inviteMember(notRegisteredPlanId, savedMember.getId()))
+        assertThatThrownBy(() -> planService.inviteMember(uuid, savedMember.getId()))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
 
@@ -453,7 +484,10 @@ class PlanServiceTest {
             .build();
         memberRepository.save(tester1);
         Plan savedPlan = planRepository.save(plan);
-        planService.inviteMember(savedPlan.getId(), tester1.getId());
+        String uuid = "uuid";
+        redisUtils.setData(uuid, plan.getId()
+            .toString(), 1000L);
+        planService.inviteMember(uuid, tester1.getId());
 
         PlanUpdateRequest planUpdateRequest = PlanUpdateRequest.builder()
             .title("수정된 플랜 제목")
@@ -489,7 +523,11 @@ class PlanServiceTest {
             .email("test@example.com")
             .build();
         memberRepository.save(member);
-        Long memberOfPlanId = planService.inviteMember(plan.getId(), member.getId());
+
+        String uuid = "uuid";
+        redisUtils.setData(uuid, plan.getId()
+            .toString(), 1000L);
+        Long memberOfPlanId = planService.inviteMember(uuid, member.getId());
 
         // when
         planService.exit(plan.getId(), member.getId());

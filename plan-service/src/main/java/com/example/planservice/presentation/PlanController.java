@@ -51,13 +51,14 @@ public class PlanController {
         return ResponseEntity.ok(planService.getTotalPlanResponse(planId));
     }
 
-    @PutMapping("/invite/{planId}")
-    public ResponseEntity<Long> invite(@PathVariable Long planId, @RequestAttribute Long userId) {
+    @PutMapping("/invite/{uuid}")
+    public ResponseEntity<Long> invite(@PathVariable String uuid, @RequestAttribute Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .build();
         }
-        planService.inviteMember(planId, userId);
+
+        planService.inviteMember(uuid, userId);
         return ResponseEntity.noContent()
             .build();
     }

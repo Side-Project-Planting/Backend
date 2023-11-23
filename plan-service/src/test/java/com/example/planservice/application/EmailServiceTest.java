@@ -25,6 +25,7 @@ class EmailServiceTest {
 
     @Test
     void sendEmail() throws MessagingException {
+
         // given
         String recipient = "test@example.com";
         String text = "Hello, this is a test email.";
@@ -34,7 +35,7 @@ class EmailServiceTest {
             .send(any(Message.class));
 
         // when
-        emailServiceMock.sendInviteEmail(recipient, text, 1L);
+        emailServiceMock.sendInviteEmail(recipient, text, "uuid");
 
         // then
         ArgumentCaptor<Message> messageCaptor = ArgumentCaptor.forClass(Message.class);
