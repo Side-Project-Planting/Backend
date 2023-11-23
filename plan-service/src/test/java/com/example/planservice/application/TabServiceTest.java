@@ -10,11 +10,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.TabChangeTitleResponse;
 import com.example.planservice.application.dto.TabChangeTitleServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
+import com.example.planservice.config.TestConfig;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
 import com.example.planservice.domain.plan.Plan;
@@ -30,6 +32,7 @@ import com.example.planservice.presentation.dto.response.TabFindResponse;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest
+@Import(TestConfig.class)
 @Transactional
 class TabServiceTest {
     @Autowired
@@ -61,7 +64,8 @@ class TabServiceTest {
         // then
         assertThat(savedId).isNotNull();
 
-        Tab savedTab = tabRepository.findById(savedId).get();
+        Tab savedTab = tabRepository.findById(savedId)
+            .get();
         assertThat(savedTab)
             .extracting(Tab::getTitle, Tab::getPlan)
             .containsExactly(request.getTitle(), plan);
@@ -89,7 +93,8 @@ class TabServiceTest {
         Long savedId = tabService.create(member.getId(), request);
 
         // then
-        Tab newTab = tabRepository.findById(savedId).get();
+        Tab newTab = tabRepository.findById(savedId)
+            .get();
         assertThat(newTab.isFirst()).isFalse();
         assertThat(oldTab.isFirst()).isTrue();
     }
@@ -147,9 +152,11 @@ class TabServiceTest {
         // then
         assertThat(savedId).isNotNull();
 
-        Tab savedTab = tabRepository.findById(savedId).get();
+        Tab savedTab = tabRepository.findById(savedId)
+            .get();
         assertThat(savedTab.getTitle()).isEqualTo(request.getTitle());
-        assertThat(savedTab.getPlan().getId()).isEqualTo(request.getPlanId());
+        assertThat(savedTab.getPlan()
+            .getId()).isEqualTo(request.getPlanId());
     }
 
     @Test
@@ -160,11 +167,22 @@ class TabServiceTest {
         Member member = createMember();
         createMemberOfPlan(plan, member);
 
-        Tab tab1 = Tab.builder().first(true).plan(plan).build();
-        Tab tab2 = Tab.builder().plan(plan).build();
-        Tab tab3 = Tab.builder().plan(plan).build();
-        Tab tab4 = Tab.builder().plan(plan).build();
-        Tab tab5 = Tab.builder().plan(plan).build();
+        Tab tab1 = Tab.builder()
+            .first(true)
+            .plan(plan)
+            .build();
+        Tab tab2 = Tab.builder()
+            .plan(plan)
+            .build();
+        Tab tab3 = Tab.builder()
+            .plan(plan)
+            .build();
+        Tab tab4 = Tab.builder()
+            .plan(plan)
+            .build();
+        Tab tab5 = Tab.builder()
+            .plan(plan)
+            .build();
         tabRepository.saveAll(List.of(tab1, tab2, tab3, tab4, tab5));
 
         TabCreateRequest request = createTabCreateRequest(plan.getId(), "이름");
@@ -213,7 +231,8 @@ class TabServiceTest {
         // then
         assertThat(savedId).isNotNull();
 
-        Tab savedTab = tabRepository.findById(savedId).get();
+        Tab savedTab = tabRepository.findById(savedId)
+            .get();
         assertThat(tab2.getNext()).isEqualTo(savedTab);
         assertThat(savedTab.getNext()).isNull();
     }
@@ -450,7 +469,8 @@ class TabServiceTest {
         Long deletedId = tabService.delete(request);
 
         // then
-        Tab result = tabRepository.findById(deletedId).get();
+        Tab result = tabRepository.findById(deletedId)
+            .get();
         assertThat(result.isDeleted()).isTrue();
     }
 
@@ -629,7 +649,9 @@ class TabServiceTest {
 
     @NotNull
     private Task createTask(Tab tab) {
-        Task task = Task.builder().tab(tab).build();
+        Task task = Task.builder()
+            .tab(tab)
+            .build();
         em.persist(task);
         return task;
     }
@@ -661,7 +683,9 @@ class TabServiceTest {
 
     @NotNull
     private Plan createPlanWithOwner(Member owner) {
-        Plan plan = Plan.builder().owner(owner).build();
+        Plan plan = Plan.builder()
+            .owner(owner)
+            .build();
         em.persist(plan);
         return plan;
     }

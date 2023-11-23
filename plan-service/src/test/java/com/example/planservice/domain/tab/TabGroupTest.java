@@ -11,8 +11,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.planservice.config.TestConfig;
 import com.example.planservice.domain.plan.Plan;
 import com.example.planservice.domain.plan.repository.PlanRepository;
 import com.example.planservice.domain.tab.repository.TabRepository;
@@ -20,6 +22,7 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 
 @SpringBootTest
+@Import(TestConfig.class)
 @Transactional
 class TabGroupTest {
     @Autowired
@@ -222,7 +225,8 @@ class TabGroupTest {
         Tab tab3 = createTab(plan, "탭3", tab2);
         Tab tab4 = createTab(plan, "탭4", tab3);
 
-        Tab addedTab = Tab.builder().build();
+        Tab addedTab = Tab.builder()
+            .build();
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4));
 
         // when
@@ -244,7 +248,8 @@ class TabGroupTest {
         Tab tab4 = createTab(plan, "탭4", tab3);
         Tab tab5 = createTab(plan, "탭5", tab4);
 
-        Tab addedTab = Tab.builder().build();
+        Tab addedTab = Tab.builder()
+            .build();
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1, tab2, tab3, tab4, tab5));
 
         // when & then
@@ -260,7 +265,9 @@ class TabGroupTest {
         Plan plan = createPlan();
         Tab tab1 = createTab(plan, "탭1", null);
 
-        Tab addedTab = Tab.builder().title("탭1").build();
+        Tab addedTab = Tab.builder()
+            .title("탭1")
+            .build();
         TabGroup tabGroup = new TabGroup(plan.getId(), List.of(tab1));
 
         // when & then
@@ -303,7 +310,8 @@ class TabGroupTest {
 
     @NotNull
     private Plan createPlan() {
-        Plan plan = Plan.builder().build();
+        Plan plan = Plan.builder()
+            .build();
         planRepository.save(plan);
         return plan;
     }

@@ -12,8 +12,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+import com.example.planservice.config.TestConfig;
 
 @SpringBootTest
+@Import(TestConfig.class)
 class EmailServiceTest {
 
     @Autowired
