@@ -7,6 +7,6 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class ChangeOrderResponse {
+public class TabChangeOrderResponse {
     private List<Long> sortedTabs;
 }

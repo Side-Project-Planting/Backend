@@ -23,7 +23,7 @@ public class TaskFindResponse {
 
     private List<Long> labels;
 
-    private String name;
+    private String title;
 
     private String description;
 
@@ -37,7 +37,7 @@ public class TaskFindResponse {
 
     @Builder
     @SuppressWarnings("java:S107")
-    public TaskFindResponse(Long id, Long tabId, Long planId, Long managerId, List<Long> labels, String name,
+    public TaskFindResponse(Long id, Long tabId, Long planId, Long managerId, List<Long> labels, String title,
                             String description, LocalDateTime startDate, LocalDateTime endDate, Long nextId,
                             Long prevId) {
         this.id = id;
@@ -45,7 +45,7 @@ public class TaskFindResponse {
         this.planId = planId;
         this.managerId = managerId;
         this.labels = labels;
-        this.name = name;
+        this.title = title;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -78,7 +78,7 @@ public class TaskFindResponse {
             .managerId(task.getAssignee() != null ? task.getAssignee()
                 .getId() : null)
             .labels(labels)
-            .name(task.getName())
+            .title(task.getTitle())
             .description(task.getDescription())
             .startDate(task.getStartDate())
             .endDate(task.getEndDate())

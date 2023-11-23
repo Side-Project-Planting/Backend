@@ -20,7 +20,7 @@ public class TaskUpdateRequest {
     private Long managerId;
 
     @NotBlank
-    private String name;
+    private String title;
 
     private String description;
 
@@ -32,11 +32,11 @@ public class TaskUpdateRequest {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private TaskUpdateRequest(Long planId, Long managerId, String name, String description, LocalDateTime startDate,
+    private TaskUpdateRequest(Long planId, Long managerId, String title, String description, LocalDateTime startDate,
                               LocalDateTime endDate, List<Long> labels) {
         this.planId = planId;
         this.managerId = managerId;
-        this.name = name;
+        this.title = title;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -49,7 +49,7 @@ public class TaskUpdateRequest {
             .memberId(memberId)
             .planId(planId)
             .managerId(managerId)
-            .name(name)
+            .title(title)
             .description(description)
             .startDate(startDate)
             .endDate(endDate)

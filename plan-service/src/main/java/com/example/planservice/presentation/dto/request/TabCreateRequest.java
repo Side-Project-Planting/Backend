@@ -10,14 +10,14 @@ import lombok.NoArgsConstructor;
 @Getter
 public class TabCreateRequest {
     @NotBlank
-    private String name;
+    private String title;
 
     @NotNull
     private Long planId;
 
     @Builder
-    private TabCreateRequest(String name, Long planId) {
-        this.name = name;
+    private TabCreateRequest(String title, Long planId) {
+        this.title = title;
         this.planId = planId;
     }
 }

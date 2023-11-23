@@ -96,8 +96,7 @@ class PlanServiceTest {
 
         // then
         assertThat(savedId).isNotNull();
-        Plan savedPlan = planRepository.findById(savedId)
-            .get();
+        Plan savedPlan = planRepository.findById(savedId).get();
 
         assertThat(savedPlan.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedPlan.getIntro()).isEqualTo(request.getIntro());
@@ -123,11 +122,11 @@ class PlanServiceTest {
         List<Tab> tabs = tabRepository.findAllByPlanId(savedId);
         assertThat(tabs.size()).isEqualTo(3);
         assertThat(tabs.get(0)
-            .getName()).isEqualTo("To Do");
+            .getTitle()).isEqualTo("To Do");
         assertThat(tabs.get(1)
-            .getName()).isEqualTo("In Progress");
+            .getTitle()).isEqualTo("In Progress");
         assertThat(tabs.get(2)
-            .getName()).isEqualTo("Done");
+            .getTitle()).isEqualTo("Done");
     }
 
     @Test
@@ -166,44 +165,57 @@ class PlanServiceTest {
             .profileUri("www.test2")
             .build();
 
+
         Plan plan = Plan.builder()
             .owner(member1)
             .title("testPlan")
             .intro("hi")
             .build();
 
-
         Tab tab2 = Tab.builder()
             .plan(plan)
-            .name("testTab2")
+            .title("testTab2")
             .first(false)
             .build();
 
         Tab tab1 = Tab.builder()
             .plan(plan)
-            .name("testTab1")
+            .title("testTab1")
             .next(tab2)
             .first(true)
             .build();
 
         Task task2 = Task.builder()
-            .name("testTask2")
+            .title("testTask2")
             .tab(tab1)
             .description("testTaskDesc2")
             .build();
 
         Task task1 = Task.builder()
-            .name("testTask1")
+            .title("testTask1")
             .tab(tab1)
             .description("testTaskDesc1")
             .next(task2)
             .build();
+        tab1.setFirstDummyTask(task1);
+        tab1.setLastDummyTask(task2);
 
         Task task3 = Task.builder()
-            .name("testTask3")
+            .title("testTask3")
             .tab(tab2)
             .description("testTaskDesc3")
             .build();
+
+        Task task4 = Task.builder()
+            .title("testTask4")
+            .tab(tab2)
+            .description("testTaskDesc4")
+            .prev(task3)
+            .build();
+        task3.setNext(task4);
+
+        tab2.setFirstDummyTask(task3);
+        tab2.setLastDummyTask(task4);
 
         Label label1 = Label.builder()
             .name("testLabel1")
@@ -271,15 +283,7 @@ class PlanServiceTest {
         assertThat(planResponse.getTabs()
             .get(1)
             .getTitle()).isEqualTo("testTab2");
-        assertThat(planResponse.getTasks()
-            .get(0)
-            .getTitle()).isEqualTo("testTask1");
-        assertThat(planResponse.getTasks()
-            .get(1)
-            .getTitle()).isEqualTo("testTask2");
-        assertThat(planResponse.getTasks()
-            .get(2)
-            .getTitle()).isEqualTo("testTask3");
+        assertThat(planResponse.getTasks()).isEmpty();
         assertThat(planResponse.getLabels()
             .get(0)
             .getValue()).isEqualTo("testLabel1");

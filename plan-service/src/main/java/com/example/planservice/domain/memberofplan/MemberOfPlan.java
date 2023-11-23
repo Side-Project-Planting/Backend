@@ -40,4 +40,11 @@ public class MemberOfPlan extends BaseEntity {
         this.plan = plan;
         this.member = member;
     }
+
+    public static MemberOfPlan create(Member member, Plan plan) {
+        return MemberOfPlan.builder()
+            .member(member)
+            .plan(plan)
+            .build();
+    }
 }

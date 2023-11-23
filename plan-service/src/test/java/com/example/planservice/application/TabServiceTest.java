@@ -12,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.planservice.application.dto.TabChangeNameResponse;
-import com.example.planservice.application.dto.TabChangeNameServiceRequest;
+import com.example.planservice.application.dto.TabChangeTitleResponse;
+import com.example.planservice.application.dto.TabChangeTitleServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
@@ -63,13 +63,13 @@ class TabServiceTest {
 
         Tab savedTab = tabRepository.findById(savedId).get();
         assertThat(savedTab)
-            .extracting(Tab::getName, Tab::getPlan)
-            .containsExactly(request.getName(), plan);
+            .extracting(Tab::getTitle, Tab::getPlan)
+            .containsExactly(request.getTitle(), plan);
 
         Task firstDummyTask = savedTab.getFirstDummyTask();
         Task lastDummyTask = savedTab.getLastDummyTask();
-        assertThat(firstDummyTask.getName()).isEqualTo("first");
-        assertThat(lastDummyTask.getName()).isEqualTo("last");
+        assertThat(firstDummyTask.getTitle()).isEqualTo("first");
+        assertThat(lastDummyTask.getTitle()).isEqualTo("last");
         assertThat(savedTab.getTasks()).hasSize(2)
             .contains(firstDummyTask, lastDummyTask);
     }
@@ -148,7 +148,7 @@ class TabServiceTest {
         assertThat(savedId).isNotNull();
 
         Tab savedTab = tabRepository.findById(savedId).get();
-        assertThat(savedTab.getName()).isEqualTo(request.getName());
+        assertThat(savedTab.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedTab.getPlan().getId()).isEqualTo(request.getPlanId());
     }
 
@@ -319,27 +319,27 @@ class TabServiceTest {
 
     @Test
     @DisplayName("탭의 이름을 변경한다")
-    void changeName() {
+    void changeTitle() {
         // given
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
         Tab tab = createTab(plan, "TODO", null, true);
-        String name = "변경할이름";
+        String title = "변경할 제목";
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(plan.getId())
-            .name(name)
+            .title(title)
             .memberId(member.getId())
             .tabId(tab.getId())
             .build();
 
         // when
-        TabChangeNameResponse response = tabService.changeName(request);
+        TabChangeTitleResponse response = tabService.changeName(request);
 
         // then
         assertThat(response.getId()).isEqualTo(tab.getId());
-        assertThat(response.getName()).isEqualTo(name);
+        assertThat(response.getTitle()).isEqualTo(title);
     }
 
     @Test
@@ -351,9 +351,9 @@ class TabServiceTest {
         createMemberOfPlan(plan, member);
         Tab tab = createTab(plan, "이름", null, true);
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(123123L)
-            .name("변경할이름")
+            .title("변경할 제목")
             .memberId(member.getId())
             .tabId(tab.getId())
             .build();
@@ -373,9 +373,9 @@ class TabServiceTest {
         Member member = createMember();
         Tab tab = createTab(plan, "이름", null, true);
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(plan.getId())
-            .name("변경할이름")
+            .title("변경할 제목")
             .memberId(member.getId())
             .tabId(tab.getId())
             .build();
@@ -398,9 +398,9 @@ class TabServiceTest {
 
         Tab otherTab = createTab(null, "다른플랜의탭", null, true);
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(plan.getId())
-            .name("변경할이름")
+            .title("변경할 제목")
             .tabId(otherTab.getId())
             .memberId(member.getId())
             .build();
@@ -415,17 +415,17 @@ class TabServiceTest {
     @DisplayName("동일한 플랜에 속해있는 탭들은 이름이 달라야 한다")
     void changeNameFailSameName() {
         // given
-        String duplicatedName = "동일이름";
+        String duplicatedTitle = "동일 타이틀";
 
         Plan plan = createPlan();
         Member member = createMember();
         createMemberOfPlan(plan, member);
-        Tab tab = createTab(plan, duplicatedName, null, false);
+        Tab tab = createTab(plan, duplicatedTitle, null, false);
         Tab target = createTab(plan, "시작탭", tab, true);
 
-        TabChangeNameServiceRequest request = TabChangeNameServiceRequest.builder()
+        TabChangeTitleServiceRequest request = TabChangeTitleServiceRequest.builder()
             .planId(plan.getId())
-            .name(duplicatedName)
+            .title(duplicatedTitle)
             .tabId(target.getId())
             .memberId(member.getId())
             .build();
@@ -531,7 +531,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab1.getId());
-        assertThat(response.getName()).isEqualTo(tab1.getName());
+        assertThat(response.getTitle()).isEqualTo(tab1.getTitle());
         assertThat(response.getNextId()).isEqualTo(tab2.getId());
     }
 
@@ -551,7 +551,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab2.getId());
-        assertThat(response.getName()).isEqualTo(tab2.getName());
+        assertThat(response.getTitle()).isEqualTo(tab2.getTitle());
         assertThat(response.getNextId()).isNull();
     }
 
@@ -571,7 +571,7 @@ class TabServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(tab2.getId());
-        assertThat(response.getName()).isEqualTo(tab2.getName());
+        assertThat(response.getTitle()).isEqualTo(tab2.getTitle());
         assertThat(response.getNextId()).isNull();
     }
 
@@ -605,10 +605,10 @@ class TabServiceTest {
             .hasMessageContaining(ErrorCode.TAB_NOT_FOUND.getMessage());
     }
 
-    private Tab createTab(Plan plan, String name, Tab next, boolean isFirst) {
+    private Tab createTab(Plan plan, String title, Tab next, boolean isFirst) {
         Tab tab = Tab.builder()
             .plan(plan)
-            .name(name)
+            .title(title)
             .next(next)
             .first(isFirst)
             .build();
@@ -668,9 +668,9 @@ class TabServiceTest {
 
 
     @NotNull
-    private TabCreateRequest createTabCreateRequest(Long planId, String name) {
+    private TabCreateRequest createTabCreateRequest(Long planId, String title) {
         return TabCreateRequest.builder()
-            .name(name)
+            .title(title)
             .planId(planId)
             .build();
     }

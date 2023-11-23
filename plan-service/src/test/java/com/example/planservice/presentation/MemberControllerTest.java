@@ -16,11 +16,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.MemberService;
 import com.example.planservice.application.dto.MemberRegisterResponse;
+import com.example.planservice.config.JpaAuditingConfig;
 import com.example.planservice.presentation.dto.request.MemberRegisterRequest;
 import com.example.planservice.presentation.dto.response.MemberFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(controllers = MemberController.class)
+@WebMvcTest(controllers = MemberController.class, excludeAutoConfiguration = JpaAuditingConfig.class)
 class MemberControllerTest {
     @Autowired
     private MockMvc mockMvc;

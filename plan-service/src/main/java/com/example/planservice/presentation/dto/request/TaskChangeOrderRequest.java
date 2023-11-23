@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * newPrevId가 Null이 입력되면 해당 태스크를 target 탭의 첫 번째 위치로 이동시킨다
+ */
 @NoArgsConstructor
 @Getter
 public class TaskChangeOrderRequest {

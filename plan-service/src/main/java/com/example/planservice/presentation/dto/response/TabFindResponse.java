@@ -10,20 +10,20 @@ import lombok.NoArgsConstructor;
 @Getter
 public class TabFindResponse {
     private Long id;
-    private String name;
+    private String title;
     private Long nextId;
 
     @Builder
-    private TabFindResponse(Long id, String name, Long nextId) {
+    private TabFindResponse(Long id, String title, Long nextId) {
         this.id = id;
-        this.name = name;
+        this.title = title;
         this.nextId = nextId;
     }
 
     public static TabFindResponse from(Tab tab) {
         return TabFindResponse.builder()
             .id(tab.getId())
-            .name(tab.getName())
+            .title(tab.getTitle())
             .nextId(tab.getNext() == null ? null : tab.getNext().getId())
             .build();
     }

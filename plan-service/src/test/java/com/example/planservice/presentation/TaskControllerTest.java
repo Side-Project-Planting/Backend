@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -16,11 +15,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.TaskService;
+import com.example.planservice.config.JpaAuditingConfig;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
 import com.example.planservice.presentation.dto.response.TaskFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(controllers = {TaskController.class})
+@WebMvcTest(controllers = TaskController.class, excludeAutoConfiguration = JpaAuditingConfig.class)
 class TaskControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -38,7 +38,7 @@ class TaskControllerTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(1L)
             .tabId(1L)
-            .name("이름")
+            .title("이름")
             .build();
         Long createdId = 1L;
         Long userId = 2L;
@@ -76,7 +76,7 @@ class TaskControllerTest {
         // given
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(1L)
-            .name("이름")
+            .title("이름")
             .build();
         Long createdId = 1L;
         Long userId = 2L;
@@ -99,7 +99,7 @@ class TaskControllerTest {
         // given
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(1L)
-            .name("이름")
+            .title("이름")
             .build();
         Long createdId = 1L;
         Long userId = 2L;
@@ -123,7 +123,7 @@ class TaskControllerTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .planId(1L)
             .tabId(1L)
-            .name("")
+            .title("")
             .build();
         Long createdId = 1L;
         Long userId = 2L;
@@ -172,7 +172,7 @@ class TaskControllerTest {
 
         TaskFindResponse response = TaskFindResponse.builder()
             .id(taskId)
-            .name("이름")
+            .title("태스크제목")
             .build();
 
         // stub
@@ -184,7 +184,7 @@ class TaskControllerTest {
                 .header("X-User-Id", userId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(response.getId()))
-            .andExpect(jsonPath("$.name").value(response.getName()));
+            .andExpect(jsonPath("$.title").value(response.getTitle()));
     }
 
     @Test

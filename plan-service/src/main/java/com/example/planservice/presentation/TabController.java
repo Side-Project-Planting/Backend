@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.planservice.application.TabService;
-import com.example.planservice.application.dto.TabChangeNameResponse;
+import com.example.planservice.application.dto.TabChangeTitleResponse;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
-import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
+import com.example.planservice.presentation.dto.request.TabChangeTitleRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
-import com.example.planservice.presentation.dto.response.ChangeOrderResponse;
+import com.example.planservice.presentation.dto.response.TabChangeOrderResponse;
 import com.example.planservice.presentation.dto.response.TabFindResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,16 +40,16 @@ public class TabController {
     }
 
     @PostMapping("/change-order")
-    public ResponseEntity<ChangeOrderResponse> changeOrder(@Valid @RequestBody TabChangeOrderRequest request,
-                                                           @RequestAttribute Long userId) {
+    public ResponseEntity<TabChangeOrderResponse> changeOrder(@Valid @RequestBody TabChangeOrderRequest request,
+                                                              @RequestAttribute Long userId) {
         List<Long> sortedTabList = tabService.changeOrder(userId, request);
-        return ResponseEntity.ok().body(new ChangeOrderResponse(sortedTabList));
+        return ResponseEntity.ok().body(new TabChangeOrderResponse(sortedTabList));
     }
 
-    @PatchMapping("/{tabId}/name")
-    public ResponseEntity<TabChangeNameResponse> changeName(@PathVariable Long tabId,
-                                                            @Valid @RequestBody TabChangeNameRequest request,
-                                                            @RequestAttribute Long userId) {
+    @PatchMapping("/{tabId}/title")
+    public ResponseEntity<TabChangeTitleResponse> changeTitle(@PathVariable Long tabId,
+                                                              @Valid @RequestBody TabChangeTitleRequest request,
+                                                              @RequestAttribute Long userId) {
         return ResponseEntity.ok().body(tabService.changeName(request.toServiceRequest(userId, tabId)));
     }
 

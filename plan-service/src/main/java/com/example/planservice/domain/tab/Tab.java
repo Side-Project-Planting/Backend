@@ -33,11 +33,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "tabs",
     uniqueConstraints = {
-        @UniqueConstraint(name = "UniquePlanAndTabName", columnNames = {"plan_id", "name"})
+        @UniqueConstraint(name = "UniquePlanAndTabName", columnNames = {"plan_id", "title"})
     })
 @Where(clause = "is_deleted = false")
 public class Tab extends BaseEntity {
     public static final int TAB_MAX_SIZE = 5;
+    public static final String TODO = "To Do";
+    public static final String IN_PROGRESS = "In Progress";
+    public static final String DONE = "Done";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,7 +51,7 @@ public class Tab extends BaseEntity {
     @JoinColumn(name = "plan_id")
     private Plan plan;
 
-    private String name;
+    private String title;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "tab")
     private List<Task> tasks = new ArrayList<>();
@@ -73,10 +76,10 @@ public class Tab extends BaseEntity {
     private boolean isDeleted;
 
     @Builder
-    private Tab(Plan plan, String name, Tab next, boolean first, Task firstDummyTask, Task lastDummyTask,
+    private Tab(Plan plan, String title, Tab next, boolean first, Task firstDummyTask, Task lastDummyTask,
                 boolean isDeleted) {
         this.plan = plan;
-        this.name = name;
+        this.title = title;
         this.next = next;
         this.first = first;
         this.firstDummyTask = firstDummyTask;
@@ -88,7 +91,7 @@ public class Tab extends BaseEntity {
     public static Tab create(Plan plan, String name) {
         return Tab.builder()
             .plan(plan)
-            .name(name)
+            .title(name)
             .first(false)
             .build();
     }
@@ -96,7 +99,7 @@ public class Tab extends BaseEntity {
     public static Tab createTodoTab(Plan plan) {
         return Tab.builder()
             .plan(plan)
-            .name("TODO")
+            .title(TODO)
             .first(true)
             .build();
     }
@@ -110,7 +113,7 @@ public class Tab extends BaseEntity {
 
     public void changeName(@NotNull String name) {
         // TODO Tab 이름에 대한 제약조건 이야기해보기
-        this.name = name;
+        this.title = name;
     }
 
     public void setFirstDummyTask(Task firstDummyTask) {

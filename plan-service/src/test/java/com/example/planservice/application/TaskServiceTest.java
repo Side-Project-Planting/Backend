@@ -79,7 +79,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(tab.getId())
             .assigneeId(taskManager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
             .endDate(null)
@@ -98,7 +98,7 @@ class TaskServiceTest {
             .getId()).isEqualTo(request.getTabId());
         assertThat(task.getAssignee()
             .getId()).isEqualTo(request.getAssigneeId());
-        assertThat(task.getName()).isEqualTo(request.getName());
+        assertThat(task.getTitle()).isEqualTo(request.getTitle());
         assertThat(task.getDescription()).isEqualTo(request.getDescription());
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
@@ -118,7 +118,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(tab.getId())
             .assigneeId(null)
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
             .endDate(null)
@@ -136,7 +136,7 @@ class TaskServiceTest {
         assertThat(task.getId()).isEqualTo(createdId);
         assertThat(task.getTab()
             .getId()).isEqualTo(request.getTabId());
-        assertThat(task.getName()).isEqualTo(request.getName());
+        assertThat(task.getTitle()).isEqualTo(request.getTitle());
         assertThat(task.getDescription()).isEqualTo(request.getDescription());
         assertThat(task.getStartDate()).isEqualTo(request.getStartDate());
         assertThat(task.getEndDate()).isEqualTo(request.getEndDate());
@@ -159,7 +159,7 @@ class TaskServiceTest {
         TaskCreateRequest request = TaskCreateRequest.builder()
             .tabId(tab.getId())
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
             .endDate(null)
@@ -188,7 +188,7 @@ class TaskServiceTest {
             .planId(plan.getId())
             .tabId(tab.getId())
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .labels(List.of(label1.getId(), label2.getId()))
             .build();
@@ -227,7 +227,7 @@ class TaskServiceTest {
             .planId(plan.getId())
             .tabId(tab.getId())
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .labels(List.of(label1.getId(), notRegisteredLabelId))
             .build();
@@ -266,7 +266,7 @@ class TaskServiceTest {
             .planId(plan.getId())
             .tabId(tab.getId())
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .labels(List.of(otherPlansLabel.getId()))
             .build();
@@ -303,7 +303,7 @@ class TaskServiceTest {
             .planId(notRegisteredPlanId)
             .tabId(notRegisteredTabId)
             .assigneeId(manager.getId())
-            .name("스프링공부하기")
+            .title("스프링공부하기")
             .description("1. 책을 편다. \n2. 글자를 읽는다. \n3. 책을닫는다\n")
             .startDate(null)
             .endDate(null)
@@ -552,7 +552,7 @@ class TaskServiceTest {
             .memberId(loginMember.getId())
             .planId(plan.getId())
             .managerId(taskManager.getId())
-            .name("변경된 이름")
+            .title("변경된 이름")
             .description("이렇게 설명할게요")
             .startDate(LocalDateTime.now()
                 .minusDays(10))
@@ -569,9 +569,9 @@ class TaskServiceTest {
             .get();
         assertThat(updatedTask).isEqualTo(task);
         assertThat(updatedTask)
-            .extracting(Task::getTab, Task::getAssignee, Task::getName,
+            .extracting(Task::getTab, Task::getAssignee, Task::getTitle,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
-            .containsExactly(tab, taskManager, request.getName(),
+            .containsExactly(tab, taskManager, request.getTitle(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());
 
         List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(updatedId);
@@ -608,7 +608,7 @@ class TaskServiceTest {
             .memberId(loginMember.getId())
             .planId(plan.getId())
             .managerId(null)
-            .name("변경된 이름")
+            .title("변경된 이름")
             .description("이렇게 설명할게요")
             .startDate(LocalDateTime.now()
                 .minusDays(10))
@@ -625,9 +625,9 @@ class TaskServiceTest {
             .get();
         assertThat(updatedTask).isEqualTo(task);
         assertThat(updatedTask)
-            .extracting(Task::getTab, Task::getAssignee, Task::getName,
+            .extracting(Task::getTab, Task::getAssignee, Task::getTitle,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
-            .containsExactly(tab, null, request.getName(),
+            .containsExactly(tab, null, request.getTitle(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());
 
         List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(updatedId);

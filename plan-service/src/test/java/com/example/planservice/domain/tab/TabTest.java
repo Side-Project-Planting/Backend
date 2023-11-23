@@ -18,7 +18,7 @@ class TabTest {
         Tab tab = Tab.create(plan, "탭이름");
 
         // then
-        assertThat(tab.getName()).isEqualTo("탭이름");
+        assertThat(tab.getTitle()).isEqualTo("탭이름");
         assertThat(tab.getNext()).isNull();
         assertThat(tab.isFirst()).isFalse();
         assertThat(tab.getPlan()).isEqualTo(plan);
@@ -34,7 +34,7 @@ class TabTest {
         Tab tab = Tab.createTodoTab(plan);
 
         // then
-        assertThat(tab.getName()).isEqualTo("TODO");
+        assertThat(tab.getTitle()).isEqualTo("To Do");
         assertThat(tab.getNext()).isNull();
         assertThat(tab.isFirst()).isTrue();
         assertThat(tab.getPlan()).isEqualTo(plan);
@@ -65,7 +65,7 @@ class TabTest {
         tab.changeName("이름변경");
 
         // then
-        assertThat(tab.getName()).isEqualTo("이름변경");
+        assertThat(tab.getTitle()).isEqualTo("이름변경");
     }
 
 }

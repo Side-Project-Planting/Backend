@@ -53,7 +53,7 @@ public class Task extends BaseEntity {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "task")
     private List<LabelOfTask> labelOfTasks = new ArrayList<>();
 
-    private String name;
+    private String title;
 
     private String description;
 
@@ -76,12 +76,12 @@ public class Task extends BaseEntity {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private Task(Tab tab, Member manager, String name, String description, LocalDateTime startDate,
+    private Task(Tab tab, Member manager, String title, String description, LocalDateTime startDate,
                  LocalDateTime endDate, boolean isDeleted, Task next, Task prev, int version) {
         validateDates(startDate, endDate);
         this.tab = tab;
         this.assignee = manager;
-        this.name = name;
+        this.title = title;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -168,7 +168,7 @@ public class Task extends BaseEntity {
         validateCanModify();
 
         this.assignee = entity.getAssignee();
-        this.name = entity.getName();
+        this.title = entity.getTitle();
         this.description = entity.getDescription();
         this.startDate = entity.getStartDate();
         this.endDate = entity.getEndDate();
@@ -191,7 +191,7 @@ public class Task extends BaseEntity {
     private static Task createDummy(Tab tab, String name) {
         return Task.builder()
             .tab(tab)
-            .name(name)
+            .title(name)
             .build();
     }
 
@@ -210,7 +210,7 @@ public class Task extends BaseEntity {
     }
 
     public boolean isDummy() {
-        return this.name.equals(FIRST_DUMMY_NAME) || this.name.equals(LAST_DUMMY_NAME);
+        return this.title.equals(FIRST_DUMMY_NAME) || this.title.equals(LAST_DUMMY_NAME);
     }
 
 }

@@ -20,16 +20,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.planservice.application.TabService;
-import com.example.planservice.application.dto.TabChangeNameResponse;
-import com.example.planservice.application.dto.TabChangeNameServiceRequest;
+import com.example.planservice.application.dto.TabChangeTitleResponse;
+import com.example.planservice.application.dto.TabChangeTitleServiceRequest;
 import com.example.planservice.application.dto.TabDeleteServiceRequest;
-import com.example.planservice.presentation.dto.request.TabChangeNameRequest;
+import com.example.planservice.config.JpaAuditingConfig;
+import com.example.planservice.presentation.dto.request.TabChangeTitleRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
 import com.example.planservice.presentation.dto.response.TabFindResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(controllers = {TabController.class})
+@WebMvcTest(controllers = TabController.class, excludeAutoConfiguration = JpaAuditingConfig.class)
 class TabControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -47,7 +48,7 @@ class TabControllerTest {
         Long userId = 1L;
         Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
-            .name("탭이름")
+            .title("탭제목")
             .planId(planId)
             .build();
         Long createdTabId = 2L;
@@ -71,7 +72,7 @@ class TabControllerTest {
         // given
         Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
-            .name("탭이름")
+            .title("탭제목")
             .planId(planId)
             .build();
 
@@ -83,14 +84,14 @@ class TabControllerTest {
     }
 
     @ParameterizedTest
-    @DisplayName("탭의 이름은 공백이 될 수 없다")
+    @DisplayName("탭의 제목은 공백이 될 수 없다")
     @ValueSource(strings = {"", " ", "  "})
-    void createTabFailTabNameBlank(String name) throws Exception {
+    void createTabFailTabTitleBlank(String title) throws Exception {
         // given
         Long userId = 1L;
         Long planId = 10L;
         TabCreateRequest request = TabCreateRequest.builder()
-            .name(name)
+            .title(title)
             .planId(planId)
             .build();
 
@@ -103,7 +104,7 @@ class TabControllerTest {
     }
 
     @Test
-    @DisplayName("탭의 이름은 null이 될 수 없다")
+    @DisplayName("탭의 제목은 null이 될 수 없다")
     void createTabFailTabNameNull() throws Exception {
         // given
         Long userId = 1L;
@@ -126,7 +127,7 @@ class TabControllerTest {
         // given
         Long userId = 1L;
         TabCreateRequest request = TabCreateRequest.builder()
-            .name("탭이름")
+            .title("탭제목")
             .build();
 
         // when & then
@@ -145,7 +146,7 @@ class TabControllerTest {
         Long userId = 2L;
         TabFindResponse response = TabFindResponse.builder()
             .id(targetTabId)
-            .name("탭명")
+            .title("탭명")
             .nextId(null)
             .build();
 
@@ -158,7 +159,7 @@ class TabControllerTest {
                 .header("X-User-Id", userId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(response.getId()))
-            .andExpect(jsonPath("$.name").value(response.getName()))
+            .andExpect(jsonPath("$.title").value(response.getTitle()))
             .andExpect(jsonPath("$.nextId").value(response.getNextId()));
     }
 
@@ -218,36 +219,38 @@ class TabControllerTest {
     void changeTabName() throws Exception {
         // given
         Long userId = 1L;
-        TabChangeNameRequest request = TabChangeNameRequest.builder()
+        TabChangeTitleRequest request = TabChangeTitleRequest.builder()
+            .title("탭제목")
+            .planId(1L)
             .build();
-        TabChangeNameResponse response = TabChangeNameResponse.builder()
-            .name("변경된이름")
+        TabChangeTitleResponse response = TabChangeTitleResponse.builder()
+            .title("변경된이름")
             .id(3L)
             .build();
 
         // stub
-        when(tabService.changeName(any(TabChangeNameServiceRequest.class)))
+        when(tabService.changeName(any(TabChangeTitleServiceRequest.class)))
             .thenReturn(response);
 
         // when & then
-        mockMvc.perform(patch("/tabs/1/name")
+        mockMvc.perform(patch("/tabs/1/title")
                 .header("X-User-Id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(response.getId()))
-            .andExpect(jsonPath("$.name").value(response.getName()));
+            .andExpect(jsonPath("$.title").value(response.getTitle()));
     }
 
     @Test
     @DisplayName("인증되지 않은 사용자는 Tab의 이름을 변경할 수 없다")
     void changeTabNameFailNotAuthenticated() throws Exception {
         // given
-        TabChangeNameRequest request = TabChangeNameRequest.builder().build();
-        TabChangeNameResponse response = TabChangeNameResponse.builder().build();
+        TabChangeTitleRequest request = TabChangeTitleRequest.builder().build();
+        TabChangeTitleResponse response = TabChangeTitleResponse.builder().build();
 
         // stub
-        when(tabService.changeName(any(TabChangeNameServiceRequest.class)))
+        when(tabService.changeName(any(TabChangeTitleServiceRequest.class)))
             .thenReturn(response);
 
         // when & then
