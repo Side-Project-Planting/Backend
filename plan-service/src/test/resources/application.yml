@@ -30,3 +30,4 @@ mail:
     enable: false
   username: sa
   password: 00
+service-url: http://localhost:8080
