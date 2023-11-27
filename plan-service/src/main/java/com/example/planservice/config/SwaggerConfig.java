@@ -1,4 +1,4 @@
-package com.example.gatewayservice.config;
+package com.example.planservice.config;
 
 import java.util.List;
 
@@ -13,7 +13,8 @@ import io.swagger.v3.oas.models.servers.Server;
 
 @OpenAPIDefinition
 @Configuration
-public class Swagger2Config {
+public class SwaggerConfig {
+
     @Bean
     public OpenAPI customOpenAPI(
         @Value("${openapi.service.title}") String serviceTitle,
@@ -28,4 +29,5 @@ public class Swagger2Config {
             .servers(List.of(new Server().url(url)))
             .info(info);
     }
+
 }
