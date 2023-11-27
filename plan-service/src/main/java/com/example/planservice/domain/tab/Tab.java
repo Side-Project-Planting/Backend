@@ -140,7 +140,7 @@ public class Tab extends BaseEntity {
     public List<Task> getSortedTasks() {
         List<Task> result = new ArrayList<>();
         Task temp = firstDummyTask;
-        while (!Objects.equals(lastDummyTask, temp.getNext())) {
+        while (!Objects.equals(lastDummyTask.getId(), temp.getNext().getId())) {
             temp = temp.getNext();
             result.add(temp);
         }
