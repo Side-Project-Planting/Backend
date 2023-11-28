@@ -15,6 +15,7 @@ public class SecurityConfig {
         return http
             .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .cors(ServerHttpSecurity.CorsSpec::disable)
             .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
             .build();
     }
