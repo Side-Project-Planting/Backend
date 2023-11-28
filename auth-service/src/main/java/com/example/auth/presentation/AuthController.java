@@ -20,6 +20,7 @@ import com.example.auth.jwt.TokenInfo;
 import com.example.auth.jwt.TokenInfoResponse;
 import com.example.auth.presentation.dto.request.OAuthLoginRequest;
 import com.example.auth.presentation.dto.request.RegisterRequest;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -43,13 +44,15 @@ public class AuthController {
     }
 
     @GetMapping("/oauth/{provider}/authorized-uri")
-    public ResponseEntity<GetAuthorizedUriResponse> getAuthorizedUri(@PathVariable String provider) {
+    public ResponseEntity<GetAuthorizedUriResponse> getAuthorizedUri(@Parameter(description = "OAuth 인증 방식 중 "
+        + "어떤 방식을 사용할지 선택합니다", example = "google") @PathVariable String provider) {
         return ResponseEntity.ok(authService.getAuthorizedUri(provider));
     }
 
     @PostMapping("/oauth/{provider}/login")
-    public ResponseEntity<OAuthLoginResponse> oauthLogin(@PathVariable String provider,
-                                                         @RequestBody OAuthLoginRequest request,
+    public ResponseEntity<OAuthLoginResponse> oauthLogin(@Parameter(description = "OAuth 인증 방식 중 "
+        + "어떤 방식을 사용할지 선택합니다", example = "google") @PathVariable String provider,
+                                                         @Valid @RequestBody OAuthLoginRequest request,
                                                          HttpServletResponse httpServletResponse) {
         OAuthLoginResponse response = authService.login(provider, request.getAuthCode());
         addCookieUsingRefreshToken(httpServletResponse, response.getRefreshToken());
@@ -66,11 +69,6 @@ public class AuthController {
             .body(response);
     }
 
-    @GetMapping("/auth/parse")
-    public ResponseEntity<TokenInfoResponse> parseToken(@RequestParam String token) {
-        return ResponseEntity.ok().body(authService.parse(token));
-    }
-
     @PostMapping("/auth/refresh-token")
     public ResponseEntity<TokenInfo> refreshToken(@CookieValue(name = "refresh") Cookie refreshCookie,
                                                   HttpServletResponse httpServletResponse) {
@@ -80,6 +78,10 @@ public class AuthController {
         return ResponseEntity.ok().body(response);
     }
 
+    @GetMapping("/auth/parse")
+    public ResponseEntity<TokenInfoResponse> parseToken(@RequestParam String token) {
+        return ResponseEntity.ok().body(authService.parse(token));
+    }
 
     private void addCookieUsingRefreshToken(HttpServletResponse httpServletResponse, String refreshToken) {
         if (refreshToken == null) {
