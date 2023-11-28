@@ -158,13 +158,11 @@ public class PlanService {
         validateOwner(plan.getOwner()
             .getId(), userId);
 
-        if (!request.getInvitedEmails()
-            .isEmpty()) {
+        if (!request.getInvitedEmails().isEmpty()) {
             sendInviteMail(request.getInvitedEmails(), request.getTitle(), userId);
         }
 
-        if (!request.getKickingMemberIds()
-            .isEmpty()) {
+        if (!request.getKickingMemberIds().isEmpty()) {
             kick(planId, request.getKickingMemberIds());
         }
 
@@ -201,8 +199,7 @@ public class PlanService {
         requireNonNull(title, "플랜 제목을 입력해주세요");
         requireNonNull(planId, "플랜 아이디를 입력해주세요");
 
-        String uuid = UUID.randomUUID()
-            .toString();
+        String uuid = UUID.randomUUID().toString();
         savePlanIdToRedis(uuid, planId);
         invitedEmails.forEach(email -> emailService.sendInviteEmail(email, title, uuid));
     }
