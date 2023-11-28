@@ -312,6 +312,9 @@ public class PlanService {
     }
 
     private void savePlanIdToRedis(String uuid, Long planId) {
+        if (redisUtils.hasKey(uuid)) {
+            uuid = UUID.randomUUID().toString();
+        }
         redisUtils.setData(uuid, planId.toString(), 1000L * 60 * 60 * 24);
     }
 }
