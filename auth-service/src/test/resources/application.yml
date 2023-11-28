@@ -42,3 +42,11 @@ eureka:
 logging:
   level:
     org.hibernate.orm.jdbc.bind: trace
+
+# Swagger 설정
+openapi:
+  service:
+    title: 인증 서버 Local #title that you will want to display in the swagger ui
+    version: 1.0.0
+    url: http://gateway-service:8080 #api gateway url
+    description: Planting 서버 중 인증 서버의 API 명세입니다(Local)
