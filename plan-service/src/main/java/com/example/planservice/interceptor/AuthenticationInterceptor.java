@@ -20,7 +20,9 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
     private static List<WhiteListEntry> getWhiteList() {
         return List.of(
-            new WhiteListEntry(HttpMethod.POST, "/members")
+            new WhiteListEntry(HttpMethod.POST, "/members"),
+            new WhiteListEntry(HttpMethod.GET, "/v3/api-docs/**"),
+            new WhiteListEntry(HttpMethod.GET, "/swagger-ui/**")
         );
     }
 

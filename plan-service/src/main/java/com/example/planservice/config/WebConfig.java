@@ -16,9 +16,9 @@ public class WebConfig implements WebMvcConfigurer {
         return new AntPathMatcher();
     }
 
-//    @Override
-//    public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(new AuthenticationInterceptor(pathMatcher()));
-//    }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new AuthenticationInterceptor(pathMatcher()));
+    }
 
 }
