@@ -36,13 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthController {
     private final AuthService authService;
 
-    // TODO 삭제해야 하는 로직입니다.
-    //  Auth Code를 확인하기 위해 임의로 설정한 URL입니다.
-    @GetMapping("/login/oauth2/code/google")
-    public String showAuthCode(String code) {
-        return code;
-    }
-
     @GetMapping("/oauth/{provider}/authorized-uri")
     public ResponseEntity<GetAuthorizedUriResponse> getAuthorizedUri(@Parameter(description = "OAuth 인증 방식 중 "
         + "어떤 방식을 사용할지 선택합니다", example = "google") @PathVariable String provider) {
