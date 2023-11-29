@@ -154,7 +154,7 @@ class PlanControllerTest {
         Long userId = 1L;
         Long planId = 1L;
 
-        when(planService.inviteMember(planId, userId)).thenReturn(1L);
+        when(planService.inviteMember("uuid", userId)).thenReturn(1L);
 
         // when & then
         mockMvc.perform(put("/plans/invite/{planId}", planId)
@@ -170,7 +170,7 @@ class PlanControllerTest {
         Long userId = 1L;
         Long invalidPlanId = 9999L;
 
-        when(planService.inviteMember(invalidPlanId, userId)).thenThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        when(planService.inviteMember("uuid", userId)).thenThrow(new ApiException(ErrorCode.PLAN_NOT_FOUND));
 
         // when & then
         mockMvc.perform(put("/invite/{planId}", invalidPlanId)

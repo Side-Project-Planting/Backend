@@ -7,9 +7,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.LabelDeleteServiceRequest;
+import com.example.planservice.config.TestConfig;
 import com.example.planservice.domain.label.Label;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
@@ -21,6 +23,7 @@ import com.example.planservice.presentation.dto.response.LabelFindResponse;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest
+@Import(TestConfig.class)
 @Transactional
 class LabelServiceTest {
     @Autowired
@@ -265,7 +268,8 @@ class LabelServiceTest {
     }
 
     private Member createMemberUsingTest(Plan plan) {
-        Member member = Member.builder().build();
+        Member member = Member.builder()
+            .build();
         em.persist(member);
         if (plan == null) {
             return member;

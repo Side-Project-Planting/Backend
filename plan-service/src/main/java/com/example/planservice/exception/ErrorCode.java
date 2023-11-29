@@ -19,6 +19,7 @@ public enum ErrorCode {
     PLAN_NOT_FOUND(HttpStatus.NOT_FOUND, "플랜이 존재하지 않습니다"),
     PLAN_TAB_MISMATCH(HttpStatus.BAD_REQUEST, "플랜과 탭 사이 관계가 없습니다"),
     MEMBER_NOT_FOUND_IN_PLAN(HttpStatus.FORBIDDEN, "플랜에 소속되지 않은 멤버입니다"),
+    MEMBER_ALREADY_IN_PLAN(HttpStatus.BAD_REQUEST, "이미 플랜에 소속된 멤버입니다"),
 
     // 탭
     TAB_NOT_FOUND(HttpStatus.NOT_FOUND, "탭을 찾을 수 없습니다"),

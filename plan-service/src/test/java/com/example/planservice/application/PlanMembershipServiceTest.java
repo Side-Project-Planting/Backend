@@ -8,8 +8,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.planservice.config.TestConfig;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.member.repository.MemberRepository;
 import com.example.planservice.domain.memberofplan.MemberOfPlan;
@@ -20,6 +22,7 @@ import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 
 @SpringBootTest
+@Import(TestConfig.class)
 @Transactional
 class PlanMembershipServiceTest {
     @Autowired
@@ -79,7 +82,9 @@ class PlanMembershipServiceTest {
     void testValidatePlanOwner() {
         // given
         Member member = createMember();
-        Plan plan = Plan.builder().owner(member).build();
+        Plan plan = Plan.builder()
+            .owner(member)
+            .build();
         planRepository.save(plan);
 
         // when
@@ -95,7 +100,9 @@ class PlanMembershipServiceTest {
         // given
         Member member = createMember();
         Member otherMember = createMember();
-        Plan plan = Plan.builder().owner(member).build();
+        Plan plan = Plan.builder()
+            .owner(member)
+            .build();
         planRepository.save(plan);
 
         // when
@@ -183,7 +190,8 @@ class PlanMembershipServiceTest {
 
     @NotNull
     private Plan createPlan() {
-        Plan plan = Plan.builder().build();
+        Plan plan = Plan.builder()
+            .build();
         planRepository.save(plan);
         return plan;
     }
