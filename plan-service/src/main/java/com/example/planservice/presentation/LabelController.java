@@ -17,9 +17,14 @@ import com.example.planservice.application.LabelService;
 import com.example.planservice.application.dto.LabelDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.LabelCreateRequest;
 import com.example.planservice.presentation.dto.response.LabelFindResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "라벨")
 @RestController
 @RequestMapping("/labels")
 @RequiredArgsConstructor
@@ -27,14 +32,16 @@ public class LabelController {
     private final LabelService labelService;
 
     @PostMapping
+    @ApiResponse(responseCode = "201", description = "라벨 생성 성공")
     ResponseEntity<Void> create(@RequestBody @Valid LabelCreateRequest labelCreateRequest,
                                 @RequestAttribute Long userId) {
         Long createdId = labelService.create(userId, labelCreateRequest);
         return ResponseEntity.created(URI.create("/labels/" + createdId)).build();
     }
 
-    @DeleteMapping("/{labelId}")
-    ResponseEntity<Void> delete(@PathVariable Long labelId,
+    @DeleteMapping("/{id}")
+    @ApiResponse(responseCode = "204", description = "라벨 삭제 성공")
+    ResponseEntity<Void> delete(@PathVariable(name = "id") Long labelId,
                                 @RequestParam Long planId,
                                 @RequestAttribute Long userId) {
         LabelDeleteServiceRequest request = LabelDeleteServiceRequest.builder()
@@ -48,6 +55,10 @@ public class LabelController {
     }
 
     @GetMapping("/{id}")
+    @PostMapping
+    @ApiResponse(responseCode = "200", description = "라벨 조회 성공",
+        content = @Content(mediaType = "application/json",
+            schema = @Schema(implementation = LabelFindResponse.class)))
     public ResponseEntity<LabelFindResponse> find(@PathVariable(name = "id") Long labelId,
                                                   @RequestAttribute Long userId) {
         return ResponseEntity.ok().body(labelService.find(labelId, userId));

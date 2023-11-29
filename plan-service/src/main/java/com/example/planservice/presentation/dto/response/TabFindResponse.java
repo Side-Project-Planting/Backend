@@ -1,6 +1,7 @@
 package com.example.planservice.presentation.dto.response;
 
 import com.example.planservice.domain.tab.Tab;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 public class TabFindResponse {
     private Long id;
+    @Schema(nullable = false, example = "조회된 탭의 제목")
     private String title;
     private Long nextId;
 
