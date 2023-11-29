@@ -213,4 +213,11 @@ public class Task extends BaseEntity {
         return this.title.equals(FIRST_DUMMY_NAME) || this.title.equals(LAST_DUMMY_NAME);
     }
 
+    public int getDday() {
+        if (this.endDate == null) {
+            return -1;
+        }
+        return LocalDateTime.now()
+            .compareTo(this.endDate);
+    }
 }

@@ -97,4 +97,16 @@ public class Plan extends BaseEntity {
         this.owner = owner;
         this.isPublic = isPublic;
     }
+
+    public void addTab(Tab tab) {
+        tabs.add(tab);
+    }
+
+    public void addTabs(List<Tab> tabs) {
+        this.tabs.addAll(tabs);
+    }
+
+    public void addMember(MemberOfPlan memberOfPlan) {
+        members.add(memberOfPlan);
+    }
 }
