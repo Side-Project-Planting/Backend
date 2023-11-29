@@ -65,7 +65,7 @@ public class PlanController {
 
     @PutMapping("/invite/{planId}")
     @ApiResponse(responseCode = "204", description = "플랜 수정 성공")
-    public ResponseEntity<Long> invite(@PathVariable Long planId, @RequestAttribute Long userId) {
+    public ResponseEntity<Void> invite(@PathVariable Long planId, @RequestAttribute Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .build();
@@ -102,7 +102,7 @@ public class PlanController {
 
     @PutMapping("/update/{planId}")
     @ApiResponse(responseCode = "204", description = "플랜 정보 수정 성공")
-    public ResponseEntity<Long> update(@PathVariable Long planId, @RequestBody @Valid PlanUpdateRequest request,
+    public ResponseEntity<Void> update(@PathVariable Long planId, @RequestBody @Valid PlanUpdateRequest request,
                                        @RequestAttribute Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
