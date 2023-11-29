@@ -207,8 +207,6 @@ class PlanServiceTest {
         assertThat(planResponse).isNotNull();
         assertThat(planResponse.getTitle()).isEqualTo(dummyRelation.plan1.getTitle());
         assertThat(planResponse.getDescription()).isEqualTo(dummyRelation.plan1.getIntro());
-        assertThat(planResponse.getTabOrder()).isEqualTo(
-            List.of(1L, 2L, 3L, dummyRelation.tab1.getId(), dummyRelation.tab2.getId()));
         assertThat(planResponse.getMembers()
             .get(0)
             .getMail()).isEqualTo(dummyRelation.member.getEmail());
@@ -478,7 +476,6 @@ class PlanServiceTest {
             .getTitle()).isEqualTo("plan2");
         assertThat(allPlanByMemberId.get(2)
             .getTitle()).isEqualTo("plan3");
-
     }
 
     @Test
@@ -519,13 +516,14 @@ class PlanServiceTest {
     void getMainResponseTaskId() {
         // given
         DummyRelation dummyRelation = createDefaultMemberPlanTabTaskRelation();
+
         // when
         List<PlanMainResponse> allPlan = planService.getMainResponse(dummyRelation.member.getId());
 
         // then
         assertThat(allPlan.get(0)
             .getTabs()
-            .get(0)
+            .get(3)
             .getTaskList()
             .get(0)
             .getTaskId()).isEqualTo(dummyRelation.task1.getId());
@@ -605,7 +603,6 @@ class PlanServiceTest {
             .planId(planId)
             .startDate(LocalDate.now().atStartOfDay())
             .endDate(LocalDate.now().plusDays(days).atStartOfDay())
-            .tabId(1L)
             .build();
         Long taskId = taskService.create(memberId, request);
         return taskRepository.findById(taskId).get();
