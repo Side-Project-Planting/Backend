@@ -19,6 +19,7 @@ import com.example.planservice.application.PlanService;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.CreateResponse;
+import com.example.planservice.presentation.dto.response.PlanMainResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import jakarta.validation.Valid;
@@ -49,6 +50,15 @@ public class PlanController {
                 .build();
         }
         return ResponseEntity.ok(planService.getTotalPlanResponse(planId));
+    }
+
+    @GetMapping("/main")
+    public ResponseEntity<List<PlanMainResponse>> readAll(@RequestAttribute Long userId) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .build();
+        }
+        return ResponseEntity.ok(planService.getMainResponse(userId));
     }
 
     @PutMapping("/invite/{uuid}")
