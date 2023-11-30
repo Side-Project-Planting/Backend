@@ -24,7 +24,7 @@ public class CustomCookiesProperties {
 
         private boolean secure;
 
-        private int maxAge;
+        private Integer maxAge;
 
         private String path;
 
