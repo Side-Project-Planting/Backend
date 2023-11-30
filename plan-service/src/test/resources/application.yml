@@ -31,7 +31,6 @@ mail:
   username: sa
   password: 00
 
-
 # Swagger 설정
 openapi:
   service:
@@ -39,3 +38,6 @@ openapi:
     version: 1.0.0
     url: http://gateway-service:8080
     description: Planting 서버 중 플랜 서버(프로필 로컬)의 API 명세입니다
+
+service-url: http://localhost:8080
+

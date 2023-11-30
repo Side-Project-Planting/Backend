@@ -24,4 +24,6 @@ public interface MemberOfPlanRepository extends JpaRepository<MemberOfPlan, Long
     void deleteAllByPlanIdAndMemberIds(@Param("planId") Long planId, @Param("memberIds") List<Long> memberIds);
 
     Optional<List<MemberOfPlan>> findAllByPlanId(Long id);
+
+    boolean existsByPlanIdAndMemberId(Long planId, Long memberId);
 }

@@ -7,10 +7,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.planservice.application.dto.MemberRegisterResponse;
+import com.example.planservice.config.TestConfig;
 import com.example.planservice.domain.member.Member;
 import com.example.planservice.domain.member.Role;
 import com.example.planservice.exception.ApiException;
@@ -20,8 +21,8 @@ import com.example.planservice.presentation.dto.response.MemberFindResponse;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest
+@Import(TestConfig.class)
 @Transactional
-@ActiveProfiles("test")
 class MemberServiceTest {
     @Autowired
     MemberService memberService;
@@ -67,7 +68,9 @@ class MemberServiceTest {
     void testRegisterFailDuplicatedEmail() throws Exception {
         // given
         String duplicatedEmail = "a@naver.com";
-        Member member = Member.builder().email(duplicatedEmail).build();
+        Member member = Member.builder()
+            .email(duplicatedEmail)
+            .build();
         em.persist(member);
 
         MemberRegisterRequest request = MemberRegisterRequest.builder()

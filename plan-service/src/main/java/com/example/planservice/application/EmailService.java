@@ -10,6 +10,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.example.planservice.config.MailProperties;
@@ -23,6 +24,8 @@ public class EmailService {
 
     private final Session session;
     private final MailProperties mailProperties;
+    @Value("${service-url}")
+    private String url;
 
     @Autowired
     public EmailService(MailProperties mailProperties) {
@@ -30,7 +33,7 @@ public class EmailService {
         session = createSession();
     }
 
-    public void sendInviteEmail(String to, String text, Long userId) {
+    public void sendInviteEmail(String to, String text, String uuid) {
         try {
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(mailProperties.getUsername()));
@@ -38,7 +41,7 @@ public class EmailService {
             message.setSubject(INVITING_SUBJECT);
             String content = text + ' ' + INVITING_ANNOUNCEMENT;
             content += "<br>";
-            content += "http://localhost/invite" + userId;
+            content += url + uuid;
 
             message.setContent(content, "text/html; charset=utf-8");
 
@@ -60,5 +63,4 @@ public class EmailService {
             }
         });
     }
-
 }
