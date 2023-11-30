@@ -1,20 +1,48 @@
 package com.example.auth.presentation;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.StringJoiner;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CustomCookieManager {
+    private final List<CustomCookiesProperties.CookieInfo> cookieInfos;
+
+    @Autowired
+    public CustomCookieManager(CustomCookiesProperties customCookiesProperties) {
+        this.cookieInfos = customCookiesProperties.getCookieInfos();
+    }
+
+    public String createRefreshToken(String refreshToken) {
+        CustomCookiesProperties.CookieInfo refreshCookieInfo = getCookieInfo("refresh");
+
+        return createBuilder("refresh", refreshToken)
+            .httpOnly(refreshCookieInfo.isHttpOnly())
+            .secure(refreshCookieInfo.isSecure())
+            .maxAge(refreshCookieInfo.getMaxAge())
+            .path(refreshCookieInfo.getPath())
+            .sameSite(refreshCookieInfo.getSameSite())
+            .build();
+    }
+
+    private CustomCookiesProperties.CookieInfo getCookieInfo(String name) {
+        return cookieInfos.stream()
+            .filter(cookieInfo -> Objects.equals(cookieInfo.getName(), name))
+            .findAny()
+            .orElseThrow(() -> new RuntimeException("해당되는 이름의 토큰은 만들 수 없습니다"));
+    }
 
     public Builder createBuilder(String name, String value) {
         return new Builder(name, value);
     }
 
-    public static class Builder {
-        private String name;
+    static class Builder {
+        private final String name;
 
-        private String value;
+        private final String value;
 
         private String sameSite;
         private boolean httpOnly;
@@ -32,13 +60,13 @@ public class CustomCookieManager {
             return this;
         }
 
-        public Builder httpOnly() {
-            this.httpOnly = true;
+        public Builder httpOnly(boolean httpOnly) {
+            this.httpOnly = httpOnly;
             return this;
         }
 
-        public Builder secure() {
-            this.secure = true;
+        public Builder secure(boolean secure) {
+            this.secure = secure;
             return this;
         }
 

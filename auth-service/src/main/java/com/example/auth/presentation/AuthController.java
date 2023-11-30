@@ -86,13 +86,7 @@ public class AuthController {
         if (refreshToken == null) {
             return;
         }
-        String cookieValue = cookieManager.createBuilder("refresh", refreshToken)
-            .httpOnly()
-            .secure()
-            .maxAge(60 * 60 * 24 * 30)
-            .path("/")
-            .sameSite("Strict")
-            .build();
+        String cookieValue = cookieManager.createRefreshToken(refreshToken);
         httpServletResponse.setHeader("Set-Cookie", cookieValue);
     }
 }
