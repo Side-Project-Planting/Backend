@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthController {
     private final AuthService authService;
+    private final CustomCookieManager cookieManager;
 
     // TODO 삭제해야 하는 로직입니다.
     //  Auth Code를 확인하기 위해 임의로 설정한 URL입니다.
@@ -85,8 +86,13 @@ public class AuthController {
         if (refreshToken == null) {
             return;
         }
-        String cookieValue =
-            String.format("refresh=%s; Max-Age=%s; Path=/; HttpOnly; SameSite=Strict", refreshToken, 60 * 60 * 24 * 30);
+        String cookieValue = cookieManager.createBuilder("refresh", refreshToken)
+            .httpOnly()
+            .secure()
+            .maxAge(60 * 60 * 24 * 30)
+            .path("/")
+            .sameSite("Strict")
+            .build();
         httpServletResponse.setHeader("Set-Cookie", cookieValue);
     }
 }
