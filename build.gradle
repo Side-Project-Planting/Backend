@@ -44,7 +44,7 @@ subprojects {
 
     processResources {
         filesMatching("**/application.yml") {
-            expand(project: project.name, profileLevel: "local")
+            expand(project: project.name, profileLevel: "docker")
         }
     }
 

@@ -2,19 +2,25 @@ package com.example.planservice.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.planservice.config.TestConfig;
 import com.example.planservice.domain.label.Label;
 import com.example.planservice.domain.label.repository.LabelRepository;
 import com.example.planservice.domain.member.Member;
@@ -33,8 +39,10 @@ import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
+import com.example.planservice.util.RedisUtils;
 
 @SpringBootTest
+@Import(TestConfig.class)
 @Transactional
 class PlanServiceTest {
     @Autowired
@@ -42,6 +50,9 @@ class PlanServiceTest {
 
     @MockBean
     EmailService emailService;
+
+    @MockBean
+    RedisUtils redisUtils;
 
     @Autowired
     PlanRepository planRepository;
@@ -62,6 +73,7 @@ class PlanServiceTest {
     TaskRepository taskRepository;
     private Long userId;
     private Member tester;
+    private Map<String, String> mockRedis;
 
     @BeforeEach
     void testSetUp() {
@@ -71,11 +83,26 @@ class PlanServiceTest {
             .build();
         Member savedMember = memberRepository.save(tester);
         userId = savedMember.getId();
+        mockRedis = new HashMap<>();
 
         Mockito.doNothing()
             .when(emailService)
-            .sendInviteEmail(ArgumentMatchers.anyString(),
-                ArgumentMatchers.anyString(), ArgumentMatchers.anyLong());
+            .sendInviteEmail(anyString(),
+                anyString(), anyString());
+
+        Mockito.doAnswer(invocation -> {
+                String key = invocation.getArgument(0);
+                String value = invocation.getArgument(1);
+                mockRedis.put(key, value);
+                return null;
+            })
+            .when(redisUtils)
+            .setData(anyString(), anyString(), anyLong());
+
+        when(redisUtils.getData(anyString())).thenAnswer(invocation -> {
+            String key = invocation.getArgument(0);
+            return mockRedis.get(key);
+        });
     }
 
     @Test
@@ -96,7 +123,8 @@ class PlanServiceTest {
 
         // then
         assertThat(savedId).isNotNull();
-        Plan savedPlan = planRepository.findById(savedId).get();
+        Plan savedPlan = planRepository.findById(savedId)
+            .get();
 
         assertThat(savedPlan.getTitle()).isEqualTo(request.getTitle());
         assertThat(savedPlan.getIntro()).isEqualTo(request.getIntro());
@@ -312,21 +340,32 @@ class PlanServiceTest {
         Plan plan = Plan.builder()
             .title("플랜 제목")
             .intro("플랜 소개")
+            .owner(tester)
             .isPublic(true)
             .build();
         planRepository.save(plan);
 
-        Member member = Member.builder()
-            .name("tester")
-            .email("test@example.com")
+        Member member1 = Member.builder()
+            .name("tester1")
+            .email("test1@example.com")
             .build();
-        memberRepository.save(member);
+        Member member2 = Member.builder()
+            .name("tester2")
+            .email("test2@example.com")
+            .build();
+        memberRepository.saveAll(List.of(member1, member2));
+        String uuid = "uuid";
+        redisUtils.setData(uuid, plan.getId()
+            .toString(), 1000L);
+
 
         // when
-        Long memberOfPlanId = planService.inviteMember(plan.getId(), member.getId());
+        Long memberOfPlanId1 = planService.inviteMember(uuid, member1.getId());
+        Long memberOfPlanId2 = planService.inviteMember(uuid, member2.getId());
 
         // then
-        assertThat(memberOfPlanRepository.findById(memberOfPlanId)).isPresent();
+        assertThat(memberOfPlanRepository.findAllByPlanId(plan.getId())
+            .get()).hasSize(2);
     }
 
     @Test
@@ -340,9 +379,12 @@ class PlanServiceTest {
             .build();
         Plan savedPlan = planRepository.save(plan);
         Long notRegisteredMemberId = 20L;
+        String uuid = "uuid";
+        redisUtils.setData(uuid, plan.getId()
+            .toString(), 1000L);
 
         // when & then
-        assertThatThrownBy(() -> planService.inviteMember(savedPlan.getId(), notRegisteredMemberId))
+        assertThatThrownBy(() -> planService.inviteMember(uuid, notRegisteredMemberId))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.MEMBER_NOT_FOUND.getMessage());
 
@@ -362,9 +404,10 @@ class PlanServiceTest {
 
 
         Member savedMember = memberRepository.save(member);
-
+        String uuid = "uuid";
+        redisUtils.setData(uuid, String.valueOf(10L), 1000L);
         // when & then
-        assertThatThrownBy(() -> planService.inviteMember(notRegisteredPlanId, savedMember.getId()))
+        assertThatThrownBy(() -> planService.inviteMember(uuid, savedMember.getId()))
             .isInstanceOf(ApiException.class)
             .hasMessageContaining(ErrorCode.PLAN_NOT_FOUND.getMessage());
 
@@ -403,10 +446,11 @@ class PlanServiceTest {
         memberRepository.save(nextOwner);
         Plan savedPlan = planRepository.save(plan);
 
-
         PlanUpdateRequest planUpdateRequest = PlanUpdateRequest.builder()
             .title("수정된 플랜 제목")
             .intro("수정된 플랜 소개")
+            .invitedEmails(List.of())
+            .kickingMemberIds(List.of())
             .ownerId(nextOwner.getId())
             .isPublic(false)
             .build();
@@ -425,6 +469,45 @@ class PlanServiceTest {
     }
 
     @Test
+    @DisplayName("플랜을 수정할 때 기존 멤버를 삭제한다")
+    void updateDeleteMember() {
+        // given
+        Member tester1 = Member.builder()
+            .name("tester1")
+            .email("test@test.com")
+            .build();
+        Plan plan = Plan.builder()
+            .title("플랜 제목")
+            .intro("플랜 소개")
+            .owner(tester)
+            .isPublic(true)
+            .build();
+        memberRepository.save(tester1);
+        Plan savedPlan = planRepository.save(plan);
+        String uuid = "uuid";
+        redisUtils.setData(uuid, plan.getId()
+            .toString(), 1000L);
+        planService.inviteMember(uuid, tester1.getId());
+
+        PlanUpdateRequest planUpdateRequest = PlanUpdateRequest.builder()
+            .title("수정된 플랜 제목")
+            .intro("수정된 플랜 소개")
+            .invitedEmails(List.of())
+            .kickingMemberIds(List.of(tester1.getId()))
+            .ownerId(tester1.getId())
+            .isPublic(false)
+            .build();
+
+        // when
+        planService.update(savedPlan.getId(), planUpdateRequest, userId);
+
+        // then
+        Plan updatedPlan = planRepository.findById(plan.getId())
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        assertThat(updatedPlan.getMembers()).isEmpty();
+    }
+
+    @Test
     @DisplayName("플랜에서 나간다")
     void exit() {
         // given
@@ -440,7 +523,11 @@ class PlanServiceTest {
             .email("test@example.com")
             .build();
         memberRepository.save(member);
-        Long memberOfPlanId = planService.inviteMember(plan.getId(), member.getId());
+
+        String uuid = "uuid";
+        redisUtils.setData(uuid, plan.getId()
+            .toString(), 1000L);
+        Long memberOfPlanId = planService.inviteMember(uuid, member.getId());
 
         // when
         planService.exit(plan.getId(), member.getId());

@@ -63,3 +63,8 @@ services:
       - ${MYSQL_PORT}:${MYSQL_PORT}
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:latest
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}

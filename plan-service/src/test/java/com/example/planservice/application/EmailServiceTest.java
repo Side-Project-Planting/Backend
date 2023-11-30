@@ -12,8 +12,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+import com.example.planservice.config.TestConfig;
 
 @SpringBootTest
+@Import(TestConfig.class)
 class EmailServiceTest {
 
     @Autowired
@@ -21,6 +25,7 @@ class EmailServiceTest {
 
     @Test
     void sendEmail() throws MessagingException {
+
         // given
         String recipient = "test@example.com";
         String text = "Hello, this is a test email.";
@@ -30,7 +35,7 @@ class EmailServiceTest {
             .send(any(Message.class));
 
         // when
-        emailServiceMock.sendInviteEmail(recipient, text, 1L);
+        emailServiceMock.sendInviteEmail(recipient, text, "uuid");
 
         // then
         ArgumentCaptor<Message> messageCaptor = ArgumentCaptor.forClass(Message.class);

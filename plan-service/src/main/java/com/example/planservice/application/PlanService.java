@@ -1,9 +1,12 @@
 package com.example.planservice.application;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
@@ -24,7 +27,6 @@ import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
-import com.example.planservice.presentation.dto.request.PlanKickRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.LabelOfPlanResponse;
 import com.example.planservice.presentation.dto.response.MemberOfPlanResponse;
@@ -32,8 +34,8 @@ import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import com.example.planservice.presentation.dto.response.TabOfPlanResponse;
 import com.example.planservice.presentation.dto.response.TaskOfPlanResponse;
+import com.example.planservice.util.RedisUtils;
 import lombok.RequiredArgsConstructor;
-
 
 @Service
 @RequiredArgsConstructor
@@ -41,11 +43,13 @@ import lombok.RequiredArgsConstructor;
 public class PlanService {
 
     private final EmailService emailService;
+    private final RedisUtils redisUtils;
+    private final TaskRepository taskRepository;
     private final PlanRepository planRepository;
     private final MemberRepository memberRepository;
     private final TabRepository tabRepository;
-    private final TaskRepository taskRepository;
     private final MemberOfPlanRepository memberOfPlanRepository;
+
 
     @Transactional
     public Long create(PlanCreateRequest request, Long userId) {
@@ -66,7 +70,8 @@ public class PlanService {
 
         TabGroup tabGroup = new TabGroup(plan.getId(), plan.getTabs());
         List<Tab> sortedTabs = tabGroup.getSortedTabs();
-        List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner().getId());
+        List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner()
+            .getId());
 
         List<Task> allTask = sortedTabs.stream()
             .map(Tab::getSortedTasks)
@@ -95,16 +100,25 @@ public class PlanService {
     }
 
     @Transactional
-    public Long inviteMember(Long planId, Long memberId) {
+    public Long inviteMember(String uuid, Long memberId) {
+        Long planId = checkInvitedUUID(uuid);
+
+        if (planId == null) {
+            throw new ApiException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        if (isDuplicatedMember(planId, memberId)) {
+            throw new ApiException(ErrorCode.MEMBER_ALREADY_REGISTERED);
+        }
+
+
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        if (plan.isDeleted()) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
 
         Member member =
             memberRepository.findById(memberId)
                 .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+
         MemberOfPlan memberOfPlan = MemberOfPlan.builder()
             .member(member)
             .plan(plan)
@@ -113,23 +127,15 @@ public class PlanService {
         return memberOfPlan.getId();
     }
 
+    public boolean isDuplicatedMember(Long planId, Long memberId) {
+        return memberOfPlanRepository.existsByPlanIdAndMemberId(planId, memberId);
+    }
+
     @Transactional
     public void exit(Long planId, Long memberId) {
         memberOfPlanRepository.deleteByPlanIdAndMemberId(planId, memberId);
     }
 
-    @Transactional
-    public void kick(Long planId, PlanKickRequest request, Long userId) {
-        Plan plan = planRepository.findById(planId)
-            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        if (plan.isDeleted()) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
-
-        validateOwner(plan.getOwner()
-            .getId(), userId);
-        memberOfPlanRepository.deleteAllByPlanIdAndMemberIds(planId, request.getKickingMemberIds());
-    }
 
     @Transactional
     public void delete(Long planId, Long userId) {
@@ -140,9 +146,6 @@ public class PlanService {
             .getId(), userId);
 
         Plan plan = memberOfPlan.getPlan();
-        if (plan.isDeleted()) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
         plan.softDelete();
         planRepository.save(plan);
         memberOfPlanRepository.delete(memberOfPlan);
@@ -152,14 +155,28 @@ public class PlanService {
     public void update(Long planId, PlanUpdateRequest request, Long userId) {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
-        if (plan.isDeleted()) {
-            throw new ApiException(ErrorCode.PLAN_NOT_FOUND);
-        }
         validateOwner(plan.getOwner()
             .getId(), userId);
+
+        if (!request.getInvitedEmails().isEmpty()) {
+            sendInviteMail(request.getInvitedEmails(), request.getTitle(), userId);
+        }
+
+        if (!request.getKickingMemberIds().isEmpty()) {
+            kick(planId, request.getKickingMemberIds());
+        }
+
+
         Member nextOwner = memberRepository.findById(request.getOwnerId())
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
         plan.update(request.getTitle(), request.getIntro(), nextOwner, request.isPublic());
+
+        planRepository.save(plan);
+
+    }
+
+    public void kick(Long planId, List<Long> kinkingMemberIds) {
+        memberOfPlanRepository.deleteAllByPlanIdAndMemberIds(planId, kinkingMemberIds);
     }
 
     public List<PlanTitleIdResponse> getAllPlanTitleIdByMemberId(Long userId) {
@@ -177,8 +194,14 @@ public class PlanService {
         }
     }
 
-    private void sendInviteMail(List<String> invitedEmails, String title, Long userId) {
-        invitedEmails.forEach(email -> emailService.sendInviteEmail(email, title, userId));
+    private void sendInviteMail(List<String> invitedEmails, String title, Long planId) {
+        requireNonNull(invitedEmails, "초대할 이메일을 입력해주세요");
+        requireNonNull(title, "플랜 제목을 입력해주세요");
+        requireNonNull(planId, "플랜 아이디를 입력해주세요");
+
+        String uuid = UUID.randomUUID().toString();
+        savePlanIdToRedis(uuid, planId);
+        invitedEmails.forEach(email -> emailService.sendInviteEmail(email, title, uuid));
     }
 
     private void createDefaultTab(Plan plan) {
@@ -278,4 +301,20 @@ public class PlanService {
         return orderedItems;
     }
 
+    public boolean isDeletedPlan(Long planId) {
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        return plan.isDeleted();
+    }
+
+    private Long checkInvitedUUID(String uuid) {
+        return Long.parseLong(redisUtils.getData(uuid));
+    }
+
+    private void savePlanIdToRedis(String uuid, Long planId) {
+        if (redisUtils.hasKey(uuid)) {
+            uuid = UUID.randomUUID().toString();
+        }
+        redisUtils.setData(uuid, planId.toString(), 1000L * 60 * 60 * 24);
+    }
 }
