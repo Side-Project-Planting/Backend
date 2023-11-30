@@ -1,5 +1,7 @@
 package com.example.auth.presentation;
 
+import static com.example.auth.presentation.CustomCookiesProperties.*;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -9,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CustomCookieManager {
-    private final List<CustomCookiesProperties.CookieInfo> cookieInfos;
+    private final List<CookieInfo> cookieInfos;
 
     @Autowired
     public CustomCookieManager(CustomCookiesProperties customCookiesProperties) {
@@ -17,18 +19,21 @@ public class CustomCookieManager {
     }
 
     public String createRefreshToken(String refreshToken) {
-        CustomCookiesProperties.CookieInfo refreshCookieInfo = getCookieInfo("refresh");
+        return createCookieStr("refresh", refreshToken);
+    }
 
-        return createBuilder("refresh", refreshToken)
-            .httpOnly(refreshCookieInfo.isHttpOnly())
-            .secure(refreshCookieInfo.isSecure())
-            .maxAge(refreshCookieInfo.getMaxAge())
-            .path(refreshCookieInfo.getPath())
-            .sameSite(refreshCookieInfo.getSameSite())
+    public String createCookieStr(String name, String value) {
+        CookieInfo cookieInfo = getCookieInfo(name);
+        return createBuilder(cookieInfo.getName(), value)
+            .httpOnly(cookieInfo.isHttpOnly())
+            .secure(cookieInfo.isSecure())
+            .maxAge(cookieInfo.getMaxAge())
+            .path(cookieInfo.getPath())
+            .sameSite(cookieInfo.getSameSite())
             .build();
     }
 
-    private CustomCookiesProperties.CookieInfo getCookieInfo(String name) {
+    private CookieInfo getCookieInfo(String name) {
         return cookieInfos.stream()
             .filter(cookieInfo -> Objects.equals(cookieInfo.getName(), name))
             .findAny()
