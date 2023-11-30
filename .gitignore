@@ -3,6 +3,7 @@ application-single.yml
 application-local.yml
 application-docker.yml
 /.env
+keystore.p12
 
 config-service/id_ed25519
 config-service/known_hosts

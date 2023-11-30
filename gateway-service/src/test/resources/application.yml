@@ -9,3 +9,11 @@ eureka:
     enabled: false
 jwt:
   secret: 5plDwnuqJyjDbaTJai5nS9tLCA7QwYwnCn2MhW6K8e/ohLrV7QVzR9IUKyrIk0f35GOOwIT4dQqfGKzLtV3NzV7qlr+7V6M6u5A4iJTh+YxTrLrQ8WgCmH8W7gKfCnS+R
+
+# Swagger 설정
+openapi:
+  service:
+    title: 게이트웨이 서버 Local #title that you will want to display in the swagger ui
+    version: 1.0.0
+    url: http://gateway-service:8080 #api gateway url
+    description: Planting 서버 게이트웨이입니다. 우측 상단에서 해당되는 서버를 찾아주세요(Local)

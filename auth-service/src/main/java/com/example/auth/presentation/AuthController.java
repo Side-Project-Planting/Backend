@@ -20,12 +20,14 @@ import com.example.auth.jwt.TokenInfo;
 import com.example.auth.jwt.TokenInfoResponse;
 import com.example.auth.presentation.dto.request.OAuthLoginRequest;
 import com.example.auth.presentation.dto.request.RegisterRequest;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@Tag(name = "인증")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/")
