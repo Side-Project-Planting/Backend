@@ -4,7 +4,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,13 +53,12 @@ public class PlanService {
         Member member = memberRepository.findById(userId)
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
         Plan plan = request.toEntity(member);
-        sendInviteMail(request.getInvitedEmails(), request.getTitle(), member.getId());
         Plan savedPlan = planRepository.save(plan);
-
         MemberOfPlan memberOfPlan = MemberOfPlan.create(member, plan);
         savedPlan.addMember(memberOfPlan);
         memberOfPlanRepository.save(memberOfPlan);
         createDefaultTab(plan);
+        sendInviteMail(request.getInvitedEmails(), request.getTitle(), member.getId());
         return savedPlan.getId();
     }
 
@@ -227,18 +225,10 @@ public class PlanService {
     }
 
     public void createDefaultTab(Plan plan) {
-        Tab firstTab = Tab.createTodoTab(plan);
-        Tab secondTab = Tab.create(plan, Tab.IN_PROGRESS);
-        Tab lastTab = Tab.create(plan, Tab.DONE);
-        firstTab.connect(secondTab);
-        secondTab.connect(lastTab);
-        tabRepository.saveAll(List.of(firstTab, secondTab, lastTab));
-        plan.addTabs(List.of(firstTab, secondTab, lastTab));
-
-        List<Task> allDummyTasks = Stream.of(
-                Task.createFirstAndLastDummy(firstTab),
-                Task.createFirstAndLastDummy(secondTab),
-                Task.createFirstAndLastDummy(lastTab))
+        List<Tab> tabs = plan.createDefaultTabs();
+        tabRepository.saveAll(tabs);
+        List<Task> allDummyTasks = tabs.stream()
+            .map(Task::createFirstAndLastDummy)
             .flatMap(List::stream)
             .toList();
         taskRepository.saveAll(allDummyTasks);

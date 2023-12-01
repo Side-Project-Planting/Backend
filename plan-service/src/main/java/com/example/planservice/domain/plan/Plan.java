@@ -1,5 +1,8 @@
 package com.example.planservice.domain.plan;
 
+import static com.example.planservice.domain.tab.Tab.DONE;
+import static com.example.planservice.domain.tab.Tab.IN_PROGRESS;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -109,4 +112,15 @@ public class Plan extends BaseEntity {
     public void addMember(MemberOfPlan memberOfPlan) {
         members.add(memberOfPlan);
     }
+
+    public List<Tab> createDefaultTabs() {
+        Tab todoTab = Tab.createTodoTab(this);
+        Tab inProgressTab = Tab.create(this, IN_PROGRESS);
+        Tab doneTab = Tab.create(this, DONE);
+        todoTab.connect(inProgressTab);
+        inProgressTab.connect(doneTab);
+        addTabs(List.of(todoTab, inProgressTab, doneTab));
+        return List.of(todoTab, inProgressTab, doneTab);
+    }
+
 }
