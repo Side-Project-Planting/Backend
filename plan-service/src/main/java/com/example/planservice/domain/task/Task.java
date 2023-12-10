@@ -214,10 +214,15 @@ public class Task extends BaseEntity {
     }
 
     public int getDday() {
-        if (this.endDate == null) {
+        if (isDateOver()) {
             return -1;
         }
         return LocalDateTime.now()
             .compareTo(this.endDate);
+    }
+
+    public boolean isDateOver() {
+        return this.endDate != null && LocalDateTime.now()
+            .isAfter(this.endDate);
     }
 }
