@@ -222,7 +222,7 @@ public class Task extends BaseEntity {
     }
 
     public boolean isDateOver() {
-        return this.endDate != null && LocalDateTime.now()
+        return this.endDate == null || LocalDateTime.now()
             .isAfter(this.endDate);
     }
 }
