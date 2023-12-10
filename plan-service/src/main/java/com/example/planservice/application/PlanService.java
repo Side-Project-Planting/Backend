@@ -2,12 +2,8 @@ package com.example.planservice.application;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +26,7 @@ import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.LabelOfPlanResponse;
 import com.example.planservice.presentation.dto.response.MemberOfPlanResponse;
+import com.example.planservice.presentation.dto.response.PlanMainResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import com.example.planservice.presentation.dto.response.TabOfPlanResponse;
@@ -56,20 +53,49 @@ public class PlanService {
         Member member = memberRepository.findById(userId)
             .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
         Plan plan = request.toEntity(member);
-        createDefaultTab(plan);
-        MemberOfPlan memberOfPlan = MemberOfPlan.create(member, plan);
-        memberOfPlanRepository.save(memberOfPlan);
-        sendInviteMail(request.getInvitedEmails(), request.getTitle(), member.getId());
         Plan savedPlan = planRepository.save(plan);
+        MemberOfPlan memberOfPlan = MemberOfPlan.create(member, plan);
+        savedPlan.addMember(memberOfPlan);
+        memberOfPlanRepository.save(memberOfPlan);
+        createDefaultTab(plan);
+        sendInviteMail(request.getInvitedEmails(), request.getTitle(), member.getId());
         return savedPlan.getId();
+    }
+
+    public List<PlanMainResponse> getMainResponse(Long userId) {
+        List<MemberOfPlan> memberOfPlans = memberOfPlanRepository.findAllByMemberId(userId)
+            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND));
+
+        return memberOfPlans.stream()
+            .map(memberOfPlan -> {
+                Plan plan = memberOfPlan.getPlan();
+                List<Tab> sortedTabs = getSortedTabs(plan);
+                List<Long> tabOrder = getTabOrder(sortedTabs);
+
+                List<PlanMainResponse.TabInfo> tabs = sortedTabs.stream()
+                    .map(tab -> {
+                        List<Task> sortedTasks = tab.getSortedTasks();
+                        List<Long> taskOrder = sortedTasks.stream()
+                            .map(Task::getId)
+                            .toList();
+                        List<PlanMainResponse.TaskInfo> taskList = sortedTasks.stream()
+                            .map(PlanMainResponse.TaskInfo::from)
+                            .toList();
+                        return PlanMainResponse.TabInfo.from(tab, taskOrder, taskList);
+                    })
+                    .toList();
+
+                return PlanMainResponse.from(plan, tabOrder, tabs);
+            })
+            .toList();
     }
 
     public PlanResponse getTotalPlanResponse(Long planId) {
         Plan plan = planRepository.findById(planId)
             .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
 
-        TabGroup tabGroup = new TabGroup(plan.getId(), plan.getTabs());
-        List<Tab> sortedTabs = tabGroup.getSortedTabs();
+        List<Tab> sortedTabs = getSortedTabs(plan);
+        List<Long> tabOrder = getTabOrder(sortedTabs);
         List<MemberOfPlanResponse> members = getMemberResponses(plan.getMembers(), plan.getOwner()
             .getId());
 
@@ -80,10 +106,6 @@ public class PlanService {
 
         List<LabelOfPlanResponse> labels = getLabelResponses(plan.getLabels());
         List<TaskOfPlanResponse> tasks = getTaskResponses(allTask);
-        List<Long> tabOrder = sortedTabs.stream()
-            .map(Tab::getId)
-            .toList();
-
         List<TabOfPlanResponse> tabs = getTabResponses(sortedTabs);
 
         return PlanResponse.builder()
@@ -139,16 +161,14 @@ public class PlanService {
 
     @Transactional
     public void delete(Long planId, Long userId) {
-        MemberOfPlan memberOfPlan = memberOfPlanRepository.findByPlanIdAndMemberId(planId, userId)
-            .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_NOT_FOUND_IN_PLAN));
-        validateOwner(memberOfPlan.getPlan()
-            .getOwner()
-            .getId(), userId);
 
-        Plan plan = memberOfPlan.getPlan();
+        Plan plan = planRepository.findById(planId)
+            .orElseThrow(() -> new ApiException(ErrorCode.PLAN_NOT_FOUND));
+        validateOwner(plan.getOwner().getId(), userId);
+
+        memberOfPlanRepository.deleteAllByPlanId(planId);
         plan.softDelete();
         planRepository.save(plan);
-        memberOfPlanRepository.delete(memberOfPlan);
     }
 
     @Transactional
@@ -204,18 +224,11 @@ public class PlanService {
         invitedEmails.forEach(email -> emailService.sendInviteEmail(email, title, uuid));
     }
 
-    private void createDefaultTab(Plan plan) {
-        Tab firstTab = Tab.createTodoTab(plan);
-        Tab secondTab = Tab.create(plan, Tab.IN_PROGRESS);
-        Tab lastTab = Tab.create(plan, Tab.DONE);
-        firstTab.connect(secondTab);
-        secondTab.connect(lastTab);
-        tabRepository.saveAll(List.of(firstTab, secondTab, lastTab));
-
-        List<Task> allDummyTasks = Stream.of(
-                Task.createFirstAndLastDummy(firstTab),
-                Task.createFirstAndLastDummy(secondTab),
-                Task.createFirstAndLastDummy(lastTab))
+    public void createDefaultTab(Plan plan) {
+        List<Tab> tabs = plan.createDefaultTabs();
+        tabRepository.saveAll(tabs);
+        List<Task> allDummyTasks = tabs.stream()
+            .map(Task::createFirstAndLastDummy)
             .flatMap(List::stream)
             .toList();
         taskRepository.saveAll(allDummyTasks);
@@ -229,10 +242,12 @@ public class PlanService {
 
     private List<TabOfPlanResponse> getTabResponses(List<Tab> tabList) {
         return tabList.stream()
-            .filter(tab -> !tab.isDeleted())
             .map(tab -> {
-                List<Task> tasksOfTab = tab.getTasks();
-                List<Long> taskOrder = getSortedTaskID(tasksOfTab);
+                List<Task> tasksOfTab = tab.getSortedTasks();
+                List<Long> taskOrder = tasksOfTab.stream()
+                    .filter(task -> !task.isDummy())
+                    .map(Task::getId)
+                    .toList();
                 return TabOfPlanResponse.from(tab, taskOrder);
             })
             .toList();
@@ -246,59 +261,9 @@ public class PlanService {
 
     private List<TaskOfPlanResponse> getTaskResponses(List<Task> tasks) {
         return tasks.stream()
-            .filter(task -> !task.isDeleted())
+            .filter(task -> !task.isDummy())
             .map(TaskOfPlanResponse::from)
             .toList();
-    }
-
-    public List<Long> getSortedTaskID(List<Task> items) {
-        List<Long> orderedItems = new ArrayList<>();
-        Set<Task> allNodes = new HashSet<>(items);
-        Task start = null;
-        for (Task item : items) {
-            if (item.getNext() != null) {
-                allNodes.remove(item.getNext());
-            }
-        }
-        if (!allNodes.isEmpty()) {
-            start = allNodes.iterator()
-                .next();
-        }
-
-        Task current = start;
-        while (current != null) {
-            if (current.isDummy()) {
-                current = current.getNext();
-                continue;
-            }
-            orderedItems.add(current.getId());
-            current = current.getNext();
-        }
-
-        return orderedItems;
-    }
-
-    public List<Long> getSortedTabID(List<Tab> items) {
-        List<Long> orderedItems = new ArrayList<>();
-        Set<Tab> allNodes = new HashSet<>(items);
-        Tab start = null;
-        for (Tab item : items) {
-            if (item.getNext() != null) {
-                allNodes.remove(item.getNext());
-            }
-        }
-        if (!allNodes.isEmpty()) {
-            start = allNodes.iterator()
-                .next();
-        }
-
-        Tab current = start;
-        while (current != null) {
-            orderedItems.add(current.getId());
-            current = current.getNext();
-        }
-
-        return orderedItems;
     }
 
     public boolean isDeletedPlan(Long planId) {
@@ -317,4 +282,16 @@ public class PlanService {
         }
         redisUtils.setData(uuid, planId.toString(), 1000L * 60 * 60 * 24);
     }
+
+    private List<Tab> getSortedTabs(Plan plan) {
+        TabGroup tabGroup = new TabGroup(plan.getId(), plan.getTabs());
+        return tabGroup.getSortedTabs();
+    }
+
+    private List<Long> getTabOrder(List<Tab> sortedTabs) {
+        return sortedTabs.stream()
+            .map(Tab::getId)
+            .toList();
+    }
+
 }

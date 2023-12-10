@@ -30,7 +30,7 @@ public class TabGroup {
 
         this.first = tabs.stream()
             .filter(Tab::isFirst)
-            .findAny()
+            .findFirst()
             .orElseThrow(() -> new ApiException(ErrorCode.SERVER_ERROR));
     }
 
