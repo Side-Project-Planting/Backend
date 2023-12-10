@@ -1,5 +1,6 @@
 package com.example.planservice.presentation.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -9,7 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class LabelCreateRequest {
+
     @NotBlank
+    @Schema(nullable = false, example = "공부")
     private String name;
 
     @NotNull

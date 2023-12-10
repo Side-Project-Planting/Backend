@@ -1,10 +1,10 @@
 package com.example.planservice.presentation.dto.request;
 
+import org.jetbrains.annotations.NotNull;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import org.jetbrains.annotations.NotNull;
 
 @NoArgsConstructor
 @Getter

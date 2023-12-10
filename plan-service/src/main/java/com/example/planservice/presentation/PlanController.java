@@ -21,9 +21,14 @@ import com.example.planservice.presentation.dto.response.CreateResponse;
 import com.example.planservice.presentation.dto.response.PlanMainResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "플랜")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/plans")
@@ -31,6 +36,9 @@ public class PlanController {
     private final PlanService planService;
 
     @PostMapping
+    @ApiResponse(responseCode = "201", description = "플랜 생성 성공",
+        content = @Content(mediaType = "application/json",
+            schema = @Schema(implementation = CreateResponse.class)))
     public ResponseEntity<CreateResponse> create(@RequestBody @Valid PlanCreateRequest request,
                                                  @RequestAttribute Long userId) {
         Long createdId = planService.create(request, userId);
@@ -39,16 +47,21 @@ public class PlanController {
     }
 
     @GetMapping("/{planId}")
+    @ApiResponse(responseCode = "200", description = "플랜 조회 성공",
+        content = @Content(mediaType = "application/json",
+            schema = @Schema(implementation = PlanResponse.class)))
     public ResponseEntity<PlanResponse> read(@PathVariable Long planId, @RequestAttribute Long userId) {
         return ResponseEntity.ok(planService.getTotalPlanResponse(planId));
     }
 
+    // TODO 해당 API Swagger 작업하기
     @GetMapping("/main")
     public ResponseEntity<List<PlanMainResponse>> readAll(@RequestAttribute Long userId) {
         return ResponseEntity.ok(planService.getMainResponse(userId));
     }
 
     @PutMapping("/invite/{uuid}")
+    @ApiResponse(responseCode = "204", description = "플랜 수정 성공")
     public ResponseEntity<Long> invite(@PathVariable String uuid, @RequestAttribute Long userId) {
         planService.inviteMember(uuid, userId);
         return ResponseEntity.noContent()
@@ -56,6 +69,7 @@ public class PlanController {
     }
 
     @PutMapping("/exit/{planId}")
+    @ApiResponse(responseCode = "204", description = "플랜 나가기 성공")
     public ResponseEntity<Void> exit(@PathVariable Long planId, @RequestAttribute Long userId) {
         planService.exit(planId, userId);
         return ResponseEntity.noContent()
@@ -63,7 +77,8 @@ public class PlanController {
     }
 
     @PutMapping("/update/{planId}")
-    public ResponseEntity<Long> update(@PathVariable Long planId, @RequestBody @Valid PlanUpdateRequest request,
+    @ApiResponse(responseCode = "204", description = "플랜 정보 수정 성공")
+    public ResponseEntity<Void> update(@PathVariable Long planId, @RequestBody @Valid PlanUpdateRequest request,
                                        @RequestAttribute Long userId) {
         planService.update(planId, request, userId);
         return ResponseEntity.noContent()
@@ -71,6 +86,7 @@ public class PlanController {
     }
 
     @DeleteMapping("/{planId}")
+    @ApiResponse(responseCode = "204", description = "플랜 삭제 성공")
     public ResponseEntity<Void> delete(@PathVariable Long planId, @RequestAttribute Long userId) {
         planService.delete(planId, userId);
         return ResponseEntity.noContent()
@@ -78,6 +94,9 @@ public class PlanController {
     }
 
     @GetMapping("/all")
+    @ApiResponse(responseCode = "200", description = "플랜에 속한 전체 사용자 조회 성공",
+        content = @Content(mediaType = "application/json",
+            schema = @Schema(implementation = PlanTitleIdResponse.class)))
     public ResponseEntity<List<PlanTitleIdResponse>> readAllByMember(@RequestAttribute Long userId) {
         return ResponseEntity.ok(planService.getAllPlanTitleIdByMemberId(userId));
     }

@@ -1,6 +1,7 @@
 package com.example.planservice.presentation.dto.response;
 
 import com.example.planservice.domain.member.Member;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,8 +10,14 @@ import lombok.NoArgsConstructor;
 @Getter
 public class MemberFindResponse {
     private Long id;
+
+    @Schema(nullable = false, example = "김철수")
     private String name;
+
+    @Schema(nullable = false, example = "chulsu@gmail.com")
     private String email;
+
+    @Schema(nullable = false, example = "https://프로필주소")
     private String profileUri;
 
     @Builder

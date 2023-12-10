@@ -1,5 +1,6 @@
 package com.example.planservice.application.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 public class TabChangeTitleResponse {
     private Long id;
+    @Schema(nullable = false, example = "변경된 탭 제목")
     private String title;
 
     @Builder
