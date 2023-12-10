@@ -18,6 +18,10 @@ public class RedisUtils {
         redisTemplate.opsForValue().set(key, value, expiredTime, TimeUnit.MILLISECONDS);
     }
 
+    public void setData(String key, String value) {
+        redisTemplate.opsForValue().set(key, value);
+    }
+
     public String getData(String key) {
         return (String) redisTemplate.opsForValue().get(key);
     }
