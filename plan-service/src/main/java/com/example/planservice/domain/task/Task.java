@@ -213,4 +213,16 @@ public class Task extends BaseEntity {
         return this.title.equals(FIRST_DUMMY_NAME) || this.title.equals(LAST_DUMMY_NAME);
     }
 
+    public int getDday() {
+        if (isDateOver()) {
+            return -1;
+        }
+        return LocalDateTime.now()
+            .compareTo(this.endDate);
+    }
+
+    public boolean isDateOver() {
+        return this.endDate == null || LocalDateTime.now()
+            .isAfter(this.endDate);
+    }
 }

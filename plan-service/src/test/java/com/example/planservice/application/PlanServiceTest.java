@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +36,12 @@ import com.example.planservice.domain.task.Task;
 import com.example.planservice.domain.task.repository.TaskRepository;
 import com.example.planservice.exception.ApiException;
 import com.example.planservice.exception.ErrorCode;
+import com.example.planservice.presentation.dto.request.LabelCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
+import com.example.planservice.presentation.dto.request.TabCreateRequest;
+import com.example.planservice.presentation.dto.request.TaskCreateRequest;
+import com.example.planservice.presentation.dto.response.PlanMainResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import com.example.planservice.util.RedisUtils;
@@ -50,6 +55,15 @@ class PlanServiceTest {
 
     @MockBean
     EmailService emailService;
+
+    @Autowired
+    TaskService taskService;
+
+    @Autowired
+    TabService tabService;
+
+    @Autowired
+    LabelService labelService;
 
     @MockBean
     RedisUtils redisUtils;
@@ -73,7 +87,10 @@ class PlanServiceTest {
     TaskRepository taskRepository;
     private Long userId;
     private Member tester;
+
     private Map<String, String> mockRedis;
+
+    private List<String> defaultTabTitle = List.of("To Do", "In Progress", "Done");
 
     @BeforeEach
     void testSetUp() {
@@ -181,144 +198,28 @@ class PlanServiceTest {
     @DisplayName("플랜의 전체 정보를 가져온다")
     void getTotalPlanResponse() {
         // given
-        Member member1 = Member.builder()
-            .email("test1@example.com")
-            .name("test1")
-            .profileUri("www.test1")
-            .build();
-
-        Member member2 = Member.builder()
-            .email("test2@example.com")
-            .name("test2")
-            .profileUri("www.test2")
-            .build();
-
-
-        Plan plan = Plan.builder()
-            .owner(member1)
-            .title("testPlan")
-            .intro("hi")
-            .build();
-
-        Tab tab2 = Tab.builder()
-            .plan(plan)
-            .title("testTab2")
-            .first(false)
-            .build();
-
-        Tab tab1 = Tab.builder()
-            .plan(plan)
-            .title("testTab1")
-            .next(tab2)
-            .first(true)
-            .build();
-
-        Task task2 = Task.builder()
-            .title("testTask2")
-            .tab(tab1)
-            .description("testTaskDesc2")
-            .build();
-
-        Task task1 = Task.builder()
-            .title("testTask1")
-            .tab(tab1)
-            .description("testTaskDesc1")
-            .next(task2)
-            .build();
-        tab1.setFirstDummyTask(task1);
-        tab1.setLastDummyTask(task2);
-
-        Task task3 = Task.builder()
-            .title("testTask3")
-            .tab(tab2)
-            .description("testTaskDesc3")
-            .build();
-
-        Task task4 = Task.builder()
-            .title("testTask4")
-            .tab(tab2)
-            .description("testTaskDesc4")
-            .prev(task3)
-            .build();
-        task3.setNext(task4);
-
-        tab2.setFirstDummyTask(task3);
-        tab2.setLastDummyTask(task4);
-
-        Label label1 = Label.builder()
-            .name("testLabel1")
-            .plan(plan)
-            .build();
-
-        Label label2 = Label.builder()
-            .name("testLabel2")
-            .plan(plan)
-            .build();
-
-        MemberOfPlan memberOfPlan1 = MemberOfPlan.builder()
-            .member(member1)
-            .plan(plan)
-            .build();
-
-        MemberOfPlan memberOfPlan2 = MemberOfPlan.builder()
-            .member(member2)
-            .plan(plan)
-            .build();
-        plan.getTabs()
-            .add(tab1);
-        plan.getTabs()
-            .add(tab2);
-
-        plan.getMembers()
-            .add(memberOfPlan1);
-        plan.getMembers()
-            .add(memberOfPlan2);
-
-        plan.getLabels()
-            .add(label1);
-        plan.getLabels()
-            .add(label2);
-
-        tab1.getTasks()
-            .add(task1);
-        tab1.getTasks()
-            .add(task2);
-        tab2.getTasks()
-            .add(task3);
-        memberRepository.saveAll(List.of(member1, member2));
-        planRepository.save(plan);
-        memberOfPlanRepository.saveAll(List.of(memberOfPlan1, memberOfPlan2));
-        tabRepository.saveAll(List.of(tab1, tab2));
-        taskRepository.saveAll(List.of(task1, task2, task3));
+        DummyRelation dummyRelation = createDefaultMemberPlanTabTaskRelation();
 
         // when
-        PlanResponse planResponse = planService.getTotalPlanResponse(plan.getId());
+        PlanResponse planResponse = planService.getTotalPlanResponse(dummyRelation.plan1.getId());
 
         // then
         assertThat(planResponse).isNotNull();
-        assertThat(planResponse.getTitle()).isEqualTo("testPlan");
-        assertThat(planResponse.getDescription()).isEqualTo("hi");
-        assertThat(planResponse.getTabOrder()).isEqualTo(List.of(tab1.getId(), tab2.getId()));
+        assertThat(planResponse.getTitle()).isEqualTo(dummyRelation.plan1.getTitle());
+        assertThat(planResponse.getDescription()).isEqualTo(dummyRelation.plan1.getIntro());
         assertThat(planResponse.getMembers()
             .get(0)
-            .getMail()).isEqualTo("test1@example.com");
-        assertThat(planResponse.getMembers()
-            .get(1)
-            .getMail()).isEqualTo("test2@example.com");
+            .getMail()).isEqualTo(dummyRelation.member.getEmail());
         assertThat(planResponse.getTabs()
-            .get(0)
-            .getTitle()).isEqualTo("testTab1");
-        assertThat(planResponse.getTabs()
-            .get(1)
-            .getTitle()).isEqualTo("testTab2");
-        assertThat(planResponse.getTasks()).isEmpty();
+            .stream().filter(tabInfo -> !defaultTabTitle.contains(tabInfo.getTitle()))
+            .count()).isEqualTo(2);
         assertThat(planResponse.getLabels()
             .get(0)
-            .getValue()).isEqualTo("testLabel1");
+            .getValue()).isEqualTo(dummyRelation.label1.getName());
         assertThat(planResponse.getLabels()
             .get(1)
-            .getValue()).isEqualTo("testLabel2");
-        assertThat(planResponse.isPublic()).isFalse();
+            .getValue()).isEqualTo(dummyRelation.label2.getName());
+        assertThat(planResponse.isPublic()).isTrue();
     }
 
     @Test
@@ -414,7 +315,6 @@ class PlanServiceTest {
 
     }
 
-
     @Test
     @DisplayName("플랜을 삭제한다")
     void delete() {
@@ -427,6 +327,21 @@ class PlanServiceTest {
 
         // then
         assertThat(plan.isDeleted()).isEqualTo(true);
+    }
+
+    @Test
+    @DisplayName("플랜을 삭제하고 플랜을 호줄한다")
+    void deleteAndReadPlan() {
+        // given
+        DummyRelation dummyRelation = createDefaultMemberPlanTabTaskRelation();
+        Plan plan = dummyRelation.plan1;
+        planService.delete(plan.getId(), plan.getOwner().getId());
+
+        // when
+        PlanResponse planResponse = planService.getTotalPlanResponse(plan.getId());
+
+        // then
+        assertThat(planResponse).isNotNull();
     }
 
     @Test
@@ -542,7 +457,7 @@ class PlanServiceTest {
     @DisplayName("멤버 아이디로 모든 플랜을 가져온다")
     void getAllPlanByMemberId() {
         // given
-        Member member = createDefaultMember();
+        Member member = createDefaultMember("tester1", "tester1");
         Plan plan1 = creatDefaultPlan("plan1");
         Plan plan2 = creatDefaultPlan("plan2");
         Plan plan3 = creatDefaultPlan("plan3");
@@ -561,8 +476,59 @@ class PlanServiceTest {
             .getTitle()).isEqualTo("plan2");
         assertThat(allPlanByMemberId.get(2)
             .getTitle()).isEqualTo("plan3");
-
     }
+
+    @Test
+    @DisplayName("멤버 아이디로 메인페이지에 보여줄 모든 플랜을 가져온다")
+    void getMainResponse() {
+        // given
+        DummyRelation dummyRelation = createDefaultMemberPlanTabTaskRelation();
+
+        // when
+        List<PlanMainResponse> allPlan = planService.getMainResponse(dummyRelation.member.getId());
+
+        // then
+        assertThat(allPlan.size()).isEqualTo(2);
+        assertThat(allPlan.get(0)
+            .getTitle()).isEqualTo(dummyRelation.plan1.getTitle());
+        assertThat(allPlan.get(1)
+            .getTitle()).isEqualTo(dummyRelation.plan2.getTitle());
+    }
+
+    @Test
+    @DisplayName("멤버 아이디로 메인페이지에 보여줄 모든 플랜에 속한 탭 아이디를 확인한다")
+    void getMainResponseTabId() {
+        // given
+        DummyRelation dummyRelation = createDefaultMemberPlanTabTaskRelation();
+
+        // when
+        List<PlanMainResponse> allPlan = planService.getMainResponse(dummyRelation.member.getId());
+
+        // then
+        assertThat(allPlan.get(0)
+            .getTabs()
+            .stream().filter(tabInfo -> !defaultTabTitle.contains(tabInfo.getTitle()))
+            .count()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("멤버 아이디로 메인페이지에 보여줄 플랜의 각 탭에 속한 테스크 아이디를 확인한다")
+    void getMainResponseTaskId() {
+        // given
+        DummyRelation dummyRelation = createDefaultMemberPlanTabTaskRelation();
+
+        // when
+        List<PlanMainResponse> allPlan = planService.getMainResponse(dummyRelation.member.getId());
+
+        // then
+        assertThat(allPlan.get(0)
+            .getTabs()
+            .get(3)
+            .getTaskList()
+            .get(0)
+            .getTaskId()).isEqualTo(dummyRelation.task1.getId());
+    }
+
 
     private Plan creatDefaultPlan(String planTitle) {
         return planRepository.save(Plan.builder()
@@ -573,10 +539,10 @@ class PlanServiceTest {
             .build());
     }
 
-    private Member createDefaultMember() {
+    private Member createDefaultMember(String name, String email) {
         return memberRepository.save(Member.builder()
-            .name("tester1")
-            .email("tester@example.com")
+            .name(name)
+            .email(email)
             .build());
     }
 
@@ -589,5 +555,94 @@ class PlanServiceTest {
         plan.getMembers()
             .add(memberOfPlan);
         memberOfPlanRepository.save(memberOfPlan);
+    }
+
+    private DummyRelation createDefaultMemberPlanTabTaskRelation() {
+        Member member = createDefaultMember("tester1", "email@exam.com");
+
+        Plan plan1 = createPlan("testplan1", member.getId());
+        Plan plan2 = createPlan("testplan2", member.getId());
+
+        Tab tab1 = createTab("tab1", plan1.getId(), member.getId());
+        Tab tab2 = createTab("tab2", plan1.getId(), member.getId());
+
+        Task task1 = createTask("task1", tab1.getId(), plan1.getId(), member.getId(), 1);
+        Task task2 = createTask("task2", tab1.getId(), plan1.getId(), member.getId(), 1);
+        Task task3 = createTask("task3", tab2.getId(), plan1.getId(), member.getId(), 2);
+
+        Label label1 = createLabel("testLabel1", plan1.getId(), member.getId());
+        Label label2 = createLabel("testLabel2", plan1.getId(), member.getId());
+
+        return new DummyRelation(member, plan1, plan2, tab1, tab2, task1, task2, task3, label1, label2);
+    }
+
+    private Plan createPlan(String title, Long memberId) {
+        PlanCreateRequest request = PlanCreateRequest.builder()
+            .title(title)
+            .intro("플랜 소개")
+            .isPublic(true)
+            .invitedEmails(List.of())
+            .build();
+        Long planId = planService.create(request, memberId);
+        return planRepository.findById(planId).get();
+    }
+
+    private Tab createTab(String title, Long planId, Long memberId) {
+        TabCreateRequest request = TabCreateRequest.builder()
+            .title(title)
+            .planId(planId)
+            .build();
+        Long tabId = tabService.create(memberId, request);
+        return tabRepository.findById(tabId).get();
+    }
+
+    private Task createTask(String title, Long tabId, Long planId, Long memberId, int days) {
+        TaskCreateRequest request = TaskCreateRequest.builder()
+            .title(title)
+            .tabId(tabId)
+            .planId(planId)
+            .startDate(LocalDate.now().atStartOfDay())
+            .endDate(LocalDate.now().plusDays(days).atStartOfDay())
+            .build();
+        Long taskId = taskService.create(memberId, request);
+        return taskRepository.findById(taskId).get();
+    }
+
+    private Label createLabel(String name, Long planId, Long memberId) {
+        LabelCreateRequest request = LabelCreateRequest.builder()
+            .planId(planId)
+            .name(name)
+            .build();
+        Long labelId = labelService.create(memberId, request);
+        return labelRepository.findById(labelId).get();
+    }
+
+    class DummyRelation {
+        private Member member;
+        private Plan plan1;
+        private Plan plan2;
+        private Tab tab1;
+        private Tab tab2;
+        private Task task1;
+        private Task task2;
+        private Task task3;
+
+        private Label label1;
+        private Label label2;
+
+
+        public DummyRelation(Member member, Plan plan1, Plan plan2, Tab tab1, Tab tab2, Task task1, Task task2,
+                             Task task3, Label label1, Label label2) {
+            this.member = member;
+            this.plan1 = plan1;
+            this.plan2 = plan2;
+            this.tab1 = tab1;
+            this.tab2 = tab2;
+            this.task1 = task1;
+            this.task2 = task2;
+            this.task3 = task3;
+            this.label1 = label1;
+            this.label2 = label2;
+        }
     }
 }

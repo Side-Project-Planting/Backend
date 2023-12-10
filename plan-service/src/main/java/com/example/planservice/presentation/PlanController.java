@@ -3,7 +3,6 @@ package com.example.planservice.presentation;
 import java.net.URI;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +18,7 @@ import com.example.planservice.application.PlanService;
 import com.example.planservice.presentation.dto.request.PlanCreateRequest;
 import com.example.planservice.presentation.dto.request.PlanUpdateRequest;
 import com.example.planservice.presentation.dto.response.CreateResponse;
+import com.example.planservice.presentation.dto.response.PlanMainResponse;
 import com.example.planservice.presentation.dto.response.PlanResponse;
 import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -41,10 +41,6 @@ public class PlanController {
             schema = @Schema(implementation = CreateResponse.class)))
     public ResponseEntity<CreateResponse> create(@RequestBody @Valid PlanCreateRequest request,
                                                  @RequestAttribute Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .build();
-        }
         Long createdId = planService.create(request, userId);
         return ResponseEntity.created(URI.create("/plans/"))
             .body(CreateResponse.of(createdId));
@@ -55,20 +51,18 @@ public class PlanController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = PlanResponse.class)))
     public ResponseEntity<PlanResponse> read(@PathVariable Long planId, @RequestAttribute Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .build();
-        }
         return ResponseEntity.ok(planService.getTotalPlanResponse(planId));
+    }
+
+    // TODO 해당 API Swagger 작업하기
+    @GetMapping("/main")
+    public ResponseEntity<List<PlanMainResponse>> readAll(@RequestAttribute Long userId) {
+        return ResponseEntity.ok(planService.getMainResponse(userId));
     }
 
     @PutMapping("/invite/{uuid}")
     @ApiResponse(responseCode = "204", description = "플랜 수정 성공")
     public ResponseEntity<Long> invite(@PathVariable String uuid, @RequestAttribute Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .build();
-        }
         planService.inviteMember(uuid, userId);
         return ResponseEntity.noContent()
             .build();
@@ -77,10 +71,6 @@ public class PlanController {
     @PutMapping("/exit/{planId}")
     @ApiResponse(responseCode = "204", description = "플랜 나가기 성공")
     public ResponseEntity<Void> exit(@PathVariable Long planId, @RequestAttribute Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .build();
-        }
         planService.exit(planId, userId);
         return ResponseEntity.noContent()
             .build();
@@ -90,10 +80,6 @@ public class PlanController {
     @ApiResponse(responseCode = "204", description = "플랜 정보 수정 성공")
     public ResponseEntity<Void> update(@PathVariable Long planId, @RequestBody @Valid PlanUpdateRequest request,
                                        @RequestAttribute Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .build();
-        }
         planService.update(planId, request, userId);
         return ResponseEntity.noContent()
             .build();
@@ -102,10 +88,6 @@ public class PlanController {
     @DeleteMapping("/{planId}")
     @ApiResponse(responseCode = "204", description = "플랜 삭제 성공")
     public ResponseEntity<Void> delete(@PathVariable Long planId, @RequestAttribute Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .build();
-        }
         planService.delete(planId, userId);
         return ResponseEntity.noContent()
             .build();
@@ -116,10 +98,6 @@ public class PlanController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = PlanTitleIdResponse.class)))
     public ResponseEntity<List<PlanTitleIdResponse>> readAllByMember(@RequestAttribute Long userId) {
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .build();
-        }
         return ResponseEntity.ok(planService.getAllPlanTitleIdByMemberId(userId));
     }
 
