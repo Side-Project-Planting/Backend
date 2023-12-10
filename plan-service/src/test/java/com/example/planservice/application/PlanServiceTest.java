@@ -2,14 +2,10 @@ package com.example.planservice.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,10 +14,8 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.planservice.config.TestConfig;
 import com.example.planservice.domain.label.Label;
 import com.example.planservice.domain.label.repository.LabelRepository;
 import com.example.planservice.domain.member.Member;
@@ -47,7 +41,6 @@ import com.example.planservice.presentation.dto.response.PlanTitleIdResponse;
 import com.example.planservice.util.RedisUtils;
 
 @SpringBootTest
-@Import(TestConfig.class)
 @Transactional
 class PlanServiceTest {
     @Autowired
@@ -65,7 +58,7 @@ class PlanServiceTest {
     @Autowired
     LabelService labelService;
 
-    @MockBean
+    @Autowired
     RedisUtils redisUtils;
 
     @Autowired
@@ -88,8 +81,6 @@ class PlanServiceTest {
     private Long userId;
     private Member tester;
 
-    private Map<String, String> mockRedis;
-
     private List<String> defaultTabTitle = List.of("To Do", "In Progress", "Done");
 
     @BeforeEach
@@ -100,26 +91,11 @@ class PlanServiceTest {
             .build();
         Member savedMember = memberRepository.save(tester);
         userId = savedMember.getId();
-        mockRedis = new HashMap<>();
 
         Mockito.doNothing()
             .when(emailService)
             .sendInviteEmail(anyString(),
                 anyString(), anyString());
-
-        Mockito.doAnswer(invocation -> {
-                String key = invocation.getArgument(0);
-                String value = invocation.getArgument(1);
-                mockRedis.put(key, value);
-                return null;
-            })
-            .when(redisUtils)
-            .setData(anyString(), anyString(), anyLong());
-
-        when(redisUtils.getData(anyString())).thenAnswer(invocation -> {
-            String key = invocation.getArgument(0);
-            return mockRedis.get(key);
-        });
     }
 
     @Test
@@ -401,7 +377,7 @@ class PlanServiceTest {
         Plan savedPlan = planRepository.save(plan);
         String uuid = "uuid";
         redisUtils.setData(uuid, plan.getId()
-            .toString(), 1000L);
+            .toString(), 10000L);
         planService.inviteMember(uuid, tester1.getId());
 
         PlanUpdateRequest planUpdateRequest = PlanUpdateRequest.builder()
@@ -438,10 +414,8 @@ class PlanServiceTest {
             .email("test@example.com")
             .build();
         memberRepository.save(member);
-
         String uuid = "uuid";
-        redisUtils.setData(uuid, plan.getId()
-            .toString(), 1000L);
+        redisUtils.setData(uuid, plan.getId().toString(), 1000L);
         Long memberOfPlanId = planService.inviteMember(uuid, member.getId());
 
         // when
