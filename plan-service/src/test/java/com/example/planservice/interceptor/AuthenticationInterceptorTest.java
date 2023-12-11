@@ -10,15 +10,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.util.PathMatcher;
 
-import com.example.planservice.config.TestConfig;
-
 @SpringBootTest
-@Import(TestConfig.class)
 class AuthenticationInterceptorTest {
     AuthenticationInterceptor interceptor;
     MockHttpServletRequest request;

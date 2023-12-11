@@ -8,16 +8,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.planservice.config.TestConfig;
 import com.example.planservice.domain.tab.Tab;
 import com.example.planservice.domain.tab.repository.TabRepository;
 import com.example.planservice.domain.task.Task;
 
 @SpringBootTest
-@Import(TestConfig.class)
 @Transactional
 class TaskRepositoryTest {
     @Autowired
