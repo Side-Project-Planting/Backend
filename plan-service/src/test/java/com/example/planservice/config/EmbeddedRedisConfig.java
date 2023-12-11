@@ -4,18 +4,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.util.StringUtils;
 
-import lombok.extern.slf4j.Slf4j;
 import redis.embedded.RedisServer;
 
-@Slf4j
 @Profile("test")
 @Configuration
 public class EmbeddedRedisConfig {
@@ -25,14 +24,19 @@ public class EmbeddedRedisConfig {
 
     private RedisServer redisServer;
 
-    @PostConstruct
-    public void startRedis() throws IOException {
+    @Bean
+    public RedisServer redisServer() throws IOException {
         int port = isRedisRunning() ? findAvailablePort() : redisPort;
         redisServer = new RedisServer(port);
+        return redisServer;
+    }
+
+    @EventListener(ContextRefreshedEvent.class)
+    public void startRedis() {
         redisServer.start();
     }
 
-    @PreDestroy
+    @EventListener(ContextClosedEvent.class)
     public void stopRedis() {
         redisServer.stop();
     }
