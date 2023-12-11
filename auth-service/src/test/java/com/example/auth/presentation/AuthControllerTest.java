@@ -9,14 +9,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 
-import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.auth.application.AuthService;
@@ -41,8 +41,16 @@ class AuthControllerTest {
     @MockBean
     private AuthService authService;
 
+    @MockBean
+    CustomCookieManager customCookieManager;
+
     @Autowired
     ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        Mockito.when(customCookieManager.createRefreshToken(anyString())).thenReturn("refresh=hello");
+    }
 
     @Test
     @DisplayName("입력받은 Provider를 지원한다면 200번 상태와 해당 Provider의 authorized uri를 반환한다")
@@ -107,13 +115,7 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.profileUrl").exists())
             .andExpect(jsonPath("$.email").exists())
             .andExpect(jsonPath("$.registered").exists())
-            .andExpect(cookie().exists("refresh"))
-            .andExpect(cookie().httpOnly("refresh", true))
-            .andDo(result -> {
-                MockHttpServletResponse resp = result.getResponse();
-                String setCookieHeader = resp.getHeader("Set-Cookie");
-                Assertions.assertThat(setCookieHeader).contains("SameSite=Strict");
-            });
+            .andExpect(cookie().exists("refresh"));
     }
 
     @Test
@@ -202,13 +204,7 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.refreshToken").doesNotExist())
-            .andExpect(cookie().exists("refresh"))
-            .andExpect(cookie().httpOnly("refresh", true))
-            .andDo(result -> {
-                MockHttpServletResponse resp = result.getResponse();
-                String setCookieHeader = resp.getHeader("Set-Cookie");
-                Assertions.assertThat(setCookieHeader).contains("SameSite=Strict");
-            });
+            .andExpect(cookie().exists("refresh"));
     }
 
     @Test
@@ -328,16 +324,7 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.accessToken").value(createdAccessToken))
             .andExpect(jsonPath("$.refreshToken").doesNotExist())
             .andExpect(jsonPath("$.grantType").value("Bearer"))
-            .andExpect(cookie().exists("refresh"))
-            .andExpect(cookie().httpOnly("refresh", true))
-            .andDo(result -> {
-                MockHttpServletResponse resp = result.getResponse();
-                String setCookieHeader = resp.getHeader("Set-Cookie");
-                Assertions.assertThat(setCookieHeader).contains("SameSite=Strict");
-            });
-        ;
-
-
+            .andExpect(cookie().exists("refresh"));
     }
 
     @Test

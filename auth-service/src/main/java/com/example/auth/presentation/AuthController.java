@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthController {
     private final AuthService authService;
+    private final CustomCookieManager cookieManager;
 
     @GetMapping("/oauth/{provider}/authorized-uri")
     public ResponseEntity<GetAuthorizedUriResponse> getAuthorizedUri(@Parameter(description = "OAuth 인증 방식 중 "
@@ -80,8 +81,7 @@ public class AuthController {
         if (refreshToken == null) {
             return;
         }
-        String cookieValue =
-            String.format("refresh=%s; Max-Age=%s; Path=/; HttpOnly; SameSite=Strict", refreshToken, 60 * 60 * 24 * 30);
+        String cookieValue = cookieManager.createRefreshToken(refreshToken);
         httpServletResponse.setHeader("Set-Cookie", cookieValue);
     }
 }
