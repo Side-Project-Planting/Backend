@@ -2,6 +2,7 @@ package com.example.auth.presentation;
 
 import java.net.URI;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,7 @@ import com.example.auth.presentation.dto.request.RegisterRequest;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,8 +41,31 @@ public class AuthController {
 
     @GetMapping("/oauth/{provider}/authorized-uri")
     public ResponseEntity<GetAuthorizedUriResponse> getAuthorizedUri(@Parameter(description = "OAuth 인증 방식 중 "
-        + "어떤 방식을 사용할지 선택합니다", example = "google") @PathVariable String provider) {
-        return ResponseEntity.ok(authService.getAuthorizedUri(provider));
+        + "어떤 방식을 사용할지 선택합니다", example = "google") @PathVariable String provider,
+                                                                     HttpServletRequest httpServletRequest) {
+        String authorizedUri = authService.getAuthorizedUri(provider);
+
+        // TODO 삭제할 로직. Cloud 환경에서 localhost로도, vercel로도 테스트를 하기 위해 임시로 로직을 추가함
+        authorizedUri = changeAuthorizedUriIfRequestIsLocalEnv(httpServletRequest, authorizedUri);
+        return ResponseEntity.ok(new GetAuthorizedUriResponse(authorizedUri));
+    }
+
+    private static String changeAuthorizedUriIfRequestIsLocalEnv(HttpServletRequest httpServletRequest, String authorizedUri) {
+        String origin = httpServletRequest.getHeader("origin");
+        if (origin != null && origin.contains("localhost:3000")) {
+            // ?로 한 번 나누기
+            String[] temp = authorizedUri.split("&");
+            for (int i = 0; i < temp.length; i++) {
+                String[] splitParam = temp[i].split("=");
+                if (splitParam.length == 2 && splitParam[0].equals("redirect_uri")) {
+                    URI uri = URI.create(splitParam[1]);
+                    splitParam[1] = origin + uri.getPath();
+                }
+                temp[i] = StringUtils.join(splitParam, '=');
+            }
+            authorizedUri = StringUtils.join(temp, '&');
+        }
+        return authorizedUri;
     }
 
     @PostMapping("/oauth/{provider}/login")
