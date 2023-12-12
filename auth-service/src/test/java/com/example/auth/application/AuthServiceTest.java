@@ -96,10 +96,9 @@ class AuthServiceTest {
     @DisplayName("google의 AuthorizedUrl을 가져온다")
     void getGoogleAuthorizedUrl() {
         //when
-        final GetAuthorizedUriResponse response = authService.getAuthorizedUri("google");
+        String authorizedUrl = authService.getAuthorizedUri("google");
 
         // then
-        final String authorizedUrl = response.getAuthorizedUri();
         final String[] url = authorizedUrl.split("[?]");
         final String endpoint = url[0];
         final Map<String, String> params = extractParams(url[1]);

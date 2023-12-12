@@ -46,10 +46,10 @@ public class AuthService {
      * 입력받은 providerName을 사용해 해당되는 OAuthProvider를 찾는다.
      * 반환된 OAuthProvider은 Authorized URL을 만들어 반환한다.
      */
-    public GetAuthorizedUriResponse getAuthorizedUri(String providerName) {
+    public String getAuthorizedUri(String providerName) {
         OAuthProvider oAuthProvider = oAuthProviderResolver.find(providerName);
         String state = randomStringFactory.create();
-        return new GetAuthorizedUriResponse(oAuthProvider.getAuthorizedUriWithParams(state));
+        return oAuthProvider.getAuthorizedUriWithParams(state);
     }
 
     /**
