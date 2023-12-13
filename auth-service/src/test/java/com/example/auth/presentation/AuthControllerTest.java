@@ -57,11 +57,10 @@ class AuthControllerTest {
     void getAuthorizedUri() throws Exception {
         // given
         String providerName = "google";
-        GetAuthorizedUriResponse response = new GetAuthorizedUriResponse("https://answer-uri");
 
         // stub
         when(authService.getAuthorizedUri(providerName))
-            .thenReturn(response);
+            .thenReturn("https://answer-uri");
 
         // when & then
         mockMvc.perform(get(String.format("/oauth/%s/authorized-uri", providerName)))
