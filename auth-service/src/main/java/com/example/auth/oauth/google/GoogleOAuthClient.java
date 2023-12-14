@@ -57,6 +57,35 @@ public class GoogleOAuthClient implements OAuthClient {
         throw new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL);
     }
 
+    // TODO 삭제
+    @Override
+    public AccessTokenResponse getAccessTokenTemp(String authCode) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client_id", properties.getClientId());
+        params.add("client_secret", properties.getClientSecret());
+        params.add("code", authCode);
+        params.add("redirect_uri", "http://localhost:8443/login/oauth2/code/google");
+        params.add("grant_type", "authorization_code");
+
+        HttpEntity<?> request = new HttpEntity<>(params, headers);
+        try {
+            ResponseEntity<AccessTokenResponse> response =
+                new RestTemplate().postForEntity(properties.getTokenUri(), request, AccessTokenResponse.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return response.getBody();
+            }
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().is4xxClientError()) {
+                throw new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL);
+            }
+            throw new ApiException(ErrorCode.EXTERNAL_AUTH_SERVER_ERROR);
+        }
+        throw new ApiException(ErrorCode.ACCESS_TOKEN_FETCH_FAIL);
+    }
+
     @Override
     public OAuthUserResponse getOAuthUserResponse(String accessToken) {
         HttpHeaders headers = new HttpHeaders();
