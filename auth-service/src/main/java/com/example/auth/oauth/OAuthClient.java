@@ -8,5 +8,8 @@ public interface OAuthClient {
 
     AccessTokenResponse getAccessToken(String authCode);
 
+    // TODO 삭제
+    AccessTokenResponse getAccessTokenTemp(String authCode);
+
     OAuthUserResponse getOAuthUserResponse(String accessToken);
 }

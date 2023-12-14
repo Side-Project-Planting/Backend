@@ -43,4 +43,11 @@ public interface OAuthProvider {
         AccessTokenResponse accessTokenResponse = client.getAccessToken(authCode);
         return client.getOAuthUserResponse(accessTokenResponse.getAccessToken());
     }
+
+    // TODO 삭제
+    default OAuthUserResponse getOAuthUserResponseTemp(String authCode) {
+        OAuthClient client = getOAuthClient();
+        AccessTokenResponse accessTokenResponse = client.getAccessTokenTemp(authCode);
+        return client.getOAuthUserResponse(accessTokenResponse.getAccessToken());
+    }
 }

@@ -46,6 +46,7 @@ public class AuthController {
         String authorizedUri = authService.getAuthorizedUri(provider);
 
         // TODO 삭제할 로직. Cloud 환경에서 localhost로도, vercel로도 테스트를 하기 위해 임시로 로직을 추가함
+        log.info("(getAuthorizedUri 메서드): " + authorizedUri);
         authorizedUri = changeAuthorizedUriIfRequestIsLocalEnv(httpServletRequest, authorizedUri);
         return ResponseEntity.ok(new GetAuthorizedUriResponse(authorizedUri));
     }
@@ -72,7 +73,16 @@ public class AuthController {
     public ResponseEntity<OAuthLoginResponse> oauthLogin(@Parameter(description = "OAuth 인증 방식 중 "
         + "어떤 방식을 사용할지 선택합니다", example = "google") @PathVariable String provider,
                                                          @Valid @RequestBody OAuthLoginRequest request,
-                                                         HttpServletResponse httpServletResponse) {
+                                                         HttpServletResponse httpServletResponse,
+                                                         HttpServletRequest httpServletRequest) {
+        // TODO 삭제해야 하는 로직
+        String origin = httpServletRequest.getHeader("origin");
+        if (origin != null && origin.contains("localhost:3000")) {
+            OAuthLoginResponse response = authService.loginTemp(provider, request.getAuthCode());
+            addCookieUsingRefreshToken(httpServletResponse, response.getRefreshToken());
+            return ResponseEntity.ok(response);
+        }
+
         OAuthLoginResponse response = authService.login(provider, request.getAuthCode());
         addCookieUsingRefreshToken(httpServletResponse, response.getRefreshToken());
         return ResponseEntity.ok(response);

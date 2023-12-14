@@ -75,6 +75,24 @@ public class AuthService {
         return OAuthLoginResponse.create(oAuthInfo, tokenInfo, providerResponse);
     }
 
+    // TODO 삭제
+    @Transactional
+    public OAuthLoginResponse loginTemp(String providerName, String authCode) {
+        OAuthProvider oAuthProvider = oAuthProviderResolver.find(providerName);
+        OAuthUserResponse providerResponse = oAuthProvider.getOAuthUserResponseTemp(authCode);
+        OAuthInfo oAuthInfo = retrieveOrCreateMemberUsingAuthCode(oAuthProvider.getOAuthType(), providerResponse);
+
+        Member member = oAuthInfo.getMember();
+        if (member == null) {
+            oAuthInfo.setAuthorizedToken(randomStringFactory.create());
+            return OAuthLoginResponse.createWithoutToken(oAuthInfo, providerResponse);
+        }
+
+        TokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(member.getId(), LocalDateTime.now());
+        member.changeRefreshToken(tokenInfo.getRefreshToken());
+        return OAuthLoginResponse.create(oAuthInfo, tokenInfo, providerResponse);
+    }
+
     /**
      * 서비스를 이용하기 위해 필요한 초기값을 입력한 뒤 MemberService로 등록 요청을 보내는 로직.
      * 기존 OAuthInfo로 등록된 정보에 profileUrl, name을 추가로 입력한다.
