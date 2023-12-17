@@ -67,7 +67,7 @@ public class GoogleOAuthClient implements OAuthClient {
         params.add("client_id", properties.getClientId());
         params.add("client_secret", properties.getClientSecret());
         params.add("code", authCode);
-        params.add("redirect_uri", "http://localhost:8443/login/oauth2/code/google");
+        params.add("redirect_uri", "http://localhost:3000/login/oauth2/code/google");
         params.add("grant_type", "authorization_code");
 
         HttpEntity<?> request = new HttpEntity<>(params, headers);
