@@ -134,7 +134,6 @@ public class Tab extends BaseEntity {
 
     public void delete() {
         this.isDeleted = true;
-        tasks.forEach(Task::delete);
     }
 
     public List<Task> getSortedTasks() {

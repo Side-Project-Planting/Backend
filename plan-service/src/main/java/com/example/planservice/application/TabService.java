@@ -95,6 +95,7 @@ public class TabService {
 
         Tab target = tabGroup.findById(tabId);
         target.delete();
+        taskRepository.deleteAllByTabId(tabId);
         return tabId;
     }
 
