@@ -18,7 +18,9 @@ public class TaskUpdateRequest {
     @NotNull
     private Long planId;
 
-    private Long managerId;
+    private Long memberId;
+
+    private Long assigneeId;
 
     @NotBlank
     @Schema(nullable = false, example = "변경할 이름")
@@ -38,10 +40,11 @@ public class TaskUpdateRequest {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private TaskUpdateRequest(Long planId, Long managerId, String title, String description, LocalDateTime startDate,
+    private TaskUpdateRequest(Long planId, Long memberId, Long assigneeId, String title, String description, LocalDateTime startDate,
                               LocalDateTime endDate, List<Long> labels) {
         this.planId = planId;
-        this.managerId = managerId;
+        this.memberId = memberId;
+        this.assigneeId = assigneeId;
         this.title = title;
         this.description = description;
         this.startDate = startDate;
@@ -52,9 +55,9 @@ public class TaskUpdateRequest {
     public TaskUpdateServiceRequest toServiceRequest(@NotNull Long memberId, @NotNull Long taskId) {
         return TaskUpdateServiceRequest.builder()
             .taskId(taskId)
-            .memberId(memberId)
             .planId(planId)
-            .managerId(managerId)
+            .memberId(memberId)
+            .assigneeId(assigneeId)
             .title(title)
             .description(description)
             .startDate(startDate)

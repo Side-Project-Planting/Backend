@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class TaskUpdateServiceRequest {
     private Long taskId;
     private Long memberId;
+    private Long assigneeId;
     private Long planId;
     private Long managerId;
     private String title;
@@ -24,11 +25,12 @@ public class TaskUpdateServiceRequest {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private TaskUpdateServiceRequest(Long taskId, Long memberId, Long planId, Long managerId, String title,
+    private TaskUpdateServiceRequest(Long taskId, Long memberId, Long assigneeId, Long planId, Long managerId, String title,
                                      String description, LocalDateTime startDate, LocalDateTime endDate,
                                      List<Long> labels) {
         this.taskId = taskId;
         this.memberId = memberId;
+        this.assigneeId = assigneeId;
         this.planId = planId;
         this.managerId = managerId;
         this.title = title;
