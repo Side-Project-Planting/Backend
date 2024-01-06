@@ -1,6 +1,6 @@
 package com.example.planservice.application.dto;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.example.planservice.domain.member.Member;
@@ -14,21 +14,23 @@ import lombok.NoArgsConstructor;
 public class TaskUpdateServiceRequest {
     private Long taskId;
     private Long memberId;
+    private Long assigneeId;
     private Long planId;
     private Long managerId;
     private String title;
     private String description;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private List<Long> labels;
 
     @Builder
     @SuppressWarnings("java:S107")
-    private TaskUpdateServiceRequest(Long taskId, Long memberId, Long planId, Long managerId, String title,
-                                     String description, LocalDateTime startDate, LocalDateTime endDate,
+    private TaskUpdateServiceRequest(Long taskId, Long memberId, Long assigneeId, Long planId, Long managerId, String title,
+                                     String description, LocalDate startDate, LocalDate endDate,
                                      List<Long> labels) {
         this.taskId = taskId;
         this.memberId = memberId;
+        this.assigneeId = assigneeId;
         this.planId = planId;
         this.managerId = managerId;
         this.title = title;

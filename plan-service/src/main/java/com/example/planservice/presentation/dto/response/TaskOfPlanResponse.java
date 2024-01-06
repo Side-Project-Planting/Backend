@@ -1,6 +1,6 @@
 package com.example.planservice.presentation.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.example.planservice.domain.task.Task;
@@ -16,12 +16,12 @@ public class TaskOfPlanResponse {
     private List<Long> labels;
     private Long tabId;
     private Long assigneeId;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
 
     @Builder
     private TaskOfPlanResponse(Long id, String title, Long tabId, List<Long> labels, Long assigneeId,
-                               LocalDateTime startDate, LocalDateTime endDate) {
+                               LocalDate startDate, LocalDate endDate) {
         this.id = id;
         this.title = title;
         this.labels = labels;

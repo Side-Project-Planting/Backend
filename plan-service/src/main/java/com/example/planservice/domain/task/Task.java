@@ -1,6 +1,6 @@
 package com.example.planservice.domain.task;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,9 +57,9 @@ public class Task extends BaseEntity {
 
     private String description;
 
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     private boolean isDeleted;
 
@@ -76,8 +76,8 @@ public class Task extends BaseEntity {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private Task(Tab tab, Member manager, String title, String description, LocalDateTime startDate,
-                 LocalDateTime endDate, boolean isDeleted, Task next, Task prev, int version) {
+    private Task(Tab tab, Member manager, String title, String description, LocalDate startDate,
+                 LocalDate endDate, boolean isDeleted, Task next, Task prev, int version) {
         validateDates(startDate, endDate);
         this.tab = tab;
         this.assignee = manager;
@@ -199,7 +199,7 @@ public class Task extends BaseEntity {
         return next != null || prev != null;
     }
 
-    private void validateDates(LocalDateTime startDate, LocalDateTime endDate) {
+    private void validateDates(LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null) {
             return;
         }
@@ -217,12 +217,12 @@ public class Task extends BaseEntity {
         if (isDateOver()) {
             return -1;
         }
-        return LocalDateTime.now()
+        return LocalDate.now()
             .compareTo(this.endDate);
     }
 
     public boolean isDateOver() {
-        return this.endDate == null || LocalDateTime.now()
+        return this.endDate == null || LocalDate.now()
             .isAfter(this.endDate);
     }
 }

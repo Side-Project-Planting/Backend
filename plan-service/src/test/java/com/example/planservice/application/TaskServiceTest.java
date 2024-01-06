@@ -3,7 +3,7 @@ package com.example.planservice.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -554,9 +554,9 @@ class TaskServiceTest {
             .managerId(taskManager.getId())
             .title("변경된 이름")
             .description("이렇게 설명할게요")
-            .startDate(LocalDateTime.now()
+            .startDate(LocalDate.now()
                 .minusDays(10))
-            .endDate(LocalDateTime.now()
+            .endDate(LocalDate.now()
                 .plusDays(2))
             .labels(List.of(label1.getId(), label2.getId()))
             .build();
@@ -610,9 +610,9 @@ class TaskServiceTest {
             .managerId(null)
             .title("변경된 이름")
             .description("이렇게 설명할게요")
-            .startDate(LocalDateTime.now()
+            .startDate(LocalDate.now()
                 .minusDays(10))
-            .endDate(LocalDateTime.now()
+            .endDate(LocalDate.now()
                 .plusDays(2))
             .labels(List.of(label1.getId(), label2.getId()))
             .build();

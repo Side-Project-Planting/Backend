@@ -45,6 +45,8 @@ public class TaskService {
             .manager(assignee)
             .title(request.getTitle())
             .description(request.getDescription())
+            .startDate(request.getStartDate())
+            .endDate(request.getEndDate())
             .build();
 
         Task savedTask = taskRepository.save(task);
