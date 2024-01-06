@@ -575,8 +575,8 @@ class PlanServiceTest {
             .title(title)
             .tabId(tabId)
             .planId(planId)
-            .startDate(LocalDate.now().atStartOfDay())
-            .endDate(LocalDate.now().plusDays(days).atStartOfDay())
+            .startDate(LocalDate.now())
+            .endDate(LocalDate.now().plusDays(days))
             .build();
         Long taskId = taskService.create(memberId, request);
         return taskRepository.findById(taskId).get();

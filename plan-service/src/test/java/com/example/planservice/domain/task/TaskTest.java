@@ -3,7 +3,7 @@ package com.example.planservice.domain.task;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -36,8 +36,8 @@ class TaskTest {
     @DisplayName("태스크의 startDate는 endDate보다 빨라야 합니다")
     void testDateIsValid() throws Exception {
         // given
-        LocalDateTime endDate = LocalDateTime.now();
-        LocalDateTime startDate = endDate.plusDays(1);
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.plusDays(1);
 
         // when & then
         assertThatThrownBy(() -> createTask(startDate, endDate))
@@ -45,7 +45,7 @@ class TaskTest {
             .hasMessageContaining(ErrorCode.TASK_DATE_INVALID.getMessage());
     }
 
-    private Task createTask(LocalDateTime startDate, LocalDateTime endDate) {
+    private Task createTask(LocalDate startDate, LocalDate endDate) {
         return Task.builder()
             .startDate(startDate)
             .endDate(endDate)

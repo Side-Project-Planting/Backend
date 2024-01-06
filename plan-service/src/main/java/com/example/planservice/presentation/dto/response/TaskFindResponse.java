@@ -1,6 +1,6 @@
 package com.example.planservice.presentation.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,10 +32,10 @@ public class TaskFindResponse {
     private String description;
 
     @Schema(description = "추후에 날짜까지만 보내줄 예정", nullable = true, example = "2023-11-08T08:00:00")
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
     @Schema(description = "추후에 날짜까지만 보내줄 예정", nullable = true, example = "2023-11-09T08:00:00")
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     private Long nextId;
 
@@ -44,7 +44,7 @@ public class TaskFindResponse {
     @Builder
     @SuppressWarnings("java:S107")
     public TaskFindResponse(Long id, Long tabId, Long planId, Long managerId, List<Long> labels, String title,
-                            String description, LocalDateTime startDate, LocalDateTime endDate, Long nextId,
+                            String description, LocalDate startDate, LocalDate endDate, Long nextId,
                             Long prevId) {
         this.id = id;
         this.tabId = tabId;

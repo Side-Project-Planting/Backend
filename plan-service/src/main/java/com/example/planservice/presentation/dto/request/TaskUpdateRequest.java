@@ -1,6 +1,6 @@
 package com.example.planservice.presentation.dto.request;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,18 +30,18 @@ public class TaskUpdateRequest {
     private String description;
 
     @Schema(description = "추후에 날짜까지만 입력받도록 변경될 예정", nullable = true, example = "2023-11-08T08:00:00")
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
     @Schema(description = "추후에 날짜까지만 입력받도록 변경될 예정", nullable = true, example = "2023-11-09T08:00:00")
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     @Schema(description = "만약 Null이 입력된다면 [] 가 대신 들어감", nullable = true, example = "[1,2,3]")
     private List<Long> labels;
 
     @Builder
     @SuppressWarnings("java:S107")
-    private TaskUpdateRequest(Long planId, Long memberId, Long assigneeId, String title, String description, LocalDateTime startDate,
-                              LocalDateTime endDate, List<Long> labels) {
+    private TaskUpdateRequest(Long planId, Long memberId, Long assigneeId, String title, String description, LocalDate startDate,
+                              LocalDate endDate, List<Long> labels) {
         this.planId = planId;
         this.memberId = memberId;
         this.assigneeId = assigneeId;
