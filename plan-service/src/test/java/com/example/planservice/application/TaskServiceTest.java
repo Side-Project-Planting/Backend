@@ -530,7 +530,7 @@ class TaskServiceTest {
         Plan plan = createPlan();
         Tab tab = createTab(plan);
         Member loginMember = createMemberWithPlan(plan);
-        Member taskManager = createMemberWithPlan(plan);
+        Member assignee = createMemberWithPlan(plan);
         Task task = createTaskWithTab(tab);
         Label label1 = Label.builder()
             .plan(plan)
@@ -551,7 +551,7 @@ class TaskServiceTest {
             .taskId(task.getId())
             .memberId(loginMember.getId())
             .planId(plan.getId())
-            .managerId(taskManager.getId())
+            .assigneeId(assignee.getId())
             .title("변경된 이름")
             .description("이렇게 설명할게요")
             .startDate(LocalDate.now()
@@ -571,7 +571,7 @@ class TaskServiceTest {
         assertThat(updatedTask)
             .extracting(Task::getTab, Task::getAssignee, Task::getTitle,
                 Task::getDescription, Task::getStartDate, Task::getEndDate)
-            .containsExactly(tab, taskManager, request.getTitle(),
+            .containsExactly(tab, assignee, request.getTitle(),
                 request.getDescription(), request.getStartDate(), request.getEndDate());
 
         List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(updatedId);
@@ -607,7 +607,7 @@ class TaskServiceTest {
             .taskId(task.getId())
             .memberId(loginMember.getId())
             .planId(plan.getId())
-            .managerId(null)
+            .assigneeId(null)
             .title("변경된 이름")
             .description("이렇게 설명할게요")
             .startDate(LocalDate.now()
