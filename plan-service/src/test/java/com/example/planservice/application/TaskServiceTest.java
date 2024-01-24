@@ -770,6 +770,23 @@ class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("태스크 조회 시 Description을 조회할 수 있다")
+    void testCanShowDescriptionThatCreateTask() throws Exception {
+        // given
+        Plan plan = createPlan();
+        Tab tab = createTab(plan);
+        Member member = createMemberWithPlan(plan);
+        Task task = createTaskWithTabAndDescription(tab, "설명임");
+        Task nextTask = createTaskWithTab(tab);
+
+        // when
+        TaskFindResponse response = taskService.find(task.getId(), member.getId());
+
+        // then
+        assertThat(response.getDescription()).isEqualTo(task.getDescription());
+    }
+
+    @Test
     @DisplayName("Private Plan에 속한 태스크는 가입된 사람만 볼 수 있다")
     void testFindTaskFailNotRegistered() throws Exception {
         // given
@@ -810,6 +827,19 @@ class TaskServiceTest {
         taskRepository.save(task);
         return task;
     }
+
+    private Task createTaskWithTabAndDescription(Tab tab, String description) {
+        Task task = Task.builder()
+            .description(description)
+            .tab(tab)
+            .build();
+        Task lastDummy = tab.getLastDummyTask();
+        lastDummy.putInFront(task);
+
+        taskRepository.save(task);
+        return task;
+    }
+
 
     private Plan createPlan() {
         Plan plan = Plan.builder()
