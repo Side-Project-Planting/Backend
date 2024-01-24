@@ -38,9 +38,9 @@ public class TaskUpdateServiceRequest {
         this.labels = labels;
     }
 
-    public Task toEntity(Member manager) {
+    public Task toEntity(Member assignee) {
         return Task.builder()
-            .manager(manager)
+            .assignee(assignee)
             .title(title)
             .description(description)
             .startDate(startDate)

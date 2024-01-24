@@ -42,7 +42,7 @@ public class TaskService {
 
         Task task = Task.builder()
             .tab(tab)
-            .manager(assignee)
+            .assignee(assignee)
             .title(request.getTitle())
             .description(request.getDescription())
             .startDate(request.getStartDate())

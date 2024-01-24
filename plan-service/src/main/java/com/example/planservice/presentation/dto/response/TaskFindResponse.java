@@ -20,7 +20,7 @@ public class TaskFindResponse {
 
     private Long planId;
 
-    private Long managerId;
+    private Long assigneeId;
 
     @Schema(nullable = false, example = "[1,3,2]")
     private List<Long> labels;
@@ -43,13 +43,13 @@ public class TaskFindResponse {
 
     @Builder
     @SuppressWarnings("java:S107")
-    public TaskFindResponse(Long id, Long tabId, Long planId, Long managerId, List<Long> labels, String title,
+    public TaskFindResponse(Long id, Long tabId, Long planId, Long assigneeId, List<Long> labels, String title,
                             String description, LocalDate startDate, LocalDate endDate, Long nextId,
                             Long prevId) {
         this.id = id;
         this.tabId = tabId;
         this.planId = planId;
-        this.managerId = managerId;
+        this.assigneeId = assigneeId;
         this.labels = labels;
         this.title = title;
         this.description = description;
@@ -81,7 +81,7 @@ public class TaskFindResponse {
             .tabId(tab.getId())
             .planId(tab.getPlan()
                 .getId())
-            .managerId(task.getAssignee() != null ? task.getAssignee()
+            .assigneeId(task.getAssignee() != null ? task.getAssignee()
                 .getId() : null)
             .labels(labels)
             .title(task.getTitle())

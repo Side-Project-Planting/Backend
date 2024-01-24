@@ -76,11 +76,11 @@ public class Task extends BaseEntity {
 
     @Builder
     @SuppressWarnings("java:S107")
-    private Task(Tab tab, Member manager, String title, String description, LocalDate startDate,
+    private Task(Tab tab, Member assignee, String title, String description, LocalDate startDate,
                  LocalDate endDate, boolean isDeleted, Task next, Task prev, int version) {
         validateDates(startDate, endDate);
         this.tab = tab;
-        this.assignee = manager;
+        this.assignee = assignee;
         this.title = title;
         this.description = description;
         this.startDate = startDate;
