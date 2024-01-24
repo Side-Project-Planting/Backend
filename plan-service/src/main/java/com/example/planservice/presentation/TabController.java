@@ -21,6 +21,7 @@ import com.example.planservice.application.dto.TabDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.TabChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TabChangeTitleRequest;
 import com.example.planservice.presentation.dto.request.TabCreateRequest;
+import com.example.planservice.presentation.dto.response.CreateResponse;
 import com.example.planservice.presentation.dto.response.TabChangeOrderResponse;
 import com.example.planservice.presentation.dto.response.TabFindResponse;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,10 +40,11 @@ public class TabController {
 
     @PostMapping
     @ApiResponse(responseCode = "201", description = "탭 생성 성공")
-    public ResponseEntity<Void> create(@Valid @RequestBody TabCreateRequest request,
-                                       @RequestAttribute Long userId) {
+    public ResponseEntity<CreateResponse> create(@Valid @RequestBody TabCreateRequest request,
+                                                 @RequestAttribute Long userId) {
         Long createdId = tabService.create(userId, request);
-        return ResponseEntity.created(URI.create("/tabs/" + createdId)).build();
+        return ResponseEntity.created(URI.create("/tabs/" + createdId))
+            .body(CreateResponse.of(createdId));
     }
 
     @PostMapping("/change-order")
