@@ -54,7 +54,8 @@ class LabelControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(header().string("Location", "/labels/" + createdLabelId));
+            .andExpect(header().string("Location", "/labels/" + createdLabelId))
+            .andExpect(jsonPath("$.id").value(createdLabelId));
     }
 
     @Test

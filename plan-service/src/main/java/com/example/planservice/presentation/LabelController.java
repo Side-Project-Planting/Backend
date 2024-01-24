@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.planservice.application.LabelService;
 import com.example.planservice.application.dto.LabelDeleteServiceRequest;
 import com.example.planservice.presentation.dto.request.LabelCreateRequest;
+import com.example.planservice.presentation.dto.response.CreateResponse;
 import com.example.planservice.presentation.dto.response.LabelFindResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,10 +34,11 @@ public class LabelController {
 
     @PostMapping
     @ApiResponse(responseCode = "201", description = "라벨 생성 성공")
-    ResponseEntity<Void> create(@RequestBody @Valid LabelCreateRequest labelCreateRequest,
-                                @RequestAttribute Long userId) {
+    ResponseEntity<CreateResponse> create(@RequestBody @Valid LabelCreateRequest labelCreateRequest,
+                                          @RequestAttribute Long userId) {
         Long createdId = labelService.create(userId, labelCreateRequest);
-        return ResponseEntity.created(URI.create("/labels/" + createdId)).build();
+        return ResponseEntity.created(URI.create("/labels/" + createdId))
+            .body(CreateResponse.of(createdId));
     }
 
     @DeleteMapping("/{id}")
