@@ -18,6 +18,7 @@ import com.example.planservice.application.TaskService;
 import com.example.planservice.presentation.dto.request.TaskChangeOrderRequest;
 import com.example.planservice.presentation.dto.request.TaskCreateRequest;
 import com.example.planservice.presentation.dto.request.TaskUpdateRequest;
+import com.example.planservice.presentation.dto.response.CreateResponse;
 import com.example.planservice.presentation.dto.response.TaskFindResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -36,10 +37,11 @@ public class TaskController {
 
     @PostMapping
     @ApiResponse(responseCode = "201", description = "태스크 생성 성공")
-    public ResponseEntity<Void> create(@RequestBody @Valid TaskCreateRequest request,
-                                       @RequestAttribute Long userId) {
+    public ResponseEntity<CreateResponse> create(@RequestBody @Valid TaskCreateRequest request,
+                                                 @RequestAttribute Long userId) {
         Long createdId = taskService.create(userId, request);
-        return ResponseEntity.created(URI.create("/tasks/" + createdId)).build();
+        return ResponseEntity.created(URI.create("/tasks/" + createdId))
+            .body(CreateResponse.of(createdId));
     }
 
     @PutMapping("/{taskId}")

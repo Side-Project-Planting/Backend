@@ -63,7 +63,8 @@ class TabControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(header().string("Location", "/tabs/" + createdTabId));
+            .andExpect(header().string("Location", "/tabs/" + createdTabId))
+            .andExpect(jsonPath("$.id").value(createdTabId));
     }
 
     @Test

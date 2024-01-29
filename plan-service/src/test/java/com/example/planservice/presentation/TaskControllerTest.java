@@ -54,7 +54,8 @@ class TaskControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
             .andExpect(header().string("Location", "/tasks/" + createdId))
-            .andExpect(redirectedUrlPattern("/tasks/*"));
+            .andExpect(redirectedUrlPattern("/tasks/*"))
+            .andExpect(jsonPath("$.id").value(createdId));;
     }
 
     @Test
