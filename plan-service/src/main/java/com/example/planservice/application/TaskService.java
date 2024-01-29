@@ -42,7 +42,7 @@ public class TaskService {
 
         Task task = Task.builder()
             .tab(tab)
-            .manager(assignee)
+            .assignee(assignee)
             .title(request.getTitle())
             .description(request.getDescription())
             .startDate(request.getStartDate())
@@ -60,9 +60,9 @@ public class TaskService {
         Plan plan = planMembershipService.getPlanAfterValidateAuthorization(request.getPlanId(), request.getMemberId());
         Task task = taskRepository.findById(request.getTaskId())
             .orElseThrow(() -> new ApiException(ErrorCode.TASK_NOT_FOUND));
-        Member manager = getMember(request.getManagerId(), plan);
+        Member assignee = getMember(request.getAssigneeId(), plan);
 
-        task.change(request.toEntity(manager));
+        task.change(request.toEntity(assignee));
         List<LabelOfTask> labelOfTaskList = labelOfTaskRepository.findAllByTaskId(task.getId());
         labelOfTaskRepository.deleteAllInBatch(labelOfTaskList);
         saveAllLabelOfTask(request.getLabels(), task, plan);
