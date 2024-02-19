@@ -41,7 +41,7 @@ public class EmailService {
             message.setSubject(INVITING_SUBJECT);
             String content = text + ' ' + INVITING_ANNOUNCEMENT;
             content += "<br>";
-            content += url + uuid;
+            content += url + "/invite/" + uuid;
 
             message.setContent(content, "text/html; charset=utf-8");
 
